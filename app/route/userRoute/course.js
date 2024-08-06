@@ -175,8 +175,8 @@ router.get("/:id", async (req, res, next) => {
       // if (!result) {
       //   return res.status(404).json({ error: "Course not found" });
       // }
-      console.log(result);
-      
+      // console.log(result);
+
       const coursesWithFullImageUrls = [result].map((course) => ({
         ...course._doc,
         thumbnail_image: `http://${req.headers.host}/${course.thumbnail_image}`,
