@@ -14,7 +14,7 @@ router.post("/", async (req, res) => {
 });
 
 // Get all Reviews
-router.get("/reviews", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const reviews = await Review.find();
     res.status(200).send(reviews);
@@ -24,7 +24,7 @@ router.get("/reviews", async (req, res) => {
 });
 
 // Get Review by ID
-router.get("/reviews/:id", async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
     const review = await Review.findById(req.params.id);
     if (!review) {
@@ -37,7 +37,7 @@ router.get("/reviews/:id", async (req, res) => {
 });
 
 // Update Review
-router.put("/reviews/:id", async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
     const review = await Review.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -53,7 +53,7 @@ router.put("/reviews/:id", async (req, res) => {
 });
 
 // Delete Review
-router.delete("/reviews/:id", async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     const review = await Review.findByIdAndDelete(req.params.id);
     if (!review) {

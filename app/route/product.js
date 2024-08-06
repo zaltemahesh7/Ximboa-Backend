@@ -151,7 +151,7 @@ router.put(
 );
 
 // Get products by trainer ID
-router.get("/ByTrainerID/:trainerId", function (req, res, next) {
+router.get("/bytrainer/:trainerId", function (req, res, next) {
   Product.find({ trainer_id: req.params.trainerId })
     .then((result) => {
       res.status(200).json({

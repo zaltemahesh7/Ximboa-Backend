@@ -188,7 +188,7 @@ router.get("/:id", async (req, res, next) => {
     });
 });
 
-router.get("/BytrainerID/:trainerId", async (req, res, next) => {
+router.get("/bytrainer/:trainerId", async (req, res, next) => {
   const trainerId = req.params.trainerId;
 
   if (!mongoose.Types.ObjectId.isValid(trainerId)) {

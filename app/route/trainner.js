@@ -18,7 +18,7 @@ const testemonial = require("../../model/testemonial");
 const gallary = require("../../model/gallary");
 
 // Get all data according to the trainer
-router.get("/trainers/:id/data", async (req, res) => {
+router.get("/:id/data", async (req, res) => {
   try {
     const trainerId = req.params.id;
 

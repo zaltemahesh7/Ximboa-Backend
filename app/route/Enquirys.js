@@ -17,7 +17,7 @@ router.post("/", async (req, res) => {
 });
 
 // Get all enquiries
-router.get("/enquiries", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const enquiries = await Enquiry.find().populate("t_id").populate("u_id");
     res.status(200).send(enquiries);
@@ -27,7 +27,7 @@ router.get("/enquiries", async (req, res) => {
 });
 
 // Get enquiries by trainer ID
-router.get("/enquiries/trainer/:t_id", async (req, res) => {
+router.get("/bytrainer/:t_id", async (req, res) => {
   try {
     const enquiries = await Enquiry.find({ t_id: req.params.t_id })
       .populate("t_id")
@@ -41,7 +41,7 @@ router.get("/enquiries/trainer/:t_id", async (req, res) => {
 });
 
 // Get enquiries by user ID
-router.get("/enquiries/user/:u_id", async (req, res) => {
+router.get("/user/:u_id", async (req, res) => {
   try {
     const enquiries = await Enquiry.find({ u_id: req.params.u_id })
       .populate("t_id")

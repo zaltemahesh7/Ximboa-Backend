@@ -131,7 +131,7 @@ router.put("/:id", upload.array("photos", 3), function (req, res, next) {
 });
 
 // Get gallery data by trainer ID
-router.get("/trainerID/:trainerId/", function (req, res, next) {
+router.get("/bytrainer/:trainerId/", function (req, res, next) {
   Gallery.find({ trainer_id: req.params.trainerId })
     .then((result) => {
       res.status(200).json({

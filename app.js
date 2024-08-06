@@ -69,10 +69,10 @@ var ReviewRoute = require("./app/route/ReviewRoute");
 app.use("/review", ReviewRoute);
 
 var QuestionsRoute = require("./app/route/QuestionsRoute/Questions");
-app.use("/", QuestionsRoute);
+app.use("/questions", QuestionsRoute);
 
 var TrainerRoute = require("./app/route/trainner");
-app.use("/", TrainerRoute);
+app.use("/trainers", TrainerRoute);
 
 var EnquirysRoute = require("./app/route/Enquirys");
 app.use("/enquiries", EnquirysRoute);
@@ -94,3 +94,6 @@ app.use((req, res, next) => {
 });
 
 module.exports = app;
+
+
+// Test new changes
