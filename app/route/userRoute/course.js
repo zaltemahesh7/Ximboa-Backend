@@ -170,17 +170,20 @@ router.put(
 
 router.get("/:id", async (req, res, next) => {
   await Course.findById(req.params.id)
-    .populate("trainer_id", "user_name")
+    // .populate("trainer_id")
     .then((result) => {
-      if (!result) {
-        return res.status(404).json({ error: "Course not found" });
-      }
-      res.status(200).json({
-        course_name: result.course_name,
-        thumbnail_image: `http://${req.headers.host}/${result.thumbnail_image}`,
-        progress: result.progress,
-        user_name: result.trainer_id.user_name,
-      });
+      // if (!result) {
+      //   return res.status(404).json({ error: "Course not found" });
+      // }
+      console.log(result);
+      
+      const coursesWithFullImageUrls = [result].map((course) => ({
+        ...course._doc,
+        thumbnail_image: `http://${req.headers.host}/${course.thumbnail_image}`,
+        gallary_image: `http://${req.headers.host}/${course.gallary_image}`,
+        trainer_materialImage: `http://${req.headers.host}/${course.trainer_materialImage}`,
+      }));
+      res.status(200).json({ courses: coursesWithFullImageUrls });
     })
     .catch((err) => {
       console.error(err);

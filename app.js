@@ -87,11 +87,12 @@ mongoose
     console.log("failed");
   });
 
-app.use((req, res, next) => {
-  res.status(200).json({
-    message: "app is running",
-  });
-});
+// app.use((req, res, next) => {
+//   res.status(200).json({
+//     message: "app is running",
+//   });
+//   next
+// });
 
 module.exports = app;
 

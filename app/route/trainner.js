@@ -30,6 +30,7 @@ router.get("/:id/data", async (req, res) => {
 
     // Find courses by the trainer
     const courses = await Course.find({ trainer_id: trainerId });
+
     // Find question by the trainer
     const question = await Question.find({ t_id: trainerId });
     // Find Appointment by the trainer
@@ -47,17 +48,19 @@ router.get("/:id/data", async (req, res) => {
 
     // Get reviews and groups for each course
     const courseIds = courses.map((course) => course._id);
-
     const reviews = await Review.find({ c_id: { $in: courseIds } });
 
     const Educations = await Education.find({ trainer_id: { $in: trainerId } });
 
-    const SocialMedias = await SocialMedia.find({ trainer_id: { $in: trainerId } });
+    const SocialMedias = await SocialMedia.find({
+      trainer_id: { $in: trainerId },
+    });
 
-    const testimonials = await testemonial.find({ trainer_id: { $in: trainerId } });
+    const testimonials = await testemonial.find({
+      trainer_id: { $in: trainerId },
+    });
 
     const gallarys = await gallary.find({ trainer_id: { $in: trainerId } });
-
 
     res.status(200).send({
       trainer,
@@ -72,7 +75,7 @@ router.get("/:id/data", async (req, res) => {
       Educations,
       SocialMedias,
       testimonials,
-      gallarys
+      gallarys,
     });
   } catch (error) {
     console.log(error);
