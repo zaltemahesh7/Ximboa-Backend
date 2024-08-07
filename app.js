@@ -91,7 +91,6 @@ mongoose
 //   res.status(200).json({
 //     message: "app is running",
 //   });
-//   next
 // });
 
 module.exports = app;

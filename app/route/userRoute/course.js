@@ -36,10 +36,12 @@ router.get("/", (req, res, next) => {
       const coursesWithFullImageUrls = result.map((course) => ({
         ...course._doc,
         thumbnail_image: `http://${req.headers.host}/${course.thumbnail_image}`,
+
         gallary_image: `http://${req.headers.host}/${course.gallary_image}`,
         trainer_materialImage: `http://${req.headers.host}/${course.trainer_materialImage}`,
       }));
-      res.status(200).json({ courses: coursesWithFullImageUrls });
+      // console.log(coursesWithFullImageUrls),
+        res.status(200).json({ courses: coursesWithFullImageUrls });
     })
     .catch((err) => {
       console.error(err);
@@ -55,14 +57,13 @@ router.post(
     { name: "gallary_image", maxCount: 1 },
     { name: "trainer_materialImage", maxCount: 1 },
   ]),
-  (req, res, next) => {
+  (req, res) => {
     const course = new Course({
       _id: new mongoose.Types.ObjectId(),
       course_name: req.body.course_name,
       online_offline: req.body.online_offline,
       price: req.body.price,
       offer_prize: req.body.offer_prize,
-      progress: req.body.progress,
       start_date: req.body.start_date,
       end_date: req.body.end_date,
       start_time: req.body.start_time,
@@ -103,7 +104,7 @@ router.delete("/:id", (req, res, next) => {
     })
     .catch((err) => {
       console.error(err);
-      res.status500().json({ error: err });
+      res.status(500).json({ error: err });
     });
 });
 
@@ -124,7 +125,6 @@ router.put(
         online_offline: req.body.online_offline,
         price: req.body.price,
         offer_prize: req.body.offer_prize,
-        progress: req.body.progress,
         start_date: req.body.start_date,
         end_date: req.body.end_date,
         start_time: req.body.start_time,
@@ -172,11 +172,6 @@ router.get("/:id", async (req, res, next) => {
   await Course.findById(req.params.id)
     // .populate("trainer_id")
     .then((result) => {
-      // if (!result) {
-      //   return res.status(404).json({ error: "Course not found" });
-      // }
-      // console.log(result);
-
       const coursesWithFullImageUrls = [result].map((course) => ({
         ...course._doc,
         thumbnail_image: `http://${req.headers.host}/${course.thumbnail_image}`,
