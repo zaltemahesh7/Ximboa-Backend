@@ -31,8 +31,7 @@ router.get("/:id/data", async (req, res) => {
 
     const coursesWithFullImageUrl = courses.map((course) => {
       return {
-        _id: course._id,
-        course_name: course.course_name,
+        ...course._doc,
         thumbnail_image: course.thumbnail_image
           ? `${baseUrl}/${course.thumbnail_image.replace(/\\/g, "/")}`
           : "",
@@ -43,6 +42,9 @@ router.get("/:id/data", async (req, res) => {
         trainer_id: course.trainer_id,
       };
     });
+
+    console.log(coursesWithFullImageUrl);
+    
 
     // Find question by the trainer
     const question = await Question.find({ t_id: trainerId });
