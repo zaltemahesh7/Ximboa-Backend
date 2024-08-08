@@ -46,7 +46,6 @@ router.post("/", function (req, res, next) {
 
 // Get About data by ID
 router.get("/:id", function (req, res, next) {
-  console.log(req.params.id);
   About.findById(req.params.id)
     .then((result) => {
     //   console.log(result);

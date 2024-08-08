@@ -3,6 +3,7 @@ var app = express();
 var cors = require("cors");
 const path = require("path");
 
+
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use(cors());
 
@@ -19,6 +20,12 @@ app.use(
     saveUninitialized: true,
   })
 );
+
+const authRoutes = require('./app/route/student/student');
+app.use('/student', authRoutes); // Register auth routes
+
+const enrollCorse = require('./app/route/student/enrollments');
+app.use('/enrollcourse', enrollCorse); // Register auth routes
 
 var registerRoute = require("./app/route/registration");
 app.use("/registration", registerRoute);
@@ -56,10 +63,10 @@ app.use("/", allDataRoute);
 var postallDataRoute = require("./app/route/postAllData");
 app.use("/postCombineData", postallDataRoute);
 
-var categoryRoute = require("./app/route/userRoute/category");
+var categoryRoute = require("./app/route/category");
 app.use("/category", categoryRoute);
 
-var courseRoute = require("./app/route/userRoute/course");
+var courseRoute = require("./app/route/course");
 app.use("/course", courseRoute);
 
 var appointmentRoute = require("./app/AppointmentRoute");

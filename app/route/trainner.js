@@ -10,11 +10,8 @@ const Product = require("../../model/product");
 const Event = require("../../model/event");
 const About1 = require("../../model/about");
 const Education = require("../../model/education");
-
 const SocialMedia = require("../../model/socialMedia");
-
 const testemonial = require("../../model/testemonial");
-
 const gallary = require("../../model/gallary");
 
 // Get all data according to the trainer
@@ -30,6 +27,22 @@ router.get("/:id/data", async (req, res) => {
 
     // Find courses by the trainer
     const courses = await Course.find({ trainer_id: trainerId });
+    const baseUrl = req.protocol + "://" + req.get("host");
+
+    const coursesWithFullImageUrl = courses.map((course) => {
+      return {
+        _id: course._id,
+        course_name: course.course_name,
+        thumbnail_image: course.thumbnail_image
+          ? `${baseUrl}/${course.thumbnail_image.replace(/\\/g, "/")}`
+          : "",
+        gallary_image: course.gallary_image
+          ? `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`
+          : "",
+        category_id: course.category_id,
+        trainer_id: course.trainer_id,
+      };
+    });
 
     // Find question by the trainer
     const question = await Question.find({ t_id: trainerId });
@@ -39,6 +52,20 @@ router.get("/:id/data", async (req, res) => {
     const Enquirys = await Enquiry.find({ t_id: trainerId });
     // Find Products by the trainer
     const Products = await Product.find({ t_id: trainerId });
+
+    const productsWithFullImageUrl = Products.map((product) => {
+      return {
+        ...product._doc,
+        product_image: product.product_image
+          ? `${baseUrl}/${product.product_image.replace(/\\/g, "/")}`
+          : "",
+        product_gallary: product.gallary_image
+          ? `${baseUrl}/${product.gallary_image.replace(/\\/g, "/")}`
+          : "",
+      };
+    });
+
+    // console.log(productsWithFullImageUrl);
 
     // Find Events by the trainer
     const Events = await Event.find({ trainer: trainerId });
@@ -64,12 +91,12 @@ router.get("/:id/data", async (req, res) => {
 
     res.status(200).send({
       trainer,
-      courses,
+      coursesWithFullImageUrl,
       reviews,
       question,
       Appointments,
       Enquirys,
-      Products,
+      productsWithFullImageUrl,
       Events,
       About,
       Educations,

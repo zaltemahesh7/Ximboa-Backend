@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
-const Course = require("../../../model/course");
+const Course = require("../../model/course");
 const multer = require("multer");
 
 // Multer configuration for file uploads
@@ -41,7 +41,7 @@ router.get("/", (req, res, next) => {
         trainer_materialImage: `http://${req.headers.host}/${course.trainer_materialImage}`,
       }));
       // console.log(coursesWithFullImageUrls),
-        res.status(200).json({ courses: coursesWithFullImageUrls });
+      res.status(200).json({ courses: coursesWithFullImageUrls });
     })
     .catch((err) => {
       console.error(err);
