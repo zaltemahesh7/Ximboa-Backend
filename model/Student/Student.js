@@ -4,9 +4,53 @@ const Schema = mongoose.Schema;
 
 const studentSchema = new Schema(
   {
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    name: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    mobile_no: {
+      type: String,
+      required: true,
+    },
+    alternet_mobile_no: {
+      type: String,
+    },
+    address_1: {
+      type: String,
+    },
+    address_2: {
+      type: String,
+    },
+    city: {
+      type: String,
+    },
+    state: {
+      type: String,
+    },
+    pincode: {
+      type: Number,
+    },
+    country: {
+      type: String,
+    },
+    education: {
+      type: String,
+    },
+    collage_name: {
+      type: String,
+    },
+    university: {
+      type: String,
+    },
   },
   { timestamps: true }
 );

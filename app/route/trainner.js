@@ -38,13 +38,11 @@ router.get("/:id/data", async (req, res) => {
         gallary_image: course.gallary_image
           ? `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`
           : "",
-        category_id: course.category_id,
-        trainer_id: course.trainer_id,
+        trainer_materialImage: course.gallary_image
+          ? `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`
+          : "",
       };
     });
-
-    console.log(coursesWithFullImageUrl);
-    
 
     // Find question by the trainer
     const question = await Question.find({ t_id: trainerId });
@@ -89,7 +87,17 @@ router.get("/:id/data", async (req, res) => {
       trainer_id: { $in: trainerId },
     });
 
-    const gallarys = await gallary.find({ trainer_id: { $in: trainerId } });
+    const gallarysWithoutImages = await gallary.find({
+      trainer_id: { $in: trainerId },
+    });
+    const gallarys = gallarysWithoutImages.map((gallary) => {
+      return {
+        ...gallary._doc,
+        photos: gallary.photos
+          ? `${baseUrl}/${gallary.photos.map((i) => i.replace(/\\/g, "/"))}`
+          : "",
+      };
+    });
 
     res.status(200).send({
       trainer,

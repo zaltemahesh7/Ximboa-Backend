@@ -1,27 +1,27 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const User = require('../../../model/Student/Student'); // Assuming User model is in models directory
-const auth = require('../../../middleware/auth'); // Middleware for protected routes
+const express = require("express");
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const User = require("../../../model/Student/Student"); // Assuming User model is in models directory
+const auth = require("../../../middleware/auth"); // Middleware for protected routes
 
 const router = express.Router();
 
 // Register a new user
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, ...rest } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: "User already exists" });
     }
 
-    const user = new User({ name, email, password });
+    const user = new User({ name, email, password, ...rest });
     await user.save();
 
-    res.status(201).json({ message: 'User registered successfully' });
+    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error });
@@ -29,21 +29,21 @@ router.post('/register', async (req, res) => {
 });
 
 // Login user
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json({ message: "Invalid email or password" });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+      return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    const token = jwt.sign({ id: user._id }, 'bhojsoft', { expiresIn: '1h' });
+    const token = jwt.sign({ id: user._id }, "bhojsoft", { expiresIn: "1h" });
 
     res.status(200).json({ token });
   } catch (error) {
@@ -53,25 +53,25 @@ router.post('/login', async (req, res) => {
 });
 
 // Logout user (invalidate token)
-router.post('/logout', auth, (req, res) => {
-  res.status(200).json({ message: 'User logged out successfully' });
+router.post("/logout", auth, (req, res) => {
+  res.status(200).json({ message: "User logged out successfully" });
 });
 
 // Password reset request
-router.post('/reset-password', async (req, res) => {
+router.post("/reset-password", async (req, res) => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res.status(400).json({ message: 'User not found' });
+      return res.status(400).json({ message: "User not found" });
     }
 
     // Generate password reset token and send email (pseudo-code)
     // const resetToken = generateResetToken();
     // await sendPasswordResetEmail(user.email, resetToken);
 
-    res.status(200).json({ message: 'Password reset email sent' });
+    res.status(200).json({ message: "Password reset email sent" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error });
@@ -79,7 +79,7 @@ router.post('/reset-password', async (req, res) => {
 });
 
 // Password reset confirmation
-router.post('/reset-password/:token', async (req, res) => {
+router.post("/reset-password/:token", async (req, res) => {
   try {
     const { token } = req.params;
     const { password } = req.body;
@@ -89,13 +89,13 @@ router.post('/reset-password/:token', async (req, res) => {
 
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(400).json({ message: 'Invalid or expired token' });
+      return res.status(400).json({ message: "Invalid or expired token" });
     }
 
     user.password = password;
     await user.save();
 
-    res.status(200).json({ message: 'Password reset successfully' });
+    res.status(200).json({ message: "Password reset successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error });

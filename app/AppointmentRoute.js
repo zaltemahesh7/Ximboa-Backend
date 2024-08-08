@@ -8,51 +8,76 @@ router.post("/", async (req, res) => {
         const { t_id, user_id, date, time } = req.body;
         const newAppointment = new Appointment({ t_id, user_id, date, time });
         await newAppointment.save();
-        res.status(201).send(newAppointment);
+        res.status(201).json(newAppointment);
     } catch (error) {
-        res.status(400).send({ message: "Error creating appointment", error });
+        res.status(400).json({ message: "Error creating appointment", error });
     }
 });
 
 // Get all appointments
-router.get("/appointments", async (req, res) => {
+router.get("/", async (req, res) => {
     try {
         const appointments = await Appointment.find()
-            .populate("trainer_id")
-            .populate("user_id");
-        res.status(200).send(appointments);
+            // .populate("t_id", "name email") // Populate trainer details
+            // .populate("user_id", "name email"); // Populate user details
+        res.status(200).json(appointments);
     } catch (error) {
-        res.status(500).send({ message: "Error fetching appointments", error });
+        res.status(500).json({ message: "Error fetching appointments", error });
     }
 });
 
 // Get appointments by trainer ID
-router.get("/appointments/trainer/:trainer_id", async (req, res) => {
+router.get("/trainer/:trainer_id", async (req, res) => {
     try {
-        const appointments = await Appointment.find({
-            trainer_id: req.params.trainer_id,
-        })
-            .populate("trainer_id")
-            .populate("user_id");
-        res.status(200).send(appointments);
+        const appointments = await Appointment.find({ t_id: req.params.trainer_id })
+            .populate("t_id", "name email")
+            .populate("user_id", "name email");
+        res.status(200).json(appointments);
     } catch (error) {
-        res
-            .status(500)
-            .send({ message: "Error fetching appointments by trainer ID", error });
+        res.status(500).json({ message: "Error fetching appointments by trainer ID", error });
     }
 });
 
 // Get appointments by user ID
-router.get("/appointments/user/:user_id", async (req, res) => {
+router.get("/user/:user_id", async (req, res) => {
     try {
         const appointments = await Appointment.find({ user_id: req.params.user_id })
-            .populate("trainer_id")
-            .populate("user_id");
-        res.status(200).send(appointments);
+            .populate("t_id", "name email")
+            .populate("user_id", "name email");
+        res.status(200).json(appointments);
     } catch (error) {
-        res
-            .status(500)
-            .send({ message: "Error fetching appointments by user ID", error });
+        res.status(500).json({ message: "Error fetching appointments by user ID", error });
+    }
+});
+
+// Update an appointment
+router.put("/:appointment_id", async (req, res) => {
+    try {
+        const { t_id, user_id, date, time } = req.body;
+        const updatedAppointment = await Appointment.findByIdAndUpdate(
+            req.params.appointment_id,
+            { t_id, user_id, date, time },
+            { new: true }
+        );
+        if (!updatedAppointment) {
+            return res.status(404).json({ message: "Appointment not found" });
+        }
+        res.status(200).json(updatedAppointment);
+    } catch (error) {
+        res.status(400).json({ message: "Error updating appointment", error });
+    }
+});
+
+// Delete an appointment
+router.delete("/:appointment_id", async (req, res) => {
+    try {
+        const deletedAppointment = await Appointment.findByIdAndDelete(req.params.appointment_id);
+        if (!deletedAppointment) {
+            return res.status(404).json({ message: "Appointment not found" });
+        }
+        res.status(200).json({ message: "Appointment deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error deleting appointment", error });
     }
 });
 

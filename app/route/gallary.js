@@ -51,27 +51,63 @@ router.get("/", function (req, res, next) {
 });
 
 // Insert data into database
-router.post("/", upload.array("photos", 5), function (req, res, next) {
-  const gallery = new Gallery({
-    _id: new mongoose.Types.ObjectId(),
-    photos: req.files.map((file) => file.path),
-    trainer_id: req.body.trainer_id,
-  });
+// router.post("/", upload.array("photos", 5), function (req, res, next) {
+//   const gallery = new Gallery({
+//     _id: new mongoose.Types.ObjectId(),
+//     photos: req.files.map((file) => file.path),
+//     trainer_id: req.body.trainer_id,
+//   });
 
-  gallery
-    .save()
-    .then((result) => {
-      res.status(201).json({
-        message: "Gallery successfully created",
-        createdGallery: result,
+//   gallery
+//     .save()
+//     .then((result) => {
+//       res.status(201).json({
+//         message: "Gallery successfully created",
+//         createdGallery: result,
+//       });
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//       res.status(500).json({
+//         error: err,
+//       });
+//     });
+// });
+
+router.post("/", upload.array("photos", 5), async function (req, res, next) {
+  try {
+    const { trainer_id } = req.body;
+    const photos = req.files.map((file) => file.path);
+
+    // Find gallery by trainer ID
+    let gallery = await Gallery.findOne({ trainer_id });
+
+    if (gallery) {
+      // If gallery exists, push new photos to the photos array
+      gallery.photos.push(...photos);
+    } else {
+      // If gallery does not exist, create a new gallery record
+      gallery = new Gallery({
+        trainer_id,
+        photos,
       });
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(500).json({
-        error: err,
-      });
+    }
+
+    // Save the gallery
+    const result = await gallery.save();
+
+    res.status(201).json({
+      message: gallery.isNew
+        ? "Gallery successfully created"
+        : "Photos successfully added to gallery",
+      gallery: result,
     });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      error: err,
+    });
+  }
 });
 
 // Single data access
