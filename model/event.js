@@ -1,15 +1,17 @@
-var mongoose = require("mongoose");
+const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-var eventSchema = new mongoose.Schema({
-  event_name: String,
-  event_type: String,
-  event_categories: String,
-  event_start_time: String,
-  event_End_time: String,
-  trainer: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Registration",
-  }, // Add this line
-});
+const eventSchema = new Schema(
+  {
+    event_name: { type: String, required: true },
+    event_type: { type: String, required: true },
+    event_categories: { type: [String], required: true },
+    event_start_time: { type: Date, required: true },
+    event_end_time: { type: Date, required: true },
+    trainerid: { type: Schema.Types.ObjectId, ref: "Trainer", required: true },
+  },
+  { timestamps: true }
+);
 
-module.exports = mongoose.model("Event", eventSchema);
+const Event = mongoose.model("Event", eventSchema);
+module.exports = Event;
