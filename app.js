@@ -3,7 +3,6 @@ var app = express();
 var cors = require("cors");
 const path = require("path");
 
-
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use(cors());
 
@@ -21,11 +20,11 @@ app.use(
   })
 );
 
-const authRoutes = require('./app/route/student/student');
-app.use('/student', authRoutes); // Register auth routes
+const authRoutes = require("./app/route/student/student");
+app.use("/student", authRoutes); // Register auth routes
 
-const enrollCorse = require('./app/route/student/enrollments');
-app.use('/enrollcourse', enrollCorse); // Register auth routes
+const enrollCorse = require("./app/route/student/enrollments");
+app.use("/enrollcourse", enrollCorse); // Register auth routes
 
 var registerRoute = require("./app/route/registration");
 app.use("/registration", registerRoute);
@@ -84,6 +83,10 @@ app.use("/trainers", TrainerRoute);
 var EnquirysRoute = require("./app/route/Enquirys");
 app.use("/enquiries", EnquirysRoute);
 
+const beforeLoginRoutes = require("./app/route/student/studentDashboard/beforeLogin");
+
+app.use("/beforeLogin", beforeLoginRoutes);
+
 var mongoose = require("mongoose");
 mongoose
   .connect("mongodb://127.0.0.1:27017/bhoj_soft_solution")
@@ -94,13 +97,6 @@ mongoose
     console.log("failed");
   });
 
-// app.use((req, res, next) => {
-//   res.status(200).json({
-//     message: "app is running",
-//   });
-// });
-
 module.exports = app;
-
 
 // Test new changes

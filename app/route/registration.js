@@ -16,10 +16,73 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+const multer = require("multer");
+
+// Multer configuration for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "./public/uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
+    cb(null, true);
+  } else {
+    cb(new Error("Unsupported file type"), false);
+  }
+};
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 1024 * 1024 * 5 },
+  fileFilter: fileFilter,
+});
+
+// Create a new trainer
 // Register a new user----------------------------------------------------------
-router.post("/", async (req, res) => {
-  try {
-    const { user_name, mobile_number, email_id, password } = req.body;
+
+router.post(
+  "/",
+  upload.single("trainer_image"),
+  async function (req, res, next) {
+    const {
+      user_name,
+      email_id,
+      password,
+      mobile_number,
+      date_of_birth,
+      rating,
+      rating_count,
+      address1,
+      address2,
+      city,
+      country,
+      state,
+      pincode,
+    } = req.body;
+
+    const trainer_image = req.file ? req.file.path : "";
+
+    const newRegistration = new Registration({
+      user_name,
+      email_id,
+      password,
+      mobile_number,
+      trainer_image,
+      date_of_birth,
+      rating,
+      rating_count,
+      address1,
+      address2,
+      city,
+      country,
+      state,
+      pincode,
+    });
 
     const existingUserName = await Registration.findOne({
       user_name: user_name,
@@ -44,20 +107,21 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ message: "email_id already exists" });
     }
 
-    const register = new Registration({
-      user_name: user_name,
-      mobile_number: mobile_number,
-      email_id: email_id,
-      password: password,
-    });
-    const result = await register.save();
-
-    res.status(201).json({ message: "User registered successfully", result });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error });
+    newRegistration
+      .save()
+      .then((result) => {
+        res.status(200).json({
+          newTrainer: result,
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        res.status(500).json({
+          error: err,
+        });
+      });
   }
-});
+);
 
 // GET route to validate user login ----------------------------------------------------------------
 router.post("/login", async (req, res) => {

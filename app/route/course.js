@@ -169,21 +169,19 @@ router.put(
 );
 
 router.get("/:id", async (req, res, next) => {
-  await Course.findById(req.params.id)
-    // .populate("trainer_id")
-    .then((result) => {
-      const coursesWithFullImageUrls = [result].map((course) => ({
-        ...course._doc,
-        thumbnail_image: `http://${req.headers.host}/${course.thumbnail_image}`,
-        gallary_image: `http://${req.headers.host}/${course.gallary_image}`,
-        trainer_materialImage: `http://${req.headers.host}/${course.trainer_materialImage}`,
-      }));
-      res.status(200).json({ courses: coursesWithFullImageUrls });
-    })
-    .catch((err) => {
-      console.error(err);
-      res.status(500).json({ error: err });
-    });
+  const result = await Course.findById(req.params.id);
+  // .populate("trainer_id")
+
+  if (!result) return res.status(404).json({ message: "Course not found" });
+  else {
+    const coursesWithFullImageUrls = [result].map((course) => ({
+      ...course._doc,
+      thumbnail_image: `http://${req.headers.host}/${course.thumbnail_image}`,
+      gallary_image: `http://${req.headers.host}/${course.gallary_image}`,
+      trainer_materialImage: `http://${req.headers.host}/${course.trainer_materialImage}`,
+    }));
+    res.status(200).json({ courses: coursesWithFullImageUrls });
+  }
 });
 
 router.get("/bytrainer/:trainerId", async (req, res, next) => {

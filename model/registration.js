@@ -1,8 +1,6 @@
 var mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
-
-
 var RegistrationSchema = new mongoose.Schema(
   {
     user_name: {
@@ -28,10 +26,19 @@ var RegistrationSchema = new mongoose.Schema(
     resetPasswordExpires: {
       type: Date,
     },
+    trainer_image: String,
+    date_of_birth: String,
+    rating: String,
+    rating_count: String,
+    address1: String,
+    address2: String,
+    city: String,
+    country: String,
+    state: String,
+    pincode: String,
   },
   { timestamps: true }
 );
-
 
 // Hash password before saving
 RegistrationSchema.pre("save", async function (next) {
@@ -42,9 +49,10 @@ RegistrationSchema.pre("save", async function (next) {
 });
 
 // Method to compare password
-RegistrationSchema.methods.comparePassword = async function (candidatePassword) {
+RegistrationSchema.methods.comparePassword = async function (
+  candidatePassword
+) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
 module.exports = mongoose.model("Registration", RegistrationSchema);
-

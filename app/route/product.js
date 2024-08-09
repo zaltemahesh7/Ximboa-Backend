@@ -117,10 +117,10 @@ router.put(
   ]),
   function (req, res, next) {
     const updateData = {
-      Product_name: req.body.Product_name,
-      Product_Prize: req.body.Product_Prize,
-      Product_Selling_Prize: req.body.Product_Selling_Prize,
-      Products_info: req.body.Products_info,
+      product_name: req.body.product_name,
+      product_prize: req.body.product_prize,
+      product_selling_prize: req.body.product_selling_prize,
+      products_info: req.body.products_info,
       trainer_id: req.body.trainer_id, // Update the trainer ID if needed
     };
 

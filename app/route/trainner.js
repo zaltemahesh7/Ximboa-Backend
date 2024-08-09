@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Trainer = require("../../model/registration");
+const Trainer = require("../../model/trainerInformation");
 const Course = require("../../model/course");
 const Review = require("../../model/Review");
 const Question = require("../../model/Questions/Questions");
@@ -64,8 +64,6 @@ router.get("/:id/data", async (req, res) => {
           : "",
       };
     });
-
-    // console.log(productsWithFullImageUrl);
 
     // Find Events by the trainer
     const Events = await Event.find({ trainerid: trainerId });

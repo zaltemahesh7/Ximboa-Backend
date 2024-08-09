@@ -1,8 +1,13 @@
 var mongoose = require("mongoose");
 
 var trainerinfoSchema = new mongoose.Schema({
-  trainer_name: String,
-  trainer_whatsapp_no: String,
+  user_name: {
+    type: String,
+    required: true,
+  },
+  email_id: String,
+  mobile_number: String,
+  trainer_image: String,
   date_of_birth: String,
   rating: String,
   rating_count: String,
@@ -12,7 +17,6 @@ var trainerinfoSchema = new mongoose.Schema({
   country: String,
   state: String,
   pincode: String,
-  trainer_image: String,
 });
 
 module.exports = mongoose.model("TrainerINfo", trainerinfoSchema);

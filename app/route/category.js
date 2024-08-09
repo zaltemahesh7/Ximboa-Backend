@@ -30,21 +30,6 @@ const upload = multer({
   fileFilter: fileFilter,
 });
 
-// GET route to fetch all categories
-// router.get("/", async (req, res, next) => {
-//     try {
-//         const categories = await Category.find();
-//         res.status(200).json({
-//             categories: categories
-//         });
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).json({
-//             error: err.message
-//         });
-//     }
-// });
-
 router.get("/", async (req, res, next) => {
   try {
     const categories = await Category.find();

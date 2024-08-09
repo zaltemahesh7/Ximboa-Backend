@@ -59,4 +59,36 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/student/:student_id", async (req, res) => {
+  try {
+    const enrollments = await Enrollment.find({
+      student_id: req.params.student_id,
+    }).populate("course_id", "course_name");
+    if (enrollments.length === 0) {
+      return res
+        .status(404)
+        .send({ message: "No enrollments found for this student" });
+    }
+    res.status(200).send(enrollments);
+  } catch (error) {
+    res.status(500).send({ message: "Error fetching enrollments", error });
+  }
+});
+
+router.get("/course/:course_id", async (req, res) => {
+  try {
+    const enrollments = await Enrollment.find({
+      course_id: req.params.course_id,
+    });
+    if (enrollments.length === 0) {
+      return res
+        .status(404)
+        .send({ message: "No enrollments found for this course" });
+    }
+    res.status(200).send(enrollments);
+  } catch (error) {
+    res.status(500).send({ message: "Error fetching enrollments", error });
+  }
+});
+
 module.exports = router;
