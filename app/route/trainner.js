@@ -68,14 +68,14 @@ router.get("/:id/data", async (req, res) => {
     // console.log(productsWithFullImageUrl);
 
     // Find Events by the trainer
-    const Events = await Event.find({ trainer: trainerId });
+    const Events = await Event.find({ trainerid: trainerId });
 
     // Find About by the trainer
     const About = await About1.find({ trainer: trainerId });
 
     // Get reviews and groups for each course
     const courseIds = courses.map((course) => course._id);
-    const reviews = await Review.find({ c_id: { $in: courseIds } });
+    const reviews = await Review.find({ t_id: trainerId });
 
     const Educations = await Education.find({ trainer_id: { $in: trainerId } });
 
@@ -115,7 +115,7 @@ router.get("/:id/data", async (req, res) => {
       gallarys,
     });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
 
     res.status(500).send({ message: "Server error", error });
   }

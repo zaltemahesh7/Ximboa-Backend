@@ -6,8 +6,8 @@ const eventSchema = new Schema(
     event_name: { type: String, required: true },
     event_type: { type: String, required: true },
     event_categories: { type: [String], required: true },
-    event_start_time: { type: Date, required: true },
-    event_end_time: { type: Date, required: true },
+    event_start_time: { type: String, required: true },
+    event_end_time: { type: String, required: true },
     trainerid: { type: Schema.Types.ObjectId, ref: "Trainer", required: true },
   },
   { timestamps: true }
