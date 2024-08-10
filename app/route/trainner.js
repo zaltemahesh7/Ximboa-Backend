@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Trainer = require("../../model/trainerInformation");
+const Trainer = require("../../model/registration");
 const Course = require("../../model/course");
 const Review = require("../../model/Review");
 const Question = require("../../model/Questions/Questions");
@@ -13,6 +13,10 @@ const Education = require("../../model/education");
 const SocialMedia = require("../../model/socialMedia");
 const testemonial = require("../../model/testemonial");
 const gallary = require("../../model/gallary");
+
+// Get data according to the trainer Email id
+
+
 
 // Get all data according to the trainer
 router.get("/:id/data", async (req, res) => {

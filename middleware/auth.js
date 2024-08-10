@@ -1,10 +1,12 @@
 const jwt = require("jsonwebtoken");
-const Student = require("../model/Student/Student"); // Assuming Student model is in models directory
+const Student = require("../model/registration"); // Assuming Student model is in models directory
 
 const auth = async (req, res, next) => {
   try {
-    const token = req.header("Authorization").replace("Bearer ", "");
-    const decoded = jwt.verify(token, "your_jwt_secret");
+    const token = req.header("x-auth-token").replace("Bearer ", "");
+    console.log(token);
+
+    const decoded = jwt.verify(token, "bhojsoft");
     const user = await Student.findById(decoded.id);
 
     if (!user) {
@@ -14,6 +16,8 @@ const auth = async (req, res, next) => {
     req.user = user;
     next();
   } catch (error) {
+    console.log(error);
+
     res.status(401).json({ message: "Please authenticate" });
   }
 };

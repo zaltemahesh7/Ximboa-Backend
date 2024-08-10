@@ -30,8 +30,8 @@ router.get("/", async (req, res) => {
 router.get("/trainer/:trainer_id", async (req, res) => {
     try {
         const appointments = await Appointment.find({ t_id: req.params.trainer_id })
-            .populate("t_id", "name email")
-            .populate("user_id", "name email");
+            // .populate("t_id", "name email")
+            // .populate("user_id", "name email");
         res.status(200).json(appointments);
     } catch (error) {
         res.status(500).json({ message: "Error fetching appointments by trainer ID", error });

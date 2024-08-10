@@ -2,6 +2,7 @@ var express = require("express");
 var app = express();
 var cors = require("cors");
 const path = require("path");
+const auth = require("./middleware/auth");
 
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use(cors());
@@ -66,7 +67,7 @@ var categoryRoute = require("./app/route/category");
 app.use("/category", categoryRoute);
 
 var courseRoute = require("./app/route/course");
-app.use("/course", courseRoute);
+app.use("/course", auth, courseRoute);
 
 var appointmentRoute = require("./app/AppointmentRoute");
 app.use("/appointment", appointmentRoute);
@@ -78,7 +79,7 @@ var QuestionsRoute = require("./app/route/QuestionsRoute/Questions");
 app.use("/questions", QuestionsRoute);
 
 var TrainerRoute = require("./app/route/trainner");
-app.use("/trainers", TrainerRoute);
+app.use("/trainers", auth, TrainerRoute);
 
 var EnquirysRoute = require("./app/route/Enquirys");
 app.use("/enquiries", EnquirysRoute);

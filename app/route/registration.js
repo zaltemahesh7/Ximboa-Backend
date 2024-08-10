@@ -7,6 +7,8 @@ const Registration = require("../../model/registration");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer"); // Import nodemailer
 
+const UserToken = require("../../model/UserToken");
+
 // Nodemailer configuration
 const transporter = nodemailer.createTransport({
   service: "Gmail", // Use your email service
@@ -123,6 +125,23 @@ router.post(
   }
 );
 
+router.get("/email/:email_id", async (req, res) => {
+  try {
+    const { email_id } = req.params;
+    // console.log(email_id);
+
+    const trainer = await Registration.findOne({ email_id });
+    if (!trainer) {
+      return res.status(400).json({ message: "Not Exist" });
+    }
+
+    res.status(200).json({ trainer });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error });
+  }
+});
+
 // Get app user----------------------------------------------------------
 
 router.get("/", function (req, res) {
@@ -153,7 +172,16 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
+    // Generate a token
     const token = jwt.sign({ id: user._id }, "bhojsoft", { expiresIn: "1h" });
+
+    // Store the token in the database
+    // const userToken = new UserToken({
+    //   email_id: user.email_id,
+    //   token: token,
+    // });
+
+    // await userToken.save();
 
     res.status(200).json({ token });
   } catch (error) {
