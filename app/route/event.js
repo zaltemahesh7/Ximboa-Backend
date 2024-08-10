@@ -53,6 +53,22 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// trainer/:trainer_id
+
+router.get("/bytrainer/:trainerid", async (req, res) => {
+  try {
+    const events = await Event.find({ trainerid: req.params.trainerid });
+    if (events.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No events found for this trainer" });
+    }
+    res.status(200).json(events);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching events", error });
+  }
+});
+
 // Update an event by ID
 router.put("/:id", async (req, res) => {
   try {

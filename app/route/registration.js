@@ -123,6 +123,21 @@ router.post(
   }
 );
 
+// Get app user----------------------------------------------------------
+
+router.get("/", function (req, res) {
+  Registration.find()
+    .then((result) => {
+      res.status(200).json({
+        allRegistration: result,
+      });
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).json({ error: err });
+    });
+});
+
 // GET route to validate user login ----------------------------------------------------------------
 router.post("/login", async (req, res) => {
   try {

@@ -95,17 +95,18 @@ router.post(
 );
 
 // DELETE a course by ID
-router.delete("/:id", (req, res, next) => {
-  Course.deleteOne({ _id: req.params.id })
-    .then((result) => {
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const data = await Course.deleteOne({ _id: req.params.id });
+    if (!data.deletedCount) res.status(400).json({ msg: "Not Found" });
+    else {
       res
         .status(200)
-        .json({ msg: "Course data successfully deleted", result: result });
-    })
-    .catch((err) => {
-      console.error(err);
-      res.status(500).json({ error: err });
-    });
+        .json({ msg: "Course data successfully deleted", result: data });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error });
+  }
 });
 
 // UPDATE a course by ID with image upload
