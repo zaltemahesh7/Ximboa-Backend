@@ -16,12 +16,10 @@ const gallary = require("../../model/gallary");
 
 // Get data according to the trainer Email id
 
-
-
 // Get all data according to the trainer
-router.get("/:id/data", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const trainerId = req.params.id;
+    const trainerId = req.user.id;
 
     // Find the trainer
     const trainer = await Trainer.findById(trainerId);

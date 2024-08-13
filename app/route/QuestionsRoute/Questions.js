@@ -5,11 +5,14 @@ const Question = require("../../../model/Questions/Questions");
 // Create a new question
 router.post("/", async (req, res) => {
   try {
-    const { c_id, t_id, question } = req.body;
+    const { c_id, question } = req.body;
+    const t_id = req.user.id;
     const newQuestion = new Question({ c_id, t_id, question });
     await newQuestion.save();
     res.status(201).send(newQuestion);
   } catch (error) {
+    console.log(error);
+    
     res.status(400).send({ message: "Error creating question", error });
   }
 });

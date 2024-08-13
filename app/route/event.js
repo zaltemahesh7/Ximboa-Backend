@@ -11,8 +11,9 @@ router.post("/", async (req, res) => {
       event_categories,
       event_start_time,
       event_end_time,
-      trainerid,
     } = req.body;
+
+    const trainerid = req.user.id;
 
     const newEvent = new Event({
       event_name,

@@ -22,13 +22,13 @@ router.get("/", function (req, res, next) {
 // Insert testimonial into database
 router.post("/", function (req, res, next) {
   var testimonial = new Testimonial({
-    _id: new mongoose.Types.ObjectId(),
     Testimonial: req.body.Testimonial,
-    Testimonial_Autor_Name: req.body.Testimonial_Autor_Name,
-    trainer_id: req.body.trainer_id // Save the trainer ID
+    Testimonial_Author_Name: req.body.Testimonial_Autor_Name,
+    trainer_id: req.user.id, // Save the trainer ID
   });
 
-  testimonial.save()
+  testimonial
+    .save()
     .then((result) => {
       res.status(200).json({
         newTestimonial: result,
@@ -83,7 +83,7 @@ router.put("/:id", function (req, res, next) {
       $set: {
         Testimonial: req.body.Testimonial,
         Testimonial_Autor_Name: req.body.Testimonial_Autor_Name,
-        trainer_id: req.body.trainer_id // Update the trainer ID if needed
+        trainer_id: req.body.trainer_id, // Update the trainer ID if needed
       },
     }
   )

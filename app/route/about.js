@@ -22,16 +22,15 @@ router.get("/", function (req, res, next) {
 // Add new About data
 router.post("/", function (req, res, next) {
   var about = new About({
-    _id: new mongoose.Types.ObjectId(),
     about_us: req.body.about_us,
     our_services: req.body.our_services,
-    trainer: req.body.trainer,
+    trainer: req.user.id,
   });
 
   about
     .save()
     .then((result) => {
-    //   console.log(result);
+      //   console.log(result);
       res.status(200).json({
         newAbout: result,
       });
@@ -48,7 +47,7 @@ router.post("/", function (req, res, next) {
 router.get("/:id", function (req, res, next) {
   About.findById(req.params.id)
     .then((result) => {
-    //   console.log(result);
+      //   console.log(result);
       res.status(200).json({
         aboutData: result,
       });
@@ -104,8 +103,8 @@ router.put("/:id", function (req, res, next) {
 });
 
 // Get About data by trainer ID
-router.get("/bytrainer/:trainerId", function (req, res, next) {
-  About.find({ trainer: req.params.trainerId })
+router.get("/bytrainer", function (req, res, next) {
+  About.find({ trainer: req.user.id })
     .then((result) => {
       res.status(200).json({
         byTrainerAboutData: result,

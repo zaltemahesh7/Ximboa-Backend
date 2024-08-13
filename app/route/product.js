@@ -37,8 +37,7 @@ router.post(
   ]),
   (req, res, next) => {
     var product = new Product({
-      _id: new mongoose.Types.ObjectId(),
-      t_id: req.body.t_id,
+      t_id: req.user.id, // Don't pass Trainer id it will fetched from token payload
       Product_name: req.body.Product_name,
       Product_Prize: req.body.Product_Prize,
       Product_Selling_Prize: req.body.Product_Selling_Prize,
@@ -121,7 +120,7 @@ router.put(
       product_prize: req.body.product_prize,
       product_selling_prize: req.body.product_selling_prize,
       products_info: req.body.products_info,
-      trainer_id: req.body.trainer_id, // Update the trainer ID if needed
+      trainer_id: req.user.id, // Update the trainer ID if needed
     };
 
     if (req.files["product_image"]) {
@@ -151,8 +150,8 @@ router.put(
 );
 
 // Get products by trainer ID
-router.get("/bytrainer/:trainerId", function (req, res, next) {
-  Product.find({ trainer_id: req.params.trainerId })
+router.get("/bytrainer", function (req, res, next) {
+  Product.find({ trainer_id: req.user.id })
     .then((result) => {
       res.status(200).json({
         productsByTrainerId: result,

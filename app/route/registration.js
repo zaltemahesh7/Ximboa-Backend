@@ -19,6 +19,7 @@ const transporter = nodemailer.createTransport({
 });
 
 const multer = require("multer");
+const { generateToken } = require("../../middleware/auth");
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -173,7 +174,11 @@ router.post("/login", async (req, res) => {
     }
 
     // Generate a token
-    const token = jwt.sign({ id: user._id }, "bhojsoft", { expiresIn: "1h" });
+    const payload = {
+      id: user.id,
+      username: user.username,
+    };
+    const token = generateToken(payload);
 
     // Store the token in the database
     // const userToken = new UserToken({

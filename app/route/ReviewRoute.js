@@ -1,11 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const Review = require('../../model/Review');
+const Review = require("../../model/Review");
 
 // Create a Review
 router.post("/", async (req, res) => {
   try {
-    const review = new Review(req.body);
+    const t_id = req.user.id;
+    const data = req.body;
+    const review = new Review({ t_id, ...data });
     await review.save();
     res.status(201).send(review);
   } catch (error) {

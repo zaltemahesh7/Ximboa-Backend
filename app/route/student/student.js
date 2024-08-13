@@ -3,7 +3,10 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../../../model/Student/Student"); // Assuming User model is in models directory
-const auth = require("../../../middleware/auth"); // Middleware for protected routes
+const {
+  jwtAuthMiddleware,
+  generateToken,
+} = require("../../../middleware/auth"); // Middleware for protected routes
 
 const router = express.Router();
 
@@ -53,7 +56,7 @@ router.post("/login", async (req, res) => {
 });
 
 // Logout user (invalidate token)
-router.post("/logout", auth, (req, res) => {
+router.post("/logout", (req, res) => {
   res.status(200).json({ message: "User logged out successfully" });
 });
 

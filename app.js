@@ -2,7 +2,7 @@ var express = require("express");
 var app = express();
 var cors = require("cors");
 const path = require("path");
-const auth = require("./middleware/auth");
+const { jwtAuthMiddleware, generateToken } = require("./middleware/auth");
 
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use(cors());
@@ -34,28 +34,28 @@ var trainerINfoRoute = require("./app/route/trainerInfo");
 app.use("/trainerINfo", trainerINfoRoute);
 
 var aboutRoute = require("./app/route/about");
-app.use("/about", aboutRoute);
+app.use("/about", jwtAuthMiddleware, aboutRoute);
 
 var batchRoute = require("./app/route/batch");
-app.use("/batch", batchRoute);
+app.use("/batch", jwtAuthMiddleware, batchRoute);
 
 var educationRoute = require("./app/route/education");
-app.use("/education", educationRoute);
+app.use("/education", jwtAuthMiddleware, educationRoute);
 
 var eventSchema = require("./app/route/event");
-app.use("/event", eventSchema);
+app.use("/event", jwtAuthMiddleware, eventSchema);
 
 var gallaryRoute = require("./app/route/gallary");
-app.use("/gallary", gallaryRoute);
+app.use("/gallary", jwtAuthMiddleware, gallaryRoute);
 
 var productRoute = require("./app/route/product");
-app.use("/product", productRoute);
+app.use("/product", jwtAuthMiddleware, productRoute);
 
 var socialMediaSchema = require("./app/route/socialMedia");
-app.use("/socialMedia", socialMediaSchema);
+app.use("/socialMedia", jwtAuthMiddleware, socialMediaSchema);
 
 var testemonialRoute = require("./app/route/testemonial");
-app.use("/testmonial", testemonialRoute);
+app.use("/testmonial", jwtAuthMiddleware, testemonialRoute);
 
 var allDataRoute = require("./app/route/trainner");
 app.use("/", allDataRoute);
@@ -64,25 +64,25 @@ var postallDataRoute = require("./app/route/postAllData");
 app.use("/postCombineData", postallDataRoute);
 
 var categoryRoute = require("./app/route/category");
-app.use("/category", categoryRoute);
+app.use("/category", jwtAuthMiddleware, categoryRoute);
 
 var courseRoute = require("./app/route/course");
-app.use("/course", auth, courseRoute);
+app.use("/course", jwtAuthMiddleware, courseRoute);
 
 var appointmentRoute = require("./app/AppointmentRoute");
-app.use("/appointment", appointmentRoute);
+app.use("/appointment", jwtAuthMiddleware, appointmentRoute);
 
 var ReviewRoute = require("./app/route/ReviewRoute");
-app.use("/review", ReviewRoute);
+app.use("/review", jwtAuthMiddleware, ReviewRoute);
 
 var QuestionsRoute = require("./app/route/QuestionsRoute/Questions");
-app.use("/questions", QuestionsRoute);
+app.use("/questions", jwtAuthMiddleware, QuestionsRoute);
 
 var TrainerRoute = require("./app/route/trainner");
-app.use("/trainers", auth, TrainerRoute);
+app.use("/trainers", jwtAuthMiddleware, TrainerRoute);
 
 var EnquirysRoute = require("./app/route/Enquirys");
-app.use("/enquiries", EnquirysRoute);
+app.use("/enquiries", jwtAuthMiddleware, EnquirysRoute);
 
 const beforeLoginRoutes = require("./app/route/student/studentDashboard/beforeLogin");
 

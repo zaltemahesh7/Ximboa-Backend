@@ -36,6 +36,14 @@ var RegistrationSchema = new mongoose.Schema(
     country: String,
     state: String,
     pincode: String,
+    tokens: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );
@@ -47,6 +55,17 @@ RegistrationSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
+
+RegistrationSchema.methods.AuthToken = async function () {
+  try {
+    let token = jwt.signin({ _id: this._id }, "bhojsoft");
+    this.tokens = this.tokens.concat({ token: token });
+    await this.save();
+    return token;
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 // Method to compare password
 RegistrationSchema.methods.comparePassword = async function (

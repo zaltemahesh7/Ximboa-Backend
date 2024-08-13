@@ -5,6 +5,7 @@ var gallerySchema = mongoose.Schema({
   trainer_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Registration",
+    required: true,
   }, // Reference to Trainer
 });
 

@@ -50,33 +50,9 @@ router.get("/", function (req, res, next) {
     });
 });
 
-// Insert data into database
-// router.post("/", upload.array("photos", 5), function (req, res, next) {
-//   const gallery = new Gallery({
-//     _id: new mongoose.Types.ObjectId(),
-//     photos: req.files.map((file) => file.path),
-//     trainer_id: req.body.trainer_id,
-//   });
-
-//   gallery
-//     .save()
-//     .then((result) => {
-//       res.status(201).json({
-//         message: "Gallery successfully created",
-//         createdGallery: result,
-//       });
-//     })
-//     .catch((err) => {
-//       console.log(err);
-//       res.status(500).json({
-//         error: err,
-//       });
-//     });
-// });
-
 router.post("/", upload.array("photos", 5), async function (req, res, next) {
   try {
-    const { trainer_id } = req.body;
+    const trainer_id = req.user.id;
     const photos = req.files.map((file) => file.path);
 
     // Find gallery by trainer ID
@@ -168,7 +144,7 @@ router.put("/:id", upload.array("photos", 3), function (req, res, next) {
 
 // Get gallery data by trainer ID
 router.get("/bytrainer/:trainerId/", function (req, res, next) {
-  Gallery.find({ trainer_id: req.params.trainerId })
+  Gallery.find({ trainer_id: req.user.id })
     .then((result) => {
       res.status(200).json({
         ByTrainerIDgalleryData: result,

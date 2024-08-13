@@ -5,7 +5,8 @@ const Appointment = require("../model/Appointment/Appointment");
 // Create a new appointment
 router.post("/", async (req, res) => {
     try {
-        const { t_id, user_id, date, time } = req.body;
+        const t_id = req.user.id;
+        const { user_id, date, time } = req.body;
         const newAppointment = new Appointment({ t_id, user_id, date, time });
         await newAppointment.save();
         res.status(201).json(newAppointment);
@@ -27,9 +28,9 @@ router.get("/", async (req, res) => {
 });
 
 // Get appointments by trainer ID
-router.get("/trainer/:trainer_id", async (req, res) => {
+router.get("/trainer", async (req, res) => {
     try {
-        const appointments = await Appointment.find({ t_id: req.params.trainer_id })
+        const appointments = await Appointment.find({ t_id: req.user.id })
             // .populate("t_id", "name email")
             // .populate("user_id", "name email");
         res.status(200).json(appointments);
