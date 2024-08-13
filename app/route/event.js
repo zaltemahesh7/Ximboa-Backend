@@ -84,7 +84,7 @@ router.put("/:id", async (req, res) => {
           event_categories: req.body.event_categories,
           event_start_time: req.body.event_start_time,
           event_end_time: req.body.event_end_time,
-          trainerid: req.body.trainerid,
+          trainerid: req.user.id,
         },
       },
       { new: true }

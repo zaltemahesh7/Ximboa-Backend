@@ -2,24 +2,14 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
-const mongoose = require("mongoose");
 const Registration = require("../../model/registration");
 const crypto = require("crypto");
-const nodemailer = require("nodemailer"); // Import nodemailer
+const { generateToken } = require("../../middleware/auth");
+const { sendSuccessEmail } = require("../../utils/email");
 
 const UserToken = require("../../model/UserToken");
 
-// Nodemailer configuration
-const transporter = nodemailer.createTransport({
-  service: "Gmail", // Use your email service
-  auth: {
-    user: "your-email@gmail.com", // Your email
-    pass: "your-email-password", // Your email password
-  },
-});
-
 const multer = require("multer");
-const { generateToken } = require("../../middleware/auth");
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -105,6 +95,7 @@ router.post(
     newRegistration
       .save()
       .then((result) => {
+        sendSuccessEmail(email_id, user_name);
         res.status(200).json({
           newTrainer: result,
         });
@@ -127,7 +118,6 @@ router.get("/email/:email_id", async (req, res) => {
     if (!trainer) {
       return res.status(400).json({ message: "Not Exist" });
     }
-
     res.status(200).json({ trainer });
   } catch (error) {
     console.error(error);
