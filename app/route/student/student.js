@@ -46,8 +46,12 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    const token = jwt.sign({ id: user._id }, "bhojsoft", { expiresIn: "1h" });
-
+    // Generate a token
+    const payload = {
+      id: user.id,
+      username: user.email,
+    };
+    const token = generateToken(payload);
     res.status(200).json({ token });
   } catch (error) {
     console.error(error);

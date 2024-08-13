@@ -129,7 +129,7 @@ router.put("/:id", upload.single("category_image"), async (req, res, next) => {
     const updateOps = {
       category_name: req.body.category_name,
       category_image: req.file ? req.file.path : "",
-      trainer_id: req.body.trainer_id, // Assuming trainer_id is passed in the request body
+      trainer_id: req.user.id, // Assuming trainer_id is passed in the request body
     };
 
     const updatedCategory = await Category.findOneAndUpdate(
@@ -137,10 +137,13 @@ router.put("/:id", upload.single("category_image"), async (req, res, next) => {
       { $set: updateOps },
       { new: true }
     );
-    res.status(200).json({
-      msg: "Updated data successfully",
-      updatedCategory: updatedCategory,
-    });
+    if (!updatedCategory) res.status(400).json({ msg: "Not found" });
+    else {
+      res.status(200).json({
+        msg: "Updated data successfully",
+        updatedCategory: updatedCategory,
+      });
+    }
   } catch (err) {
     console.error(err);
     res.status(500).json({
@@ -150,10 +153,10 @@ router.put("/:id", upload.single("category_image"), async (req, res, next) => {
 });
 
 // GET route to fetch categories by trainer ID
-router.get("/BytrainerID/:trainerId", async (req, res, next) => {
+router.get("/bytrainer", async (req, res, next) => {
   try {
     const categories = await Category.find({
-      trainer_id: req.params.trainerId,
+      trainer_id: req.user.id,
     }).populate("trainer_id");
     if (categories.length === 0) {
       return res

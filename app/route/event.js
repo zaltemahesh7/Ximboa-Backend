@@ -37,12 +37,12 @@ router.get("/", async (req, res) => {
     const events = await Event.find();
     res.status(200).json(events);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching events", error });
+    res.status(500).json({ message: "Error fetching events 40", error });
   }
 });
 
 // Get a specific event by ID
-router.get("/:id", async (req, res) => {
+router.get("/event/:id", async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) {
@@ -50,15 +50,15 @@ router.get("/:id", async (req, res) => {
     }
     res.status(200).json(event);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching event", error });
+    res.status(500).json({ message: "Error fetching event 53", error });
   }
 });
 
 // trainer/:trainer_id
 
-router.get("/bytrainer/:trainerid", async (req, res) => {
+router.get("/bytrainer", async (req, res) => {
   try {
-    const events = await Event.find({ trainerid: req.params.trainerid });
+    const events = await Event.find({ trainerid: req.user.id });
     if (events.length === 0) {
       return res
         .status(404)
@@ -66,7 +66,9 @@ router.get("/bytrainer/:trainerid", async (req, res) => {
     }
     res.status(200).json(events);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching events", error });
+    console.log(error);
+    
+    res.status(500).json({ message: "Error fetching events 71", error });
   }
 });
 

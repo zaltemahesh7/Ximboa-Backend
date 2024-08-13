@@ -38,10 +38,10 @@ router.post(
   (req, res, next) => {
     var product = new Product({
       t_id: req.user.id, // Don't pass Trainer id it will fetched from token payload
-      Product_name: req.body.Product_name,
-      Product_Prize: req.body.Product_Prize,
-      Product_Selling_Prize: req.body.Product_Selling_Prize,
-      Products_info: req.body.Products_info,
+      product_name: req.body.product_name,
+      product_prize: req.body.product_prize,
+      product_selling_prize: req.body.product_selling_prize,
+      products_info: req.body.products_info,
       product_image: req.files["product_image"]
         ? req.files["product_image"][0].path
         : "",
@@ -114,38 +114,40 @@ router.put(
     { name: "product_image", maxCount: 1 },
     { name: "product_gallary", maxCount: 1 },
   ]),
-  function (req, res, next) {
-    const updateData = {
-      product_name: req.body.product_name,
-      product_prize: req.body.product_prize,
-      product_selling_prize: req.body.product_selling_prize,
-      products_info: req.body.products_info,
-      trainer_id: req.user.id, // Update the trainer ID if needed
-    };
+  async function (req, res, next) {
+    try {
+      const updateData = {
+        product_name: req.body.product_name,
+        product_prize: req.body.product_prize,
+        product_selling_prize: req.body.product_selling_prize,
+        products_info: req.body.products_info,
+        product_image: req.body.product_image,
+        trainer_id: req.user.id, // Update the trainer ID if needed
+      };
 
-    if (req.files["product_image"]) {
-      updateData.product_image = req.files["product_image"][0].path;
-    }
+      if (req.files["product_image"]) {
+        updateData.product_image = req.files["product_image"][0].path;
+      }
 
-    if (req.files["product_gallary"]) {
-      updateData.product_gallary = req.files["product_gallary"][0].path;
-    }
+      if (req.files["product_gallary"]) {
+        updateData.product_gallary = req.files["product_gallary"][0].path;
+      }
 
-    Product.findOneAndUpdate(
-      { _id: req.params.id },
-      { $set: updateData },
-      { new: true }
-    )
-      .then((result) => {
+      const product = await Product.findOneAndUpdate(
+        { _id: req.params.id },
+        { $set: updateData },
+        { new: true }
+      );
+      if (!product) res.status(400).json({ mag: "Not Found" });
+      else {
         res.status(200).json({
           msg: "Product updated successfully",
-          updatedProduct: result,
+          updatedProduct: product,
         });
-      })
-      .catch((err) => {
-        console.error(err);
-        res.status(500).json({ error: err });
-      });
+      }
+    } catch (error) {
+      res.status(500).json(error);
+    }
   }
 );
 

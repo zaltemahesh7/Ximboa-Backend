@@ -59,10 +59,10 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/student/:student_id", async (req, res) => {
+router.get("/student", async (req, res) => {
   try {
     const enrollments = await Enrollment.find({
-      student_id: req.params.student_id,
+      student_id: req.user.id,
     }).populate("course_id", "course_name");
     if (enrollments.length === 0) {
       return res

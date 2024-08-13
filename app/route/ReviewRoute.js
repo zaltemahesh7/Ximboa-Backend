@@ -46,7 +46,7 @@ router.put("/:id", async (req, res) => {
       runValidators: true,
     });
     if (!review) {
-      return res.status(404).send();
+      return res.status(404).send({msg: "Not Found"});
     }
     res.status(200).send(review);
   } catch (error) {

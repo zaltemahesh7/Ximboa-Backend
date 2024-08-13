@@ -17,8 +17,7 @@ const jwtAuthMiddleware = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (err) {
-    console.error(err);
-    res.status(401).json({ error: "Invalid token" });
+    res.status(401).json({ error: "Invalid token | Expired", err });
   }
 };
 
@@ -29,33 +28,3 @@ const generateToken = (userData) => {
 };
 
 module.exports = { jwtAuthMiddleware, generateToken };
-
-// const jwt = require("jsonwebtoken");
-// const Trainer = require("../model/registration"); // Assuming Trainer model is in models directory
-
-// const auth = async (req, res, next) => {
-//   try {
-//     const token = req.header("x-auth-token").replace("Bearer ", "");
-//     // const token = req.cookies.jwtoken;
-//     console.log(token);
-
-//     const decoded = jwt.verify(token, "bhojsoft");
-//     const user = await Trainer.findById(decoded.id);
-
-//     if (!user) {
-//       throw new Error("User Not Found");
-//     }
-//     // req.token = token;
-//     // req.rootUser = rootUser;
-//     // req.userId = rootUser._id;
-//     // console.log(req.rootUser);
-
-//     req.user = user;
-//     next();
-//   } catch (error) {
-//     console.log(error);
-//     res.status(401).json({ message: error });
-//   }
-// };
-
-// module.exports = auth;

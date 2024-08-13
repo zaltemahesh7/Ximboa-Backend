@@ -83,7 +83,7 @@ router.put("/:id", function (req, res, next) {
       $set: {
         Testimonial: req.body.Testimonial,
         Testimonial_Autor_Name: req.body.Testimonial_Autor_Name,
-        trainer_id: req.body.trainer_id, // Update the trainer ID if needed
+        trainer_id: req.user.id, // Update the trainer ID if needed
       },
     }
   )

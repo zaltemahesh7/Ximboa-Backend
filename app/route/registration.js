@@ -87,12 +87,10 @@ router.post(
       pincode,
     });
 
-    const existingUserName = await Registration.findOne({
-      user_name: user_name,
-    });
-
-    if (existingUserName) {
-      return res.status(409).json({ message: "User name is already taken" });
+    // Check if user already exists
+    const existingUser = await Registration.findOne({ email_id });
+    if (existingUser) {
+      return res.status(400).json({ message: "email_id already exists" });
     }
 
     const existingMobileNumber = await Registration.findOne({
@@ -102,12 +100,6 @@ router.post(
       return res
         .status(409)
         .json({ message: "Mobile number is already registered" });
-    }
-
-    // Check if user already exists
-    const existingUser = await Registration.findOne({ email_id });
-    if (existingUser) {
-      return res.status(400).json({ message: "email_id already exists" });
     }
 
     newRegistration
@@ -176,17 +168,9 @@ router.post("/login", async (req, res) => {
     // Generate a token
     const payload = {
       id: user.id,
-      username: user.username,
+      username: user.email_id,
     };
     const token = generateToken(payload);
-
-    // Store the token in the database
-    // const userToken = new UserToken({
-    //   email_id: user.email_id,
-    //   token: token,
-    // });
-
-    // await userToken.save();
 
     res.status(200).json({ token });
   } catch (error) {
