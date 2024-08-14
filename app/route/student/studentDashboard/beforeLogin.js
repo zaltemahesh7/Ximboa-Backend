@@ -82,8 +82,8 @@ router.get("/", async (req, res) => {
     });
 
     res.status(200).send({
-      // trainersWithFullImageUrl,
-      // categoriesWithFullImageUrl,
+      trainersWithFullImageUrl,
+      categoriesWithFullImageUrl,
       coursesWithFullImageUrl,
     });
   } catch (error) {

@@ -74,10 +74,6 @@ router.post("/reset-password", async (req, res) => {
       return res.status(400).json({ message: "User not found" });
     }
 
-    // Generate password reset token and send email (pseudo-code)
-    // const resetToken = generateResetToken();
-    // await sendPasswordResetEmail(user.email, resetToken);
-
     res.status(200).json({ message: "Password reset email sent" });
   } catch (error) {
     console.error(error);
