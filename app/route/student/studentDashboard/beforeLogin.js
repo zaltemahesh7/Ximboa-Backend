@@ -19,7 +19,8 @@ router.get("/", async (req, res) => {
     const courses = await Course.find()
       .skip(startIndex)
       .limit(limit)
-      .populate("category_id").populate("trainer_id");
+      .populate("category_id")
+      .populate("trainer_id");
 
     // Get base URL for image paths
     const baseUrl = req.protocol + "://" + req.get("host");
@@ -87,7 +88,73 @@ router.get("/", async (req, res) => {
       coursesWithFullImageUrl,
     });
   } catch (error) {
-    res.status(500).send({ message: "Error fetching courses", error });
+    res.status(500).send({ message: "Error fetching", error });
+  }
+});
+
+// ========================-------------------------------------=======
+router.get("/allcategory", async (req, res) => {
+  const baseUrl = req.protocol + "://" + req.get("host");
+
+  try {
+    const categories = await Category.find();
+
+    const categoriesWithFullImageUrl = categories.map((category) => {
+      return {
+        _id: category._id,
+        category_name: category.category_name,
+        category_image: category.category_image
+          ? `${baseUrl}/${category.category_image.replace(/\\/g, "/")}`
+          : "",
+        __v: category.__v,
+        trainer_id: category.trainer_id,
+      };
+    });
+
+    res.status(200).send({
+      categoriesWithFullImageUrl,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).send({ message: "Error fetching categories", error });
+  }
+});
+
+// ======================================all Courses===================----------
+
+router.get("/allcourses", async (req, res) => {
+  try {
+    const courses = await Course.find()
+      .populate("category_id")
+      .populate("trainer_id");
+
+    // Get base URL for image paths
+    const baseUrl = req.protocol + "://" + req.get("host");
+
+    // Map courses to include full image URLs
+    const coursesWithFullImageUrl = courses.map((course) => {
+      return {
+        ...course._doc,
+        thumbnail_image: course.thumbnail_image
+          ? `${baseUrl}/${course.thumbnail_image.replace(/\\/g, "/")}`
+          : "",
+        gallary_image: course.gallary_image
+          ? `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`
+          : "",
+        trainer_materialImage: course.trainer_materialImage
+          ? `${baseUrl}/${course.trainer_materialImage.replace(/\\/g, "/")}`
+          : "",
+      };
+    });
+
+    res.status(200).send({
+      coursesWithFullImageUrl,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).send({ message: "Error fetching ourses", error });
   }
 });
 
