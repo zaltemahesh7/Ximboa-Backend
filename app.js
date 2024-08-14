@@ -24,8 +24,8 @@ app.use(
 const authRoutes = require("./app/route/student/student");
 app.use("/student", authRoutes); // Register auth routes
 
-const enrollCorse = require("./app/route/student/enrollments");
-app.use("/enrollcourse", jwtAuthMiddleware, enrollCorse); // Register auth routes
+const enrollCourse = require("./app/route/student/enrollments");
+app.use("/enrollcourse", jwtAuthMiddleware, enrollCourse); // Register auth routes
 
 var registerRoute = require("./app/route/registration");
 app.use("/registration", registerRoute);
