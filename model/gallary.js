@@ -1,6 +1,6 @@
-var mongoose = require("mongoose");
+const mongoose = require("mongoose");
 
-var gallerySchema = mongoose.Schema({
+const gallerySchema = mongoose.Schema({
   photos: [String], // Array of strings to store file paths
   trainer_id: {
     type: mongoose.Schema.Types.ObjectId,

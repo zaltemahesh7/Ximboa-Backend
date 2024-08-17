@@ -60,6 +60,10 @@ app.use("/testmonial", jwtAuthMiddleware, testemonialRoute);
 var allDataRoute = require("./app/route/trainner");
 app.use("/", allDataRoute);
 
+var videoRoutes = require("./app/route/video");
+app.use('/videos', videoRoutes);
+
+
 var postallDataRoute = require("./app/route/postAllData");
 app.use("/postCombineData", postallDataRoute);
 

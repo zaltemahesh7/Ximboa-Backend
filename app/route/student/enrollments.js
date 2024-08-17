@@ -3,11 +3,12 @@ const mongoose = require("mongoose");
 const Enrollment = require("../../../model/Student/Enrollment"); // Assuming Enrollment model is in models directory
 const Course = require("../../../model/course"); // Assuming Course model is in models directory
 const Student = require("../../../model/Student/Student"); // Assuming Student model is in models directory
+const { jwtAuthMiddleware } = require("../../../middleware/auth");
 
 const router = express.Router();
 
 // POST route to enroll in a course
-router.post("/", async (req, res) => {
+router.post("/", jwtAuthMiddleware, async (req, res) => {
   try {
     const { student_id, course_id } = req.body;
 
@@ -59,7 +60,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.get("/student", async (req, res) => {
+router.get("/student", jwtAuthMiddleware, async (req, res) => {
   try {
     const enrollments = await Enrollment.find({
       student_id: req.user.id,

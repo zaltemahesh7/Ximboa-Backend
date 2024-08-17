@@ -22,13 +22,14 @@ router.get("/", (req, res) => {
 // Insert new education record
 router.post("/", (req, res) => {
   const trainer_id = req.user.id;
-  const { school, college, degree, other_details, achievements } = req.body;
+  const { school, college, degree,university, other_details, achievements } = req.body;
 
   const education = new Education({
     _id: new mongoose.Types.ObjectId(),
     school: school,
     college: college,
     degree: degree,
+    university: university,
     other_details: other_details,
     achievements: achievements,
     trainer_id: trainer_id,
@@ -96,6 +97,7 @@ router.put("/:id", (req, res) => {
         school: req.body.school,
         college: req.body.college,
         degree: req.body.degree,
+        university: req.body.university,
         other_details: req.body.other_details,
         achievements: req.body.achievements,
         trainer_id: req.user.id,

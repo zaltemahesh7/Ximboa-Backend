@@ -99,6 +99,33 @@ router.get("/", async (req, res) => {
       };
     });
 
+    const currentDate = new Date();
+    console.log(currentDate);
+    
+    const ongoingCourses = await Course.find({
+      start_date: { $lte: currentDate }, // Course has started
+      end_date: { $gte: currentDate }, // Course has not ended
+    })
+      // .populate("category_id")
+      // .populate("trainer_id");
+
+    // Map courses to include full image URLs and trainer name
+    const OnGoingBatches = ongoingCourses.map((course) => {
+      return {
+        ...course._doc,
+        thumbnail_image: course.thumbnail_image
+          ? `${baseUrl}/${course.thumbnail_image.replace(/\\/g, "/")}`
+          : "",
+        gallary_image: course.gallary_image
+          ? `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`
+          : "",
+        trainer_materialImage: course.trainer_materialImage
+          ? `${baseUrl}/${course.trainer_materialImage.replace(/\\/g, "/")}`
+          : "",
+        trainer_name: course.trainer_id ? course.trainer_id.name : "N/A",
+      };
+    });
+
     res.status(200).send({
       trainer,
       coursesWithFullImageUrl,
@@ -113,6 +140,7 @@ router.get("/", async (req, res) => {
       SocialMedias,
       testimonials,
       gallarys,
+      OnGoingBatches,
     });
   } catch (error) {
     // console.log(error);

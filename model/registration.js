@@ -1,4 +1,4 @@
-var mongoose = require("mongoose");
+const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
 var RegistrationSchema = new mongoose.Schema(
@@ -11,6 +11,9 @@ var RegistrationSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    whatsapp_no: {
+      type: String,
+    },
     email_id: {
       type: String,
       required: true,
@@ -20,15 +23,8 @@ var RegistrationSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    resetPasswordToken: {
-      type: String,
-    },
-    resetPasswordExpires: {
-      type: Date,
-    },
     trainer_image: String,
     date_of_birth: String,
-    rating: String,
     rating_count: String,
     address1: String,
     address2: String,
@@ -36,14 +32,6 @@ var RegistrationSchema = new mongoose.Schema(
     country: String,
     state: String,
     pincode: String,
-    tokens: [
-      {
-        token: {
-          type: String,
-          required: true,
-        },
-      },
-    ],
   },
   { timestamps: true }
 );

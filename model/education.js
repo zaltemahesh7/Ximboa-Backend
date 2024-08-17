@@ -4,6 +4,7 @@ var educationSchema = new mongoose.Schema({
   school: String,
   college: String,
   degree: String,
+  university: String,
   other_details: String,
   achievements: String,
   trainer_id: {
