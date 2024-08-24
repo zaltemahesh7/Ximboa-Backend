@@ -21,6 +21,9 @@ app.use(
   })
 );
 
+const adminRoutes = require("./app/adminRoutes/adminRoutes");
+app.use("/admin", adminRoutes); // Register auth routes
+
 const authRoutes = require("./app/route/student/student");
 app.use("/student", authRoutes); // Register auth routes
 
@@ -61,8 +64,7 @@ var allDataRoute = require("./app/route/trainner");
 app.use("/", allDataRoute);
 
 var videoRoutes = require("./app/route/video");
-app.use('/videos', videoRoutes);
-
+app.use("/videos", videoRoutes);
 
 var postallDataRoute = require("./app/route/postAllData");
 app.use("/postCombineData", postallDataRoute);
@@ -83,7 +85,7 @@ var QuestionsRoute = require("./app/route/QuestionsRoute/Questions");
 app.use("/questions", jwtAuthMiddleware, QuestionsRoute);
 
 var TrainerRoute = require("./app/route/trainner");
-app.use("/trainers", jwtAuthMiddleware, TrainerRoute);
+app.use("/trainers", TrainerRoute);
 
 var EnquirysRoute = require("./app/route/Enquirys");
 app.use("/enquiries", jwtAuthMiddleware, EnquirysRoute);

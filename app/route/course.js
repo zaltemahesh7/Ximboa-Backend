@@ -107,6 +107,7 @@ router.delete("/:id", async (req, res, next) => {
   }
 });
 
+// dto 
 // UPDATE a course by ID with image upload
 router.put(
   "/:id",

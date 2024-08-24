@@ -1,12 +1,20 @@
-var mongoose = require("mongoose");
+const mongoose = require("mongoose");
 
-var testimonialSchema = new mongoose.Schema({
-  Testimonial: String,
+const testimonialSchema = new mongoose.Schema({
+  Testimonial_Title: {
+    type: String,
+    required: true,
+  },
+  Testimonial_Description: {
+    type: String,
+    required: true,
+  },
   Testimonial_Autor_Name: String,
   trainer_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Registration",
-  }, // Reference to Trainer
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("Testimonial", testimonialSchema);

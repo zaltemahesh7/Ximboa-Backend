@@ -17,9 +17,9 @@ const gallary = require("../../model/gallary");
 // Get data according to the trainer Email id
 
 // Get all data according to the trainer
-router.get("/", async (req, res) => {
+router.get("/:t_id", async (req, res) => {
   try {
-    const trainerId = req.user.id;
+    const trainerId = req.params.t_id;
 
     // Find the trainer
     const trainer = await Trainer.findById(trainerId);
@@ -68,13 +68,47 @@ router.get("/", async (req, res) => {
     });
 
     // Find Events by the trainer
-    const Events = await Event.find({ trainerid: trainerId });
+    const events = await Event.find({ trainerid: trainerId })
+      .populate("event_category", "category_name")
+      .populate("trainerid", "user_name");
+
+    const eventsWithThumbnailUrl = events.map((event) => {
+      return {
+        ...event._doc,
+        event_thumbnail: event.event_thumbnail
+          ? `${baseUrl}/${event.event_thumbnail.replace(/\\/g, "/")}`
+          : "",
+      };
+    });
+
+    const onlineEvents = events.filter(
+      (event) => event.event_type === "Online"
+    );
+    const onlineEventsThumbnailUrl = onlineEvents.map((event) => {
+      return {
+        ...event._doc,
+        event_thumbnail: event.event_thumbnail
+          ? `${baseUrl}/${event.event_thumbnail.replace(/\\/g, "/")}`
+          : "",
+      };
+    });
+    const offlienEvents = events.filter(
+      (event) => event.event_type === "Offline"
+    );
+    const offlienEventsThumbnailUrl = offlienEvents.map((event) => {
+      return {
+        ...event._doc,
+        event_thumbnail: event.event_thumbnail
+          ? `${baseUrl}/${event.event_thumbnail.replace(/\\/g, "/")}`
+          : "",
+      };
+    });
 
     // Find About by the trainer
     const About = await About1.find({ trainer: trainerId });
 
     // Get reviews and groups for each course
-    const courseIds = courses.map((course) => course._id);
+    // const courseIds = courses.map((course) => course._id);
     const reviews = await Review.find({ t_id: trainerId });
 
     const Educations = await Education.find({ trainer_id: { $in: trainerId } });
@@ -92,22 +126,20 @@ router.get("/", async (req, res) => {
     });
     const gallarys = gallarysWithoutImages.map((gallary) => {
       return {
-        ...gallary._doc,
-        photos: gallary.photos
-          ? `${baseUrl}/${gallary.photos.map((i) => i.replace(/\\/g, "/"))}`
-          : "",
+        photos: gallary.photos.map((photo) => {
+          photo ? `${baseUrl}/${photo}` : "";
+        }),
       };
     });
 
-    const currentDate = new Date();
-    console.log(currentDate);
-    
+    const currentDate = new Date().toISOString();
+
     const ongoingCourses = await Course.find({
-      start_date: { $lte: currentDate }, // Course has started
-      end_date: { $gte: currentDate }, // Course has not ended
+      start_date: { $lte: currentDate },
+      end_date: { $gte: currentDate },
     })
-      // .populate("category_id")
-      // .populate("trainer_id");
+      .populate("trainer_id", "user_name")
+      .populate("category_id", "category_name");
 
     // Map courses to include full image URLs and trainer name
     const OnGoingBatches = ongoingCourses.map((course) => {
@@ -122,7 +154,30 @@ router.get("/", async (req, res) => {
         trainer_materialImage: course.trainer_materialImage
           ? `${baseUrl}/${course.trainer_materialImage.replace(/\\/g, "/")}`
           : "",
-        trainer_name: course.trainer_id ? course.trainer_id.name : "N/A",
+        trainer_name: course.trainer_id ? course.trainer_id.user_name : "N/A",
+      };
+    });
+
+    const upcomingCourses = await Course.find({
+      start_date: { $gt: currentDate },
+    })
+      .populate("trainer_id", "user_name")
+      .populate("category_id", "category_name");
+
+    // Map courses to include full image URLs and trainer name
+    const UpcomingBatches = upcomingCourses.map((course) => {
+      return {
+        ...course._doc,
+        thumbnail_image: course.thumbnail_image
+          ? `${baseUrl}/${course.thumbnail_image.replace(/\\/g, "/")}`
+          : "",
+        gallary_image: course.gallary_image
+          ? `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`
+          : "",
+        trainer_materialImage: course.trainer_materialImage
+          ? `${baseUrl}/${course.trainer_materialImage.replace(/\\/g, "/")}`
+          : "",
+        trainer_name: course.trainer_id ? course.trainer_id.user_name : "N/A",
       };
     });
 
@@ -134,17 +189,19 @@ router.get("/", async (req, res) => {
       Appointments,
       Enquirys,
       productsWithFullImageUrl,
-      Events,
+      eventsWithThumbnailUrl,
+      onlineEventsThumbnailUrl,
+      offlienEventsThumbnailUrl,
       About,
       Educations,
       SocialMedias,
       testimonials,
       gallarys,
       OnGoingBatches,
+      UpcomingBatches,
     });
   } catch (error) {
     // console.log(error);
-
     res.status(500).send({ message: "Server error", error });
   }
 });

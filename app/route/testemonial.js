@@ -21,8 +21,9 @@ router.get("/", function (req, res, next) {
 
 // Insert testimonial into database
 router.post("/", function (req, res, next) {
-  var testimonial = new Testimonial({
-    Testimonial: req.body.Testimonial,
+  const testimonial = new Testimonial({
+    Testimonial_Title: req.body.Testimonial_Title,
+    Testimonial_Description: req.body.Testimonial_Description,
     Testimonial_Author_Name: req.body.Testimonial_Autor_Name,
     trainer_id: req.user.id, // Save the trainer ID
   });
@@ -35,7 +36,7 @@ router.post("/", function (req, res, next) {
       });
     })
     .catch((err) => {
-      console.log(err);
+      console.log({ err });
       res.status(500).json({
         error: err,
       });

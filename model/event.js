@@ -3,12 +3,35 @@ const Schema = mongoose.Schema;
 
 const eventSchema = new Schema(
   {
-    event_name: { type: String, required: true },
-    event_type: { type: String, required: true },
-    event_categories: { type: String, required: true },
-    event_start_time: { type: String, required: true },
-    event_end_time: { type: String, required: true },
-    trainerid: { type: Schema.Types.ObjectId, ref: "Trainer", required: true },
+    event_name: {
+      type: String,
+      required: true,
+    },
+    event_type: {
+      type: String,
+      required: true,
+    },
+    event_category: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
+    event_thumbnail: {
+      type: String,
+    },
+    trainerid: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Registration",
+      required: true,
+    },
+    event_start_time: {
+      type: String,
+      required: true,
+    },
+    event_end_time: {
+      type: String,
+      required: true,
+    },
   },
   { timestamps: true }
 );

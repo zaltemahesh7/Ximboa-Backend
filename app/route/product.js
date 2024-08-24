@@ -116,40 +116,40 @@ router.put(
   ]),
   async function (req, res, next) {
     try {
+      // Find the existing product first
+      const existingProduct = await Product.findById(req.params.id);
+      if (!existingProduct) {
+        return res.status(400).json({ msg: "Product not found" });
+      }
+
+      // Prepare the update data based on the request and existing data
       const updateData = {
-        product_name: req.body.product_name,
-        product_prize: req.body.product_prize,
-        product_selling_prize: req.body.product_selling_prize,
-        products_info: req.body.products_info,
-        product_image: req.body.product_image,
+        product_name: req.body.product_name || existingProduct.product_name,
+        product_prize: req.body.product_prize || existingProduct.product_prize,
+        product_selling_prize: req.body.product_selling_prize || existingProduct.product_selling_prize,
+        products_info: req.body.products_info || existingProduct.products_info,
+        product_image: req.files["product_image"] ? req.files["product_image"][0].path : existingProduct.product_image,
+        product_gallary: req.files["product_gallary"] ? req.files["product_gallary"][0].path : existingProduct.product_gallary,
         trainer_id: req.user.id, // Update the trainer ID if needed
       };
 
-      if (req.files["product_image"]) {
-        updateData.product_image = req.files["product_image"][0].path;
-      }
-
-      if (req.files["product_gallary"]) {
-        updateData.product_gallary = req.files["product_gallary"][0].path;
-      }
-
-      const product = await Product.findOneAndUpdate(
-        { _id: req.params.id },
+      // Update the product with the new data
+      const product = await Product.findByIdAndUpdate(
+        req.params.id,
         { $set: updateData },
         { new: true }
       );
-      if (!product) res.status(400).json({ mag: "Not Found" });
-      else {
-        res.status(200).json({
-          msg: "Product updated successfully",
-          updatedProduct: product,
-        });
-      }
+
+      res.status(200).json({
+        msg: "Product updated successfully",
+        updatedProduct: product,
+      });
     } catch (error) {
-      res.status(500).json(error);
+      res.status(500).json({ error: "Error updating product", details: error });
     }
   }
 );
+
 
 // Get products by trainer ID
 router.get("/bytrainer", function (req, res, next) {

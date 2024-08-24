@@ -1,60 +1,81 @@
 const express = require("express");
 const router = express.Router();
 const Event = require("../../model/event");
+const upload = require("../../middleware/multerConfig");
+const { jwtAuthMiddleware } = require("../../middleware/auth");
 
 // Create a new event
-router.post("/", async (req, res) => {
+router.post(
+  "/",
+  jwtAuthMiddleware,
+  upload.single("event_thumbnail"),
+  async (req, res) => {
+    try {
+      const {
+        event_name,
+        event_category,
+        event_type,
+        event_start_time,
+        event_end_time,
+      } = req.body;
+
+      const trainerid = req.user.id;
+
+      // If file is uploaded, get file path from Multer
+      const event_thumbnail = req.file ? req.file.path : null;
+
+      const newEvent = new Event({
+        event_name,
+        event_type,
+        event_category,
+        event_thumbnail,
+        event_start_time,
+        event_end_time,
+        trainerid,
+      });
+
+      const savedEvent = await newEvent.save();
+      res.status(201).json(savedEvent);
+    } catch (error) {
+      res.status(400).json({ message: "Error creating event", error });
+    }
+  }
+);
+
+router.get("/events", async (req, res) => {
   try {
-    const {
-      event_name,
-      event_type,
-      event_categories,
-      event_start_time,
-      event_end_time,
-    } = req.body;
+    // Get the event type from query params
+    const { event_type } = req.query;
 
-    const trainerid = req.user.id;
+    // Validate the event type
+    if (!event_type) {
+      return res.status(400).json({ message: "Event type is required" });
+    }
 
-    const newEvent = new Event({
-      event_name,
-      event_type,
-      event_categories,
-      event_start_time,
-      event_end_time,
-      trainerid,
+    // Filter events by the specified type
+    const events = await Event.find({ event_type });
+
+    // Get base URL for image paths
+    const baseUrl = req.protocol + "://" + req.get("host");
+
+    // Add base URL to the event_thumbnail path
+    const eventsWithFullThumbnailUrl = events.map((event) => {
+      return {
+        ...event._doc,
+        event_thumbnail: event.event_thumbnail
+          ? `${baseUrl}/${event.event_thumbnail.replace(/\\/g, "/")}`
+          : "",
+      };
     });
 
-    const savedEvent = await newEvent.save();
-    res.status(201).json(savedEvent);
+    res.status(200).json(eventsWithFullThumbnailUrl);
   } catch (error) {
-    res.status(400).json({ message: "Error creating event", error });
+    console.error(error);
+    res.status(500).json({ message: "Error fetching events", error });
   }
 });
 
-// Get all events
-router.get("/", async (req, res) => {
-  try {
-    const events = await Event.find();
-    res.status(200).json(events);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching events 40", error });
-  }
-});
-
-// Get a specific event by ID
-router.get("/event/:id", async (req, res) => {
-  try {
-    const event = await Event.findById(req.params.id);
-    if (!event) {
-      return res.status(404).json({ message: "Event not found" });
-    }
-    res.status(200).json(event);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching event 53", error });
-  }
-});
-
-// trainer/:trainer_id
+// trainer/:trainerid
 
 router.get("/bytrainer", async (req, res) => {
   try {
@@ -67,7 +88,7 @@ router.get("/bytrainer", async (req, res) => {
     res.status(200).json(events);
   } catch (error) {
     console.log(error);
-    
+
     res.status(500).json({ message: "Error fetching events 71", error });
   }
 });
