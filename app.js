@@ -91,7 +91,6 @@ var EnquirysRoute = require("./app/route/Enquirys");
 app.use("/enquiries", jwtAuthMiddleware, EnquirysRoute);
 
 const beforeLoginRoutes = require("./app/route/student/studentDashboard/beforeLogin");
-
 app.use("/beforeLogin", beforeLoginRoutes);
 
 var mongoose = require("mongoose");

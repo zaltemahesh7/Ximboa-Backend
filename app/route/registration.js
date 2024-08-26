@@ -8,6 +8,7 @@ const { generateToken, jwtAuthMiddleware } = require("../../middleware/auth");
 const { sendSuccessEmail } = require("../../utils/email");
 
 const multer = require("multer");
+const { ApiError } = require("../../utils/ApiError");
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -36,76 +37,76 @@ const upload = multer({
 // Create a new trainer
 // Register a new user----------------------------------------------------------
 
-router.post(
-  "/",
-  upload.single("trainer_image"),
-  async function (req, res, next) {
-    const {
-      user_name,
-      email_id,
-      password,
-      mobile_number,
-      date_of_birth,
-      whatsapp_no,
-      rating_count,
-      address1,
-      address2,
-      city,
-      country,
-      state,
-      pincode,
-    } = req.body;
+router.post("/", upload.single("trainer_image"), async function (req, res) {
+  const {
+    f_Name,
+    middle_Name,
+    l_Name,
+    email_id,
+    password,
+    isTrainer,
+    mobile_number,
+    date_of_birth,
+    whatsapp_no,
+    rating_count,
+    address1,
+    address2,
+    city,
+    country,
+    state,
+    pincode,
+  } = req.body;
 
-    const trainer_image = req.file ? req.file.path : "";
+  const trainer_image = req.file ? req.file.path : "";
 
-    const newRegistration = new Registration({
-      user_name,
-      email_id,
-      password,
-      mobile_number,
-      trainer_image,
-      date_of_birth,
-      whatsapp_no,
-      rating_count,
-      address1,
-      address2,
-      city,
-      country,
-      state,
-      pincode,
-    });
+  const newRegistration = new Registration({
+    f_Name,
+    middle_Name,
+    l_Name,
+    email_id,
+    password,
+    isTrainer,
+    mobile_number,
+    trainer_image,
+    date_of_birth,
+    whatsapp_no,
+    rating_count,
+    address1,
+    address2,
+    city,
+    country,
+    state,
+    pincode,
+  });
 
-    // Check if user already exists
-    const existingUser = await Registration.findOne({ email_id });
-    if (existingUser) {
-      return res.status(400).json({ message: "email_id already exists" });
-    }
-
-    const existingMobileNumber = await Registration.findOne({
-      mobile_number: mobile_number,
-    });
-    if (existingMobileNumber) {
-      return res
-        .status(409)
-        .json({ message: "Mobile number is already registered" });
-    }
-
-    newRegistration
-      .save()
-      .then((result) => {
-        sendSuccessEmail(email_id, user_name);
-        res.status(200).json({
-          newTrainer: result,
-        });
-      })
-      .catch((err) => {
-        console.log(err);
-        res.status(500).json({
-          error: err,
-        });
-      });
+  // Check if user already exists
+  const existingUser = await Registration.findOne({ email_id });
+  if (existingUser) {
+    return res.status(400).json(new ApiError(400, "email_id already exists"));
   }
-);
+
+  const existingMobileNumber = await Registration.findOne({
+    mobile_number: mobile_number,
+  });
+  if (existingMobileNumber) {
+    return res
+      .status(409)
+      .json({ message: "Mobile number is already registered" });
+  }
+
+  newRegistration
+    .save()
+    .then((result) => {
+      sendSuccessEmail(email_id, f_Name);
+      res.status(200).json({ message: "Success" });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({
+        error: err,
+      });
+    });
+});
 
 // Update user information by user ID
 router.put(
@@ -254,7 +255,7 @@ router.post("/login", async (req, res) => {
       id: user.id,
       username: user.email_id,
     };
-    const token = generateToken(payload);
+    const token = generateToken(payload, req);
     res.status(200).json({ token });
   } catch (error) {
     console.error(error);

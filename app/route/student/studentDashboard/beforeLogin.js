@@ -6,13 +6,14 @@ const Trainer = require("../../../../model/registration");
 const Course = require("../../../../model/course");
 const Event = require("../../../../model/event");
 const Product = require("../../../../model/product");
+const { ApiError } = require("../../../../utils/ApiError");
 
 // Get courses with specific fields, including trainer name populated
-router.get("/", async (req, res) => {
+router.get("/home", async (req, res) => {
   try {
     // Get page and limit from query parameters, set defaults if not provided
     const page = parseInt(req.query.page) || 1; // Default to first page
-    const limit = parseInt(req.query.limit) || 10; // Default to 10 courses per page
+    const limit = parseInt(req.query.limit) || 2; // Default to 10 courses per page
 
     // Calculate the starting index for pagination
     const startIndex = (page - 1) * limit;
@@ -22,7 +23,7 @@ router.get("/", async (req, res) => {
       .skip(startIndex)
       .limit(limit)
       .populate("category_id")
-      .populate("trainer_id");
+      .populate("trainer_id", "f_Name l_Name");
 
     // Get base URL for image paths
     const baseUrl = req.protocol + "://" + req.get("host");
@@ -43,7 +44,7 @@ router.get("/", async (req, res) => {
       };
     });
 
-    const categories = await Category.find();
+    const categories = await Category.find().select("_id, course_name");
 
     const categoriesWithFullImageUrl = categories.map((category) => {
       return {
@@ -89,8 +90,9 @@ router.get("/", async (req, res) => {
       categoriesWithFullImageUrl,
       coursesWithFullImageUrl,
     });
-  } catch (error) {
-    res.status(500).send({ message: "Error fetching", error });
+  } catch (err) {
+    console.log(err)
+    res.status(500).json(new ApiError(500, err.message, err));
   }
 });
 
@@ -116,10 +118,9 @@ router.get("/allcategory", async (req, res) => {
     res.status(200).send({
       categoriesWithFullImageUrl,
     });
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).send({ message: "Error fetching categories", error });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json(new ApiError(500, err?.message || "", err));
   }
 });
 
@@ -153,8 +154,7 @@ router.get("/allcourses", async (req, res) => {
       coursesWithFullImageUrl,
     });
   } catch (error) {
-    console.log(error);
-
+    
     res.status(500).send({ message: "Error fetching courses", error });
   }
 });

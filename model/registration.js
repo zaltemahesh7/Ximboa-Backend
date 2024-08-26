@@ -3,9 +3,19 @@ const bcrypt = require("bcrypt");
 
 var RegistrationSchema = new mongoose.Schema(
   {
-    user_name: {
+    f_Name: {
       type: String,
       required: true,
+      trim: true,
+    },
+    middle_Name: {
+      type: String,
+      trim: true,
+    },
+    l_Name: {
+      type: String,
+      required: true,
+      trim: true,
     },
     mobile_number: {
       type: String,
@@ -16,12 +26,18 @@ var RegistrationSchema = new mongoose.Schema(
     },
     email_id: {
       type: String,
+      lowercase: true,
       required: true,
       unique: true,
+      trim: true,
     },
     password: {
       type: String,
       required: true,
+    },
+    isTrainer: {
+      type: Boolean,
+      default: false,
     },
     trainer_image: String,
     date_of_birth: String,
