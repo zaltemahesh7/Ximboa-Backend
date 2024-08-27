@@ -22,7 +22,7 @@ router.get("/home", async (req, res) => {
     const courses = await Course.find()
       .skip(startIndex)
       .limit(limit)
-      .populate("category_id")
+      .populate("category_id", "category_name -_id")
       .populate("trainer_id", "f_Name l_Name");
 
     // Get base URL for image paths
@@ -44,7 +44,7 @@ router.get("/home", async (req, res) => {
       };
     });
 
-    const categories = await Category.find().select("_id, course_name");
+    const categories = await Category.find().skip(startIndex).limit(limit);
 
     const categoriesWithFullImageUrl = categories.map((category) => {
       return {
@@ -57,6 +57,7 @@ router.get("/home", async (req, res) => {
         trainer_id: category.trainer_id,
       };
     });
+
     const trainers = await Trainer.aggregate([
       {
         $lookup: {
@@ -73,7 +74,9 @@ router.get("/home", async (req, res) => {
           course_count: { $size: "$courses" },
         },
       },
-    ]);
+    ])
+      .skip(startIndex)
+      .limit(limit);
 
     const trainersWithFullImageUrl = trainers.map((trainer) => {
       return {
@@ -92,7 +95,7 @@ router.get("/home", async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    res.status(500).json(new ApiError(500, err.message, err));
+    res.status(500).json(new ApiError(500, err.message || "", err));
   }
 });
 
@@ -273,7 +276,15 @@ router.get("/product/:id", async function (req, res, next) {
       res.status(200).json({ productsWithFullImageUrls });
     })
     .catch((err) => {
-      res.status(500).json(new ApiError(500, err.message || "Server Error Gretting Product by Id", err));
+      res
+        .status(500)
+        .json(
+          new ApiError(
+            500,
+            err.message || "Server Error Gretting Product by Id",
+            err
+          )
+        );
     });
 });
 
@@ -289,7 +300,15 @@ router.get("/allproduct", async function (req, res, next) {
       res.status(200).json({ productsWithFullImageUrls });
     })
     .catch((err) => {
-      res.status(500).json(new ApiError(500, err.message || "Server Error Gretting all Products", err));
+      res
+        .status(500)
+        .json(
+          new ApiError(
+            500,
+            err.message || "Server Error Gretting all Products",
+            err
+          )
+        );
     });
 });
 

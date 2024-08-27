@@ -1,9 +1,6 @@
 const express = require("express");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const router = express.Router();
 const Registration = require("../../model/registration");
-const crypto = require("crypto");
 const { generateToken, jwtAuthMiddleware } = require("../../middleware/auth");
 const { sendSuccessEmail } = require("../../utils/email");
 const { ApiError } = require("../../utils/ApiError");
