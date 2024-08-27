@@ -91,7 +91,7 @@ router.get("/home", async (req, res) => {
       coursesWithFullImageUrl,
     });
   } catch (err) {
-    console.log(err)
+    console.log(err);
     res.status(500).json(new ApiError(500, err.message, err));
   }
 });
@@ -154,7 +154,6 @@ router.get("/allcourses", async (req, res) => {
       coursesWithFullImageUrl,
     });
   } catch (error) {
-    
     res.status(500).send({ message: "Error fetching courses", error });
   }
 });
@@ -193,9 +192,9 @@ router.get("/alltrainers", async (req, res) => {
     res.status(200).send({
       trainersWithFullImageUrl,
     });
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({ message: "Error fetching trainer", error });
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ message: "Error fetching trainer", err });
   }
 });
 
@@ -213,7 +212,7 @@ router.get("/course/:id", (req, res, next) => {
         trainer_materialImage: `http://${req.headers.host}/${course.trainer_materialImage}`,
       }));
       // console.log(coursesWithFullImageUrls),
-      res.status(200).json({ courses: coursesWithFullImageUrls });
+      res.status(200).json({ course: coursesWithFullImageUrls[0] });
     })
     .catch((err) => {
       console.error(err);
@@ -226,7 +225,7 @@ router.get("/event/:id", async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) {
-      return res.status(404).json({ message: "Event not found" });
+      return res.status(404).json(new ApiError(404, "Event not found"));
     }
     res.status(200).json(event);
   } catch (error) {
@@ -236,14 +235,28 @@ router.get("/event/:id", async (req, res) => {
 
 // ========================= All Event ====================================
 router.get("/allevents", async (req, res) => {
+  const baseUrl = req.protocol + "://" + req.get("host");
+
   try {
-    const event = await Event.find();
-    if (!event) {
-      return res.status(404).json({ message: "Event not found" });
+    const events = await Event.find()
+      .populate("event_category", "category_name")
+      .populate("trainerid", "f_Name l_Name");
+    if (!events || events.length === 0) {
+      return res.status(404).json(new ApiError(404, "Events not found"));
     }
-    res.status(200).json(event);
-  } catch (error) {
-    res.status(500).json({ message: "Error fetching event", error });
+
+    const eventsWithThumbnails = events.map((event) => ({
+      ...event._doc,
+      event_thumbnail: event.event_thumbnail
+        ? `${baseUrl}/${event.event_thumbnail.replace(/\\/g, "/")}`
+        : null,
+    }));
+
+    res.status(200).json(eventsWithThumbnails);
+  } catch (err) {
+    res
+      .status(500)
+      .json(new ApiError(500, err.message || "Error fetching Events", err));
   }
 });
 
@@ -260,8 +273,7 @@ router.get("/product/:id", async function (req, res, next) {
       res.status(200).json({ productsWithFullImageUrls });
     })
     .catch((err) => {
-      console.error(err);
-      res.status(500).json({ error: err });
+      res.status(500).json(new ApiError(500, err.message || "Server Error Gretting Product by Id", err));
     });
 });
 
@@ -277,8 +289,7 @@ router.get("/allproduct", async function (req, res, next) {
       res.status(200).json({ productsWithFullImageUrls });
     })
     .catch((err) => {
-      console.error(err);
-      res.status(500).json({ error: err });
+      res.status(500).json(new ApiError(500, err.message || "Server Error Gretting all Products", err));
     });
 });
 

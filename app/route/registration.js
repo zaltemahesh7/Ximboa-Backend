@@ -6,9 +6,13 @@ const Registration = require("../../model/registration");
 const crypto = require("crypto");
 const { generateToken, jwtAuthMiddleware } = require("../../middleware/auth");
 const { sendSuccessEmail } = require("../../utils/email");
+const { ApiError } = require("../../utils/ApiError");
+const { ApiResponse } = require("../../utils/ApiResponse");
 
 const multer = require("multer");
-const { ApiError } = require("../../utils/ApiError");
+const {
+  forgetPassward,
+} = require("../../controllers/Registration/registration.controller");
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -44,6 +48,7 @@ router.post("/", upload.single("trainer_image"), async function (req, res) {
     l_Name,
     email_id,
     password,
+    role,
     isTrainer,
     mobile_number,
     date_of_birth,
@@ -65,6 +70,7 @@ router.post("/", upload.single("trainer_image"), async function (req, res) {
     l_Name,
     email_id,
     password,
+    role,
     isTrainer,
     mobile_number,
     trainer_image,
@@ -82,7 +88,7 @@ router.post("/", upload.single("trainer_image"), async function (req, res) {
   // Check if user already exists
   const existingUser = await Registration.findOne({ email_id });
   if (existingUser) {
-    return res.status(400).json(new ApiError(400, "email_id already exists"));
+    return res.status(409).json(new ApiError(409, "email_id already exists"));
   }
 
   const existingMobileNumber = await Registration.findOne({
@@ -91,21 +97,55 @@ router.post("/", upload.single("trainer_image"), async function (req, res) {
   if (existingMobileNumber) {
     return res
       .status(409)
-      .json({ message: "Mobile number is already registered" });
+      .json(new ApiError(409, "Mobile number is already registered"));
   }
 
   newRegistration
     .save()
     .then((result) => {
       sendSuccessEmail(email_id, f_Name);
-      res.status(200).json({ message: "Success" });
+      res.status(200).json(
+        new ApiResponse(200, "Registration Success", {
+          name: result.f_Name,
+          role: result.role,
+        })
+      );
     })
     .catch((err) => {
       console.log(err);
-      res.status(500).json({
-        error: err,
-      });
+      res
+        .status(500)
+        .json(new ApiError(500, err.message || "Server Error", err));
     });
+});
+
+// GET route to validate user login -----------------------------------------------------------
+router.post("/login", async (req, res) => {
+  try {
+    const { email_id, password } = req.body;
+    const user = await Registration.findOne({ email_id });
+    if (!user) {
+      return res
+        .status(400)
+        .json(new ApiError(400, "Invalid email or password"));
+    }
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json(new ApiError(400, "Invalid email or password"));
+    }
+    // Generate a token
+    const payload = {
+      id: user.id,
+      username: user.email_id,
+    };
+    const token = generateToken(payload, req);
+    res.status(200).json({ token });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error });
+  }
 });
 
 // Update user information by user ID
@@ -116,7 +156,7 @@ router.put(
   async (req, res) => {
     try {
       const userId = req.user.id; // Assuming req.user.id is populated by authentication middleware
-
+      const user = await Registration.findById(userId);
       const {
         user_name,
         email_id,
@@ -136,9 +176,8 @@ router.put(
       const trainer_image = req.file ? req.file.path : undefined;
 
       // Find the user by ID
-      const user = await Registration.findById(userId);
       if (!user) {
-        return res.status(404).json({ message: "User not found" });
+        return res.status(404).json(new ApiError(404, "User not found"));
       }
 
       // Check for email conflicts if email is updated
@@ -238,68 +277,8 @@ router.get("/trainer", jwtAuthMiddleware, function (req, res) {
     });
 });
 
-// GET route to validate user login ----------------------------------------------------------------
-router.post("/login", async (req, res) => {
-  try {
-    const { email_id, password } = req.body;
-    const user = await Registration.findOne({ email_id });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
-    // Generate a token
-    const payload = {
-      id: user.id,
-      username: user.email_id,
-    };
-    const token = generateToken(payload, req);
-    res.status(200).json({ token });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error });
-  }
-});
-
 // POST route to initiate password reset
-router.post("/forget-password", async (req, res) => {
-  const { email_id } = req.body;
-  try {
-    const user = await Registration.findOne({ email_id: email_id });
-    if (!user) {
-      return res.status(404).json({ message: "Email not found" });
-    }
-    // Generate a reset token
-    const resetToken = crypto.randomBytes(20).toString("hex");
-    const resetTokenExpiry = Date.now() + 3600000; // 1 hour
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = resetTokenExpiry;
-    await user.save();
-    // Send email with the reset token
-    const mailOptions = {
-      to: email_id,
-      from: "",
-      subject: "Password Reset",
-      text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
-            Please click on the following link, or paste this into your browser to complete the process:\n\n
-            http://localhost:3000/reset-password/${resetToken}\n\n
-            If you did not request this, please ignore this email and your password will remain unchanged.\n`,
-    };
-
-    transporter.sendMail(mailOptions, (err) => {
-      if (err) {
-        console.log(err);
-        return res.status(500).json({ message: "Error sending email" });
-      }
-      res.status(200).json({ message: "Reset link sent to email" });
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: err });
-  }
-});
+router.post("/forget-password", forgetPassward);
 
 // POST route to reset the password
 router.post("/reset-password/:token", async (req, res) => {

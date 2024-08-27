@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
+const crypto = require("crypto");
 const bcrypt = require("bcrypt");
+const { UserRolesEnum, AvailableUserRoles } = require("../constants");
 
 var RegistrationSchema = new mongoose.Schema(
   {
@@ -33,14 +35,18 @@ var RegistrationSchema = new mongoose.Schema(
     },
     password: {
       type: String,
+      required: [true, "Password is required"],
+    },
+    role: {
+      type: String,
+      enum: AvailableUserRoles,
+      default: UserRolesEnum.USER,
       required: true,
     },
-    isTrainer: {
-      type: Boolean,
-      default: false,
-    },
     trainer_image: String,
-    date_of_birth: String,
+    date_of_birth: {
+      type: Date,
+    },
     rating_count: String,
     address1: String,
     address2: String,
@@ -68,6 +74,7 @@ RegistrationSchema.methods.AuthToken = async function () {
     return token;
   } catch (error) {
     console.log(error);
+    return error;
   }
 };
 
@@ -78,4 +85,22 @@ RegistrationSchema.methods.comparePassword = async function (
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
+/**
+ * @Description Method responsible for generating tokens for email verification, password reset etc.
+ */
+RegistrationSchema.methods.generateTemporaryToken = function () {
+  // This token should be client facing
+  // for example: for email verification unHashedToken should go into the user's mail
+  const unHashedToken = crypto.randomBytes(20).toString("hex");
+
+  // This should stay in the DB to compare at the time of verification
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(unHashedToken)
+    .digest("hex");
+  // This is the expiry time for the token (20 minutes)
+  const tokenExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
+
+  return { unHashedToken, hashedToken, tokenExpiry };
+};
 module.exports = mongoose.model("Registration", RegistrationSchema);
