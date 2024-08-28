@@ -104,7 +104,7 @@ router.get("/allcategory", async (req, res) => {
   const baseUrl = req.protocol + "://" + req.get("host");
 
   try {
-    const categories = await Category.find();
+    const categories = await Category.find().skip(startIndex).limit(limit);
 
     const categoriesWithFullImageUrl = categories.map((category) => {
       return {

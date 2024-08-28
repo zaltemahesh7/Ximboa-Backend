@@ -9,6 +9,7 @@ const { ApiResponse } = require("../../utils/ApiResponse");
 const multer = require("multer");
 const {
   forgetPassward,
+  requestRoleChange,
 } = require("../../controllers/Registration/registration.controller");
 
 // Multer configuration for file uploads
@@ -135,13 +136,14 @@ router.post("/login", async (req, res) => {
     // Generate a token
     const payload = {
       id: user.id,
+      role: user.role,
       username: user.email_id,
     };
     const token = generateToken(payload, req);
     res.status(200).json({ token });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json(new ApiError(500, err.messege || "Server Error while Login", err));
   }
 });
 
@@ -318,5 +320,7 @@ router.post("/logout", (req, res) => {
     }
   });
 });
+
+router.post("/request-role-change", jwtAuthMiddleware, requestRoleChange);
 
 module.exports = router;

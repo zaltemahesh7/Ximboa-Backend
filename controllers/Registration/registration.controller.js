@@ -1,7 +1,9 @@
 const Registration = require("../../model/registration");
 const { ApiError } = require("../../utils/ApiError");
+const { ApiResponse } = require("../../utils/ApiResponse");
+const { asyncHandler } = require("../../utils/asyncHandler");
 
-const UserRegistration = async (req, res) => {
+const userRegistration = asyncHandler(async (req, res) => {
   const {
     f_Name,
     middle_Name,
@@ -72,7 +74,7 @@ const UserRegistration = async (req, res) => {
         .status(500)
         .json(new ApiError(500, err.message || "Server Error", err));
     });
-};
+});
 
 // GET route to validate user login ----------------------------------------------------------------
 const userLogin = async (req, res) => {
@@ -81,31 +83,30 @@ const userLogin = async (req, res) => {
     const user = await Registration.findOne({ email_id });
     if (!user) {
       return res
-      .status(400)
-        .json(new ApiError(400, "Invalid email or password"));
-      }
-      const isMatch = await user.comparePassword(password);
-      if (!isMatch) {
-        return res
         .status(400)
         .json(new ApiError(400, "Invalid email or password"));
-      }
-      // Generate a token
-      const payload = {
-        id: user.id,
-        username: user.email_id,
-      };
-      const token = generateToken(payload, req);
-      res.status(200).json({ token });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: error });
     }
-  };
-  
-  
-  // Forget Passward controller ----------------------------------------------------------------
-  const forgetPassward = async (req, res) => {
+    const isMatch = await user.comparePassword(password);
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json(new ApiError(400, "Invalid email or password"));
+    }
+    // Generate a token
+    const payload = {
+      id: user.id,
+      username: user.email_id,
+    };
+    const token = generateToken(payload, req);
+    res.status(200).json({ token });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error });
+  }
+};
+
+// Forget Passward controller ----------------------------------------------------------------
+const forgetPassward = async (req, res) => {
   const { email_id } = req.body;
   try {
     const user = await Registration.findOne({ email_id: email_id });
@@ -123,7 +124,7 @@ const userLogin = async (req, res) => {
       to: email_id,
       from: "",
       subject: "Password Reset",
-      text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
+      text: `You are receiving this because you have requested the reset of the password for your account.\n\n
             Please click on the following link, or paste this into your browser to complete the process:\n\n
             http://localhost:3000/reset-password/${resetToken}\n\n
             If you did not request this, please ignore this email and your password will remain unchanged.\n`,
@@ -138,8 +139,73 @@ const userLogin = async (req, res) => {
     });
   } catch (err) {
     console.log(err);
-    res.status(500).json({ error: err });
+    res.status(500).json(new ApiError(500, err.message, err));
   }
-}
+};
 
-module.exports = { UserRegistration, userLogin, forgetPassward };
+// controllers/roleController.js
+
+// Request role change
+const requestRoleChange = async (req, res) => {
+  const { requested_Role } = req.body;
+  const userId = req.user.id;
+
+  try {
+    // Validate requested role
+    // Update user's role in the database
+    await Registration.findByIdAndUpdate(userId, {
+      requested_Role: requested_Role,
+    });
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, "Role change request submitted successfully.")
+      );
+  } catch (err) {
+    res
+      .status(500)
+      .json(
+        new ApiError(
+          500,
+          err.error || "Error processing role change request.",
+          err
+        )
+      );
+  }
+};
+
+// Approve/deny role change
+const approveRoleChange = async (req, res) => {
+  const { userId, approved } = req.body;
+
+  try {
+    const user = await Registration.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found." });
+    }
+
+    if (approved) {
+      // Update user's role (e.g., from USER to ADMIN/TRAINER)
+      await Registration.findByIdAndUpdate(userId, {
+        requested_Role: user.requested_Role,
+      });
+      res.status(200).json({ message: "Role change approved." });
+    } else {
+      res.status(200).json({ message: "Role change denied." });
+    }
+  } catch (err) {
+    res
+      .status(500)
+      .json(
+        ApiError(500, err.message || "Error processing approval request.", err)
+      );
+  }
+};
+
+module.exports = {
+  userRegistration,
+  userLogin,
+  forgetPassward,
+  requestRoleChange,
+  approveRoleChange,
+};

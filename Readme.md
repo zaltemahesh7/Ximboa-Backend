@@ -1,25 +1,23 @@
-# Project Name
+### 💻 Running locally
 
-A brief description of your project goes here.
+To run the FreeAPI project locally, follow these steps:
 
-## Table of Contents
+1. Install [NodeJs](https://www.nodejs.org/), [MongoDB](https://www.mongodb.com) and [MongoDB Compass (optional)](https://www.mongodb.com/products/compass) on your machine.
+2. Clone the project repository.
+3. Navigate to the project directory.
 
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Running the Server](#running-the-server)
-- [API Endpoints](#api-endpoints)
-- [Contributing](#contributing)
-- [License](#license)
+```bash
+   cd limbo
+```
 
-## Installation
+5. Install the packages:
 
-1. **Clone the repository:**
-
-   ```bash
-   git clone https://github.com/zaltemahesh7/limbo
-
-Navigate into the project directory:
-cd your-repo-name
-
-Install the dependencies:
+```bash
 npm install
+```
+
+6. Run the project:
+
+```bash
+npm run start
+```

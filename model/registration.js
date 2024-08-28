@@ -29,7 +29,7 @@ var RegistrationSchema = new mongoose.Schema(
     email_id: {
       type: String,
       lowercase: true,
-      required: true,
+      required: [true, "Email is required"],
       unique: true,
       trim: true,
     },
@@ -42,6 +42,10 @@ var RegistrationSchema = new mongoose.Schema(
       enum: AvailableUserRoles,
       default: UserRolesEnum.USER,
       required: true,
+    },
+    requested_Role: {
+      type: String,
+      enum: AvailableUserRoles,
     },
     trainer_image: String,
     date_of_birth: {
