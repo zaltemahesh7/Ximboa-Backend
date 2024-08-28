@@ -140,10 +140,12 @@ router.post("/login", async (req, res) => {
       username: user.email_id,
     };
     const token = generateToken(payload, req);
-    res.status(200).json({ token });
+    res.status(200).json({ token, role: user.role });
   } catch (err) {
     console.error(err);
-    res.status(500).json(new ApiError(500, err.messege || "Server Error while Login", err));
+    res
+      .status(500)
+      .json(new ApiError(500, err.messege || "Server Error while Login", err));
   }
 });
 
