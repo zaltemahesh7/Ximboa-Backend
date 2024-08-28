@@ -33,9 +33,6 @@ app.use("/enrollcourse", jwtAuthMiddleware, enrollCourse); // Register auth rout
 var registerRoute = require("./app/route/registration");
 app.use("/registration", registerRoute);
 
-var trainerINfoRoute = require("./app/route/trainerInfo");
-app.use("/trainerINfo", trainerINfoRoute);
-
 var aboutRoute = require("./app/route/about");
 app.use("/about", jwtAuthMiddleware, aboutRoute);
 

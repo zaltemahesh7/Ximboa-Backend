@@ -51,7 +51,27 @@ var RegistrationSchema = new mongoose.Schema(
     date_of_birth: {
       type: Date,
     },
-    rating_count: String,
+    requests: [
+      {
+        userid: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Registration",
+        },
+        requestedRole: {
+          type: String,
+          enum: ["admin", "trainer", "student"],
+        },
+        requestDate: {
+          type: Date,
+          default: Date.now,
+        },
+        status: {
+          type: String,
+          enum: ["pending", "approved", "rejected"],
+          default: "pending",
+        },
+      },
+    ],
     address1: String,
     address2: String,
     city: String,

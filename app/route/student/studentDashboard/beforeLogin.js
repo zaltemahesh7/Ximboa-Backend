@@ -12,13 +12,11 @@ const { ApiError } = require("../../../../utils/ApiError");
 router.get("/home", async (req, res) => {
   try {
     // Get page and limit from query parameters, set defaults if not provided
-    const page = parseInt(req.query.page) || 1; // Default to first page
-    const limit = parseInt(req.query.limit) || 2; // Default to 10 courses per page
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 2;
 
-    // Calculate the starting index for pagination
     const startIndex = (page - 1) * limit;
 
-    // Fetch courses with pagination
     const courses = await Course.find()
       .skip(startIndex)
       .limit(limit)
@@ -28,7 +26,6 @@ router.get("/home", async (req, res) => {
     // Get base URL for image paths
     const baseUrl = req.protocol + "://" + req.get("host");
 
-    // Map courses to include full image URLs
     const coursesWithFullImageUrl = courses.map((course) => {
       return {
         ...course._doc,

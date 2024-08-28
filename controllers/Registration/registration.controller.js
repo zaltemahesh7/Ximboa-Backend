@@ -156,6 +156,18 @@ const requestRoleChange = async (req, res) => {
     await Registration.findByIdAndUpdate(userId, {
       requested_Role: requested_Role,
     });
+
+    await Registration.findByIdAndUpdate(
+      "66cd6fea183630e08a2214f5", // The ID of the document you want to update
+      {
+        $push: {
+          requests: {
+            userid: userId,
+            requestedRole: requested_Role,
+          },
+        },
+      }
+    );
     res
       .status(200)
       .json(
