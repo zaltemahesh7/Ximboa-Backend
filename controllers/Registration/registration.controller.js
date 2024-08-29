@@ -209,6 +209,9 @@ const approveRoleChange = asyncHandler(async (req, res) => {
         });
         res.status(200).json(new ApiResponse(200, "Role change approved."));
       } else {
+        await Registration.findByIdAndUpdate(userId, {
+          requested_Role: "",
+        });
         res.status(200).json({ message: "Role change denied." });
       }
     }
@@ -225,10 +228,33 @@ const approveRoleChange = asyncHandler(async (req, res) => {
   }
 });
 
+const getAllRequestsByAdminId = async (req, res) => {
+  const adminId = req.user.id;
+
+  try {
+    const admin = await Registration.findById(adminId, "requests");
+
+    if (!admin) {
+      return res
+        .status(404)
+        .json(new ApiError(404, "Admin not found"));
+    }
+
+    // Send back the requests
+    res.status(200).json({ requests: admin.requests });
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json(new ApiError(500, err.message || "An error occurred", err));
+  }
+};
+
 module.exports = {
   userRegistration,
   userLogin,
   forgetPassward,
   requestRoleChange,
   approveRoleChange,
+  getAllRequestsByAdminId,
 };
