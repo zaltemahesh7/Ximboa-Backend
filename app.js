@@ -82,7 +82,7 @@ var QuestionsRoute = require("./app/route/QuestionsRoute/Questions");
 app.use("/questions", jwtAuthMiddleware, QuestionsRoute);
 
 var TrainerRoute = require("./app/route/trainner");
-app.use("/trainers", TrainerRoute);
+app.use("/trainers",jwtAuthMiddleware, TrainerRoute);
 
 var EnquirysRoute = require("./app/route/Enquirys");
 app.use("/enquiries", jwtAuthMiddleware, EnquirysRoute);

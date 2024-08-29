@@ -17,9 +17,9 @@ const gallary = require("../../model/gallary");
 // Get data according to the trainer Email id
 
 // Get all data according to the trainer
-router.get("/:t_id", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const trainerId = req.params.t_id;
+    const trainerId = req.user.id;
 
     // Find the trainer
     const trainer = await Trainer.findById(trainerId);
@@ -201,7 +201,7 @@ router.get("/:t_id", async (req, res) => {
       UpcomingBatches,
     });
   } catch (error) {
-    // console.log(error);
+    console.log(error);
     res.status(500).send({ message: "Server error", error });
   }
 });
