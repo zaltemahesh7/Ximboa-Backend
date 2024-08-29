@@ -10,6 +10,7 @@ const multer = require("multer");
 const {
   forgetPassward,
   requestRoleChange,
+  approveRoleChange,
 } = require("../../controllers/Registration/registration.controller");
 
 // Multer configuration for file uploads
@@ -324,5 +325,7 @@ router.post("/logout", (req, res) => {
 });
 
 router.post("/request-role-change", jwtAuthMiddleware, requestRoleChange);
+
+router.post("/approve-role-change", jwtAuthMiddleware , approveRoleChange)
 
 module.exports = router;

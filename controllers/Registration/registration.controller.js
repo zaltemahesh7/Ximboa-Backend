@@ -133,7 +133,9 @@ const forgetPassward = async (req, res) => {
     transporter.sendMail(mailOptions, (err) => {
       if (err) {
         console.log(err);
-        return res.status(500).json({ message: "Error sending email" });
+        return res
+          .status(500)
+          .json(new ApiError(500, err.message || "Error sending email", err));
       }
       res.status(200).json({ message: "Reset link sent to email" });
     });
@@ -146,7 +148,7 @@ const forgetPassward = async (req, res) => {
 // controllers/roleController.js
 
 // Request role change
-const requestRoleChange = async (req, res) => {
+const requestRoleChange = asyncHandler(async (req, res) => {
   const { requested_Role } = req.body;
   const userId = req.user.id;
 
@@ -184,35 +186,44 @@ const requestRoleChange = async (req, res) => {
         )
       );
   }
-};
+});
 
 // Approve/deny role change
-const approveRoleChange = async (req, res) => {
-  const { userId, approved } = req.body;
-
+const approveRoleChange = asyncHandler(async (req, res) => {
   try {
-    const user = await Registration.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: "User not found." });
-    }
-
-    if (approved) {
-      // Update user's role (e.g., from USER to ADMIN/TRAINER)
-      await Registration.findByIdAndUpdate(userId, {
-        requested_Role: user.requested_Role,
-      });
-      res.status(200).json({ message: "Role change approved." });
+    const { userId, approved } = req.body;
+    const admin = req.user.role;
+    if (admin !== "ADMIN") {
+      res.status(200).json(new ApiResponse(200, "You are NOT Admin"));
     } else {
-      res.status(200).json({ message: "Role change denied." });
+      const user = await Registration.findById(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found." });
+      }
+
+      if (approved) {
+        // Update user's role (e.g., from USER to ADMIN/TRAINER)
+        await Registration.findByIdAndUpdate(userId, {
+          role: user.requested_Role,
+          requested_Role: "",
+        });
+        res.status(200).json(new ApiResponse(200, "Role change approved."));
+      } else {
+        res.status(200).json({ message: "Role change denied." });
+      }
     }
   } catch (err) {
     res
       .status(500)
       .json(
-        ApiError(500, err.message || "Error processing approval request.", err)
+        new ApiError(
+          500,
+          err.message || "Error processing approval request.",
+          err
+        )
       );
   }
-};
+});
 
 module.exports = {
   userRegistration,
