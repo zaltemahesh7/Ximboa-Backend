@@ -191,25 +191,25 @@ const requestRoleChange = asyncHandler(async (req, res) => {
 // Approve/deny role change
 const approveRoleChange = asyncHandler(async (req, res) => {
   try {
-    const { userId, approved } = req.body;
+    const { userid, approved } = req.body;
     const admin = req.user.role;
     if (admin !== "ADMIN") {
       res.status(200).json(new ApiResponse(200, "You are NOT Admin"));
     } else {
-      const user = await Registration.findById(userId);
+      const user = await Registration.findById(userid);
       if (!user) {
         return res.status(404).json({ error: "User not found." });
       }
 
       if (approved) {
         // Update user's role (e.g., from USER to ADMIN/TRAINER)
-        await Registration.findByIdAndUpdate(userId, {
+        await Registration.findByIdAndUpdate(userid, {
           role: user.requested_Role,
           requested_Role: "",
         });
         res.status(200).json(new ApiResponse(200, "Role change approved."));
       } else {
-        await Registration.findByIdAndUpdate(userId, {
+        await Registration.findByIdAndUpdate(userid, {
           requested_Role: "",
         });
         res.status(200).json({ message: "Role change denied." });
