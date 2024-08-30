@@ -1,16 +1,18 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const Enrollment = require("../../../model/Student/Enrollment"); // Assuming Enrollment model is in models directory
-const Course = require("../../../model/course"); // Assuming Course model is in models directory
-const Student = require("../../../model/Student/Student"); // Assuming Student model is in models directory
+const Enrollment = require("../../../model/Student/Enrollment");
+const Course = require("../../../model/course");
 const { jwtAuthMiddleware } = require("../../../middleware/auth");
+const { ApiError } = require("../../../utils/ApiError");
+const Registration = require("../../../model/registration");
 
 const router = express.Router();
 
 // POST route to enroll in a course
 router.post("/", jwtAuthMiddleware, async (req, res) => {
   try {
-    const { student_id, course_id } = req.body;
+    const { course_id } = req.body;
+    const userid = req.user.id;
 
     // Check if the course exists
     const course = await Course.findById(course_id);
@@ -19,14 +21,14 @@ router.post("/", jwtAuthMiddleware, async (req, res) => {
     }
 
     // Check if the student exists
-    const student = await Student.findById(student_id);
+    const student = await Registration.findById(userid);
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
 
     // Check if the student is already enrolled in the course
     const existingEnrollment = await Enrollment.findOne({
-      student_id,
+      userid,
       course_id,
     });
     if (existingEnrollment) {
@@ -37,7 +39,7 @@ router.post("/", jwtAuthMiddleware, async (req, res) => {
 
     // Create a new enrollment
     const enrollment = new Enrollment({
-      student_id,
+      userid,
       course_id,
     });
 
@@ -47,7 +49,9 @@ router.post("/", jwtAuthMiddleware, async (req, res) => {
       .json({ message: "Enrollment successful", enrollment: result });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error });
+    res
+      .status(500)
+      .json(new ApiError(500, error.message || "Server Error", error));
   }
 });
 
@@ -63,7 +67,7 @@ router.get("/", async (req, res) => {
 router.get("/student", jwtAuthMiddleware, async (req, res) => {
   try {
     const enrollments = await Enrollment.find({
-      student_id: req.user.id,
+      userid: req.user.id,
     }).populate("course_id", "course_name");
     if (enrollments.length === 0) {
       return res

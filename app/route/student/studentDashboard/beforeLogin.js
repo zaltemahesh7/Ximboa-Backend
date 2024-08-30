@@ -101,7 +101,6 @@ router.get("/allcategory", async (req, res) => {
   const baseUrl = req.protocol + "://" + req.get("host");
 
   try {
-
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 4;
     const startIndex = (page - 1) * limit;
@@ -228,12 +227,20 @@ router.get("/course/:id", (req, res, next) => {
 // ========================= event/:id ====================================
 router.get("/event/:id", async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id);
+    const eventWithFullImageUrls = await Event.findById(req.params.id)
+      .populate("trainerid", "f_Name l_Name")
+      .populate("event_category", "category_name");
+
+    const event = {
+      ...eventWithFullImageUrls._doc,
+      event_thumbnail: `http://${req.headers.host}/${eventWithFullImageUrls.event_thumbnail}`,
+    };
     if (!event) {
       return res.status(404).json(new ApiError(404, "Event not found"));
     }
-    res.status(200).json(event);
+    res.status(200).json({ event: event });
   } catch (error) {
+    // console.log(error);
     res.status(500).json({ message: "Error fetching event", error });
   }
 });
@@ -269,13 +276,14 @@ router.get("/allevents", async (req, res) => {
 // Get a single product by ID
 router.get("/product/:id", async function (req, res, next) {
   Product.find({ _id: req.params.id })
+    .populate("t_id", "f_Name l_Name")
     .then((result) => {
       const productsWithFullImageUrls = result.map((product) => ({
         ...product._doc,
         product_image: `http://${req.headers.host}/${product.product_image}`,
       }));
       // console.log(productsWithFullImageUrls),
-      res.status(200).json({ productsWithFullImageUrls });
+      res.status(200).json(productsWithFullImageUrls[0]);
     })
     .catch((err) => {
       res

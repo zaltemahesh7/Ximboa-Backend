@@ -8,11 +8,9 @@ const {
   getAdminById,
 } = require("../../controllers/Admin/adminController");
 
-// Route to create a new admin
-router.post("/", createAdmin);
 
 // Route to get all admins
-router.get("/", getAllAdmins);
+router.get("/get_all_admin", getAllAdmins);
 
 // Route to get an admin by ID
 router.get("/:id", getAdminById);
