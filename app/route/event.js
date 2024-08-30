@@ -60,7 +60,7 @@ router.get("/:id", async (req, res) => {
 
     const event = {
       ...eventWithFullThumbnailUrl,
-      event_category: eventWithFullThumbnailUrl.event_category.category_name, // Directly include category_name
+      event_categories: eventWithFullThumbnailUrl.event_category.category_name, // Directly include category_name
       event_thumbnail: eventWithFullThumbnailUrl.event_thumbnail
         ? `${baseUrl}/${eventWithFullThumbnailUrl.event_thumbnail.replace(/\\/g, "/")}`
         : "",
