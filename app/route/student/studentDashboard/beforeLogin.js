@@ -21,7 +21,7 @@ router.get("/home", async (req, res) => {
       .skip(startIndex)
       .limit(limit)
       .populate("category_id", "category_name -_id")
-      .populate("trainer_id", "f_Name l_Name");
+      .populate("trainer_id", "f_Name l_Name -_id");
 
     // Get base URL for image paths
     const baseUrl = req.protocol + "://" + req.get("host");
@@ -132,7 +132,7 @@ router.get("/allcategory", async (req, res) => {
 router.get("/allcourses", async (req, res) => {
   try {
     const courses = await Course.find()
-      .populate("category_id")
+      .populate("category_id", "category_name")
       .populate("trainer_id");
 
     // Get base URL for image paths
@@ -205,7 +205,7 @@ router.get("/alltrainers", async (req, res) => {
 // ========================= course/:id ====================================
 router.get("/course/:id", (req, res, next) => {
   Course.find({ _id: req.params.id })
-    .populate("category_id")
+    .populate("category_id", "category_name")
     .populate("trainer_id")
     .then((result) => {
       const coursesWithFullImageUrls = result.map((course) => ({
@@ -228,8 +228,8 @@ router.get("/course/:id", (req, res, next) => {
 router.get("/event/:id", async (req, res) => {
   try {
     const eventWithFullImageUrls = await Event.findById(req.params.id)
-      .populate("trainerid", "f_Name l_Name")
-      .populate("event_category", "category_name");
+      .populate("trainerid", "f_Name l_Name -_id")
+      .populate("event_category", "category_name -_id");
 
     const event = {
       ...eventWithFullImageUrls._doc,
@@ -238,7 +238,7 @@ router.get("/event/:id", async (req, res) => {
     if (!event) {
       return res.status(404).json(new ApiError(404, "Event not found"));
     }
-    res.status(200).json({ event: event });
+    res.status(200).json(event);
   } catch (error) {
     // console.log(error);
     res.status(500).json({ message: "Error fetching event", error });
@@ -251,8 +251,8 @@ router.get("/allevents", async (req, res) => {
 
   try {
     const events = await Event.find()
-      .populate("event_category", "category_name")
-      .populate("trainerid", "f_Name l_Name");
+      .populate("event_category", "category_name -_id")
+      .populate("trainerid", "f_Name l_Name -_id");
     if (!events || events.length === 0) {
       return res.status(404).json(new ApiError(404, "Events not found"));
     }
@@ -301,6 +301,7 @@ router.get("/product/:id", async function (req, res, next) {
 // Get a single product by ID
 router.get("/allproduct", async function (req, res, next) {
   Product.find()
+    .populate("t_id", "f_Name l_Name")
     .then((result) => {
       const productsWithFullImageUrls = result.map((product) => ({
         ...product._doc,

@@ -19,7 +19,7 @@ const gallary = require("../../model/gallary");
 // Get all data according to the trainer
 router.get("/", async (req, res) => {
   try {
-    const trainerId = req.user.id;
+    const trainerId = req.user.id || req.params.id;
 
     // Find the trainer
     const trainer = await Trainer.findById(trainerId);
