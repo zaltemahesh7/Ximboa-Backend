@@ -1,26 +1,26 @@
 const express = require("express");
 const router = express.Router();
-const Trainer = require("../../model/registration");
-const Course = require("../../model/course");
-const Review = require("../../model/Review");
-const Question = require("../../model/Questions/Questions");
-const Appointment = require("../../model/Appointment/Appointment");
-const Enquiry = require("../../model/Enquire");
-const Product = require("../../model/product");
-const Event = require("../../model/event");
-const About1 = require("../../model/about");
-const Education = require("../../model/education");
-const SocialMedia = require("../../model/socialMedia");
-const testemonial = require("../../model/testemonial");
-const gallary = require("../../model/gallary");
-const { ApiError } = require("../../utils/ApiError");
+const Trainer = require("../../../model/registration");
+const Course = require("../../../model/course");
+const Review = require("../../../model/Review");
+const Question = require("../../../model/Questions/Questions");
+const Appointment = require("../../../model/Appointment/Appointment");
+const Enquiry = require("../../../model/Enquire");
+const Product = require("../../../model/product");
+const Event = require("../../../model/event");
+const About1 = require("../../../model/about");
+const Education = require("../../../model/education");
+const SocialMedia = require("../../../model/socialMedia");
+const testemonial = require("../../../model/testemonial");
+const gallary = require("../../../model/gallary");
+const { ApiError } = require("../../../utils/ApiError");
 
 // Get data according to the trainer Email id
 
 // Get all data according to the trainer
-router.get("/", async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
-    const trainerId = req.user.id;
+    const trainerId = req.params.id;
 
     // Find the trainer
     const trainer = await Trainer.findById(trainerId);

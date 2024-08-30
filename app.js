@@ -33,7 +33,6 @@ app.use("/enrollcourse", jwtAuthMiddleware, enrollCourse); // Register auth rout
 var registerRoute = require("./app/route/registration");
 app.use("/registration", registerRoute);
 
-
 app.use("/admin", adminRoutes);
 
 var aboutRoute = require("./app/route/about");
@@ -87,7 +86,8 @@ app.use("/questions", jwtAuthMiddleware, QuestionsRoute);
 var TrainerRoute = require("./app/route/trainner");
 app.use("/trainers", jwtAuthMiddleware, TrainerRoute);
 
-app.use("/trainers", TrainerRoute);
+var trainerProfile = require("./app/route/Trainer/trainerProfile");
+app.use("/trainerbyid", trainerProfile);
 
 var EnquirysRoute = require("./app/route/Enquirys");
 app.use("/enquiries", jwtAuthMiddleware, EnquirysRoute);
@@ -95,12 +95,11 @@ app.use("/enquiries", jwtAuthMiddleware, EnquirysRoute);
 const beforeLoginRoutes = require("./app/route/student/studentDashboard/beforeLogin");
 app.use("/beforeLogin", beforeLoginRoutes);
 
+
 const footerRouter = require("./app/route/footer.router");
 app.use("/footer", footerRouter);
 
-
 var mongoose = require("mongoose");
-const { categoriesDataFooter } = require("./controllers/Footer/footer.controller");
 mongoose
   .connect("mongodb://127.0.0.1:27017/bhoj_soft_solution")
   .then(function () {
