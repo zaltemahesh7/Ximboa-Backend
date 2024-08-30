@@ -182,7 +182,7 @@ router.get("/:id", async (req, res) => {
       };
     });
 
-    res.status(200).send({
+    res.status(200).json({
       trainer,
       coursesWithFullImageUrl,
       reviews,

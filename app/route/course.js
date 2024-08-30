@@ -92,6 +92,28 @@ router.post(
   }
 );
 
+// ========================= course/:id ====================================
+router.get("/:id", (req, res, next) => {
+  Course.find({ _id: req.params.id })
+    .populate("category_id", "category_name -_id")
+    .select("-trainer_id")
+    .then((result) => {
+      const coursesWithFullImageUrls = result.map((course) => ({
+        ...course._doc,
+        thumbnail_image: `http://${req.headers.host}/${course.thumbnail_image}`,
+
+        gallary_image: `http://${req.headers.host}/${course.gallary_image}`,
+        trainer_materialImage: `http://${req.headers.host}/${course.trainer_materialImage}`,
+      }));
+      // console.log(coursesWithFullImageUrls),
+      res.status(200).json(coursesWithFullImageUrls[0]);
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).json({ error: err });
+    });
+});
+
 // DELETE a course by ID
 router.delete("/:id", async (req, res, next) => {
   try {
@@ -107,7 +129,7 @@ router.delete("/:id", async (req, res, next) => {
   }
 });
 
-// dto 
+// dto
 // UPDATE a course by ID with image upload
 router.put(
   "/:id",

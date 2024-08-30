@@ -42,6 +42,26 @@ router.post(
   }
 );
 
+router.get("/:id", async (req, res) => {
+  try {
+    const eventWithFullImageUrls = await Event.findById(req.params.id)
+    .populate("event_category", "category_name")
+    .select("-trainerid")
+
+    const event = {
+      ...eventWithFullImageUrls._doc,
+      event_thumbnail: `http://${req.headers.host}/${eventWithFullImageUrls.event_thumbnail}`,
+    };
+    if (!event) {
+      return res.status(404).json(new ApiError(404, "Event not found"));
+    }
+    res.status(200).json(event);
+  } catch (error) {
+    // console.log(error);
+    res.status(500).json({ message: "Error fetching event", error });
+  }
+});
+
 router.get("/events", async (req, res) => {
   try {
     // Get the event type from query params

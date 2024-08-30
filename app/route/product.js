@@ -79,16 +79,27 @@ router.get("/", function (req, res, next) {
 });
 
 // Get a single product by ID
-router.get("/:id", function (req, res, next) {
-  Product.findById(req.params.id)
+router.get("/:id", async function (req, res, next) {
+  Product.find({ _id: req.params.id })
+  .select("-t_id")
     .then((result) => {
-      res.status(200).json({
-        product: result,
-      });
+      const productsWithFullImageUrls = result.map((product) => ({
+        ...product._doc,
+        product_image: `http://${req.headers.host}/${product.product_image}`,
+      }));
+      // console.log(productsWithFullImageUrls),
+      res.status(200).json(productsWithFullImageUrls[0]);
     })
     .catch((err) => {
-      console.error(err);
-      res.status(500).json({ error: err });
+      res
+        .status(500)
+        .json(
+          new ApiError(
+            500,
+            err.message || "Server Error Gretting Product by Id",
+            err
+          )
+        );
     });
 });
 
@@ -126,10 +137,16 @@ router.put(
       const updateData = {
         product_name: req.body.product_name || existingProduct.product_name,
         product_prize: req.body.product_prize || existingProduct.product_prize,
-        product_selling_prize: req.body.product_selling_prize || existingProduct.product_selling_prize,
+        product_selling_prize:
+          req.body.product_selling_prize ||
+          existingProduct.product_selling_prize,
         products_info: req.body.products_info || existingProduct.products_info,
-        product_image: req.files["product_image"] ? req.files["product_image"][0].path : existingProduct.product_image,
-        product_gallary: req.files["product_gallary"] ? req.files["product_gallary"][0].path : existingProduct.product_gallary,
+        product_image: req.files["product_image"]
+          ? req.files["product_image"][0].path
+          : existingProduct.product_image,
+        product_gallary: req.files["product_gallary"]
+          ? req.files["product_gallary"][0].path
+          : existingProduct.product_gallary,
         trainer_id: req.user.id, // Update the trainer ID if needed
       };
 
@@ -149,7 +166,6 @@ router.put(
     }
   }
 );
-
 
 // Get products by trainer ID
 router.get("/bytrainer", function (req, res, next) {

@@ -1,7 +1,7 @@
 const express = require('express');
-const { categoriesDataFooter } = require('../../controllers/Footer/footer.controller');
+const { categoriesDataFooter, coursesDataFooter } = require('../../controllers/Footer/footer.controller');
 const router = express.Router();
 
-router.get('/', categoriesDataFooter);
+router.get('/', categoriesDataFooter, coursesDataFooter);
 
 module.exports = router;
