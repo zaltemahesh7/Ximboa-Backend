@@ -44,23 +44,55 @@ router.post(
 
 router.get("/:id", async (req, res) => {
   try {
-    const eventWithFullImageUrls = await Event.findById(req.params.id)
-    .populate("event_category", "category_name")
-    .select("-trainerid")
+    const eventId = req.params.id;
+
+    // Find the event by its ID and populate category_id with only category_name
+    const eventWithFullThumbnailUrl = await Event.findById(eventId)
+      .populate("event_category", "category_name -_id")
+      .lean();
+
+    if (!eventWithFullThumbnailUrl) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    // Get base URL for image paths
+    const baseUrl = req.protocol + "://" + req.get("host");
 
     const event = {
-      ...eventWithFullImageUrls._doc,
-      event_thumbnail: `http://${req.headers.host}/${eventWithFullImageUrls.event_thumbnail}`,
+      ...eventWithFullThumbnailUrl,
+      event_category: eventWithFullThumbnailUrl.event_category.category_name, // Directly include category_name
+      event_thumbnail: eventWithFullThumbnailUrl.event_thumbnail
+        ? `${baseUrl}/${eventWithFullThumbnailUrl.event_thumbnail.replace(/\\/g, "/")}`
+        : "",
     };
-    if (!event) {
-      return res.status(404).json(new ApiError(404, "Event not found"));
-    }
+
+    // Send back the event with the full thumbnail URL and direct category_name
     res.status(200).json(event);
   } catch (error) {
-    // console.log(error);
+    console.error(error);
     res.status(500).json({ message: "Error fetching event", error });
   }
 });
+
+// router.get("/:id", async (req, res) => {
+//   try {
+//     const eventWithFullImageUrls = await Event.findById(req.params.id)
+//     .populate("event_category", "category_name")
+//     .select("-trainerid")
+
+//     const event = {
+//       ...eventWithFullImageUrls._doc,
+//       event_thumbnail: `http://${req.headers.host}/${eventWithFullImageUrls.event_thumbnail}`,
+//     };
+//     if (!event) {
+//       return res.status(404).json(new ApiError(404, "Event not found"));
+//     }
+//     res.status(200).json(event);
+//   } catch (error) {
+//     // console.log(error);
+//     res.status(500).json({ message: "Error fetching event", error });
+//   }
+// });
 
 router.get("/events", async (req, res) => {
   try {

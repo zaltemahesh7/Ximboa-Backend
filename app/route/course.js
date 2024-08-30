@@ -100,6 +100,7 @@ router.get("/:id", (req, res, next) => {
     .then((result) => {
       const coursesWithFullImageUrls = result.map((course) => ({
         ...course._doc,
+        category_name: course.category_id.category_name,
         thumbnail_image: `http://${req.headers.host}/${course.thumbnail_image}`,
 
         gallary_image: `http://${req.headers.host}/${course.gallary_image}`,
