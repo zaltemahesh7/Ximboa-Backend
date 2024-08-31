@@ -101,11 +101,7 @@ router.get("/allcategory", async (req, res) => {
   const baseUrl = req.protocol + "://" + req.get("host");
 
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 4;
-    const startIndex = (page - 1) * limit;
-
-    const categories = await Category.find().skip(startIndex).limit(limit);
+    const categories = await Category.find();
 
     const categoriesWithFullImageUrl = categories.map((category) => {
       return {
@@ -119,9 +115,7 @@ router.get("/allcategory", async (req, res) => {
       };
     });
 
-    res.status(200).send({
-      categoriesWithFullImageUrl,
-    });
+    res.status(200).json(categoriesWithFullImageUrl);
   } catch (err) {
     console.log(err);
     res.status(500).json(new ApiError(500, err?.message || "", err));
@@ -131,7 +125,14 @@ router.get("/allcategory", async (req, res) => {
 // ======================================all Courses===================----------
 router.get("/allcourses", async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 2;
+
+    const startIndex = (page - 1) * limit;
+
     const courses = await Course.find()
+      .skip(startIndex)
+      .limit(limit)
       .populate("category_id", "category_name")
       .populate("trainer_id");
 
