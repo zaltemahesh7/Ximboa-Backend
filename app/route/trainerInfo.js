@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const Trainer = require("../../model/trainerInformation");
 const multer = require("multer");
+const registration = require("../../model/registration");
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -80,7 +81,7 @@ router.get("/", (req, res, next) => {
 
 // Get a single trainer by ID
 router.get("/:id", (req, res, next) => {
-  Trainer.findById(req.params.id)
+  registration.findById(req.params.id)
     .then((result) => {
       if (!result) {
         return res.status(404).json({ error: "Trainer not found" });

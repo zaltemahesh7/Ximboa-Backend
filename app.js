@@ -11,16 +11,6 @@ var bodyparser = require("body-parser");
 app.use(bodyparser.urlencoded({ extended: false }));
 app.use(bodyparser.json());
 
-var session = require("express-session");
-
-app.use(
-  session({
-    secret: "bhoj info solution",
-    resave: true,
-    saveUninitialized: true,
-  })
-);
-
 const adminRoutes = require("./app/adminRoutes/adminRoutes");
 app.use("/admin", adminRoutes); // Register auth routes
 
@@ -85,6 +75,10 @@ app.use("/questions", jwtAuthMiddleware, QuestionsRoute);
 
 var TrainerRoute = require("./app/route/trainner");
 app.use("/trainers", jwtAuthMiddleware, TrainerRoute);
+
+var trainerINfoRoute = require("./app/route/trainerInfo");
+app.use("/trainerINfo", trainerINfoRoute);
+
 
 var trainerProfile = require("./app/route/Trainer/trainerProfile");
 app.use("/trainerbyid", trainerProfile);

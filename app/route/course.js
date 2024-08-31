@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const Course = require("../../model/course");
 const multer = require("multer");
+const { ApiResponse } = require("../../utils/ApiResponse");
+const { ApiError } = require("../../utils/ApiError");
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -27,25 +29,45 @@ const upload = multer({
   fileFilter: fileFilter,
 });
 
-router.get("/", (req, res, next) => {
-  Course.find()
-    .populate("category_id")
-    .populate("trainer_id")
-    .then((result) => {
-      const coursesWithFullImageUrls = result.map((course) => ({
-        ...course._doc,
-        thumbnail_image: `http://${req.headers.host}/${course.thumbnail_image}`,
+router.get("/", async (req, res, next) => {
+  try {
+    // Get page and limit from query parameters with default values
+    const page = parseInt(req.query.page) || 1; // Default to page 1
+    const limit = parseInt(req.query.limit) || 4; // Default to 10 courses per page
 
-        gallary_image: `http://${req.headers.host}/${course.gallary_image}`,
-        trainer_materialImage: `http://${req.headers.host}/${course.trainer_materialImage}`,
-      }));
-      // console.log(coursesWithFullImageUrls),
-      res.status(200).json({ courses: coursesWithFullImageUrls });
-    })
-    .catch((err) => {
-      console.error(err);
-      res.status(500).json({ error: err });
+    // Calculate the number of documents to skip
+    const skip = (page - 1) * limit;
+
+    // Fetch courses with pagination, populate category and trainer, and apply limit and skip
+    const courses = await Course.find()
+      .populate("category_id")
+      .populate("trainer_id", "f_Name l_Name")
+      .limit(limit)
+      .skip(skip);
+
+    // Format the course data to include full image URLs
+    const coursesWithFullImageUrls = courses.map((course) => ({
+      ...course._doc,
+      thumbnail_image: `http://${req.headers.host}/${course.thumbnail_image}`,
+      gallary_image: `http://${req.headers.host}/${course.gallary_image}`,
+      trainer_materialImage: `http://${req.headers.host}/${course.trainer_materialImage}`,
+    }));
+
+    // Get total count of courses to calculate total pages
+    const totalCourses = await Course.countDocuments();
+    const totalPages = Math.ceil(totalCourses / limit);
+
+    // Send response with courses and pagination info
+    res.status(200).json({
+      courses: coursesWithFullImageUrls,
+      currentPage: page,
+      totalPages,
+      totalCourses,
     });
+  } catch (err) {
+    // console.error(err);
+    res.status(500).json(new ApiError(500, err.message || "Server Error", err));
+  }
 });
 
 // POST a new course
@@ -83,11 +105,13 @@ router.post(
     course
       .save()
       .then((result) => {
-        res.status(200).json({ newCourse: result });
+        res.status(200).json(course);
       })
       .catch((err) => {
         console.error(err);
-        res.status(500).json({ error: err });
+        res
+          .status(500)
+          .json(new ApiError(500, err.message || "Server Error", err));
       });
   }
 );
@@ -96,11 +120,11 @@ router.post(
 router.get("/:id", (req, res, next) => {
   Course.find({ _id: req.params.id })
     .populate("category_id", "category_name -_id")
-    .select("-trainer_id")
+    .populate("trainer_id", "f_Name l_Name")
     .then((result) => {
       const coursesWithFullImageUrls = result.map((course) => ({
         ...course._doc,
-        category_name: course.category_id.category_name,
+        category_id: course.category_id.category_name,
         thumbnail_image: `http://${req.headers.host}/${course.thumbnail_image}`,
 
         gallary_image: `http://${req.headers.host}/${course.gallary_image}`,
@@ -111,9 +135,75 @@ router.get("/:id", (req, res, next) => {
     })
     .catch((err) => {
       console.error(err);
-      res.status(500).json({ error: err });
+      res
+        .status(500)
+        .json(new ApiError(500, err.message || "Server Error", err));
     });
 });
+
+router.put(
+  "/:id",
+  upload.fields([
+    { name: "thumbnail_image", maxCount: 1 },
+    { name: "gallary_image", maxCount: 1 },
+    { name: "trainer_materialImage", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    const courseId = req.params.id;
+    const updateData = {
+      course_name: req.body.course_name,
+      online_offline: req.body.online_offline,
+      price: req.body.price,
+      offer_prize: req.body.offer_prize,
+      start_date: req.body.start_date,
+      end_date: req.body.end_date,
+      start_time: req.body.start_time,
+      end_time: req.body.end_time,
+      course_information: req.body.course_information,
+      thumbnail_image: req.files["thumbnail_image"]
+        ? req.files["thumbnail_image"][0].path
+        : undefined, // Use undefined to avoid setting empty string if no file uploaded
+      gallary_image: req.files["gallary_image"]
+        ? req.files["gallary_image"][0].path
+        : undefined,
+      trainer_materialImage: req.files["trainer_materialImage"]
+        ? req.files["trainer_materialImage"][0].path
+        : undefined,
+      category_id: req.body.category_id,
+      trainer_id: req.user.id, // Assuming trainer ID is fetched from the token payload
+    };
+
+    try {
+      // Find the course by ID and update with the new data
+      const updatedCourse = await Course.findByIdAndUpdate(
+        courseId,
+        updateData,
+        {
+          new: true, // Return the updated document
+          runValidators: true, // Run schema validation on updates
+        }
+      );
+
+      if (!updatedCourse) {
+        return res.status(404).json(new ApiError(404, "Course not found"));
+      }
+      res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            "Course updated successfully",
+            updatedCourse.course_name
+          )
+        );
+    } catch (err) {
+      console.error(err);
+      res
+        .status(500)
+        .json(new ApiError(500, err.message || "Server Error", err));
+    }
+  }
+);
 
 // DELETE a course by ID
 router.delete("/:id", async (req, res, next) => {
@@ -130,74 +220,33 @@ router.delete("/:id", async (req, res, next) => {
   }
 });
 
-// dto
-// UPDATE a course by ID with image upload
-router.put(
-  "/:id",
-  upload.fields([
-    { name: "thumbnail_image", maxCount: 1 },
-    { name: "gallary_image", maxCount: 1 },
-    { name: "trainer_materialImage", maxCount: 1 },
-  ]),
-  async (req, res, next) => {
-    try {
-      const courseId = req.params.id;
-
-      const updatedFields = {
-        course_name: req.body.course_name,
-        online_offline: req.body.online_offline,
-        price: req.body.price,
-        offer_prize: req.body.offer_prize,
-        start_date: req.body.start_date,
-        end_date: req.body.end_date,
-        start_time: req.body.start_time,
-        end_time: req.body.end_time,
-        course_information: req.body.course_information,
-        thumbnail_image: req.files["thumbnail_image"]
-          ? req.files["thumbnail_image"][0].path
-          : undefined,
-        gallary_image: req.files["gallary_image"]
-          ? req.files["gallary_image"][0].path
-          : undefined,
-        trainer_materialImage: req.files["trainer_materialImage"]
-          ? req.files["trainer_materialImage"][0].path
-          : undefined,
-        category_id: req.body.category_id,
-        trainer_id: req.user.id, // Don't pass Trainer id it will fetched from token payload
-      };
-
-      // Remove undefined fields from the update object
-      Object.keys(updatedFields).forEach((key) => {
-        if (updatedFields[key] === undefined) {
-          delete updatedFields[key];
-        }
-      });
-
-      const updatedCourse = await Course.findByIdAndUpdate(
-        courseId,
-        updatedFields,
-        { new: true }
-      );
-
-      if (!updatedCourse) {
-        return res.status(404).json({ message: "Course not found" });
-      }
-
-      res.status(200).json({ updatedCourse: updatedCourse });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: error });
-    }
-  }
-);
-
-router.get("/courses", async (req, res) => {
+router.get("/trainer", async (req, res) => {
+  const { trainerId } = req.user.id;
+  console.log(trainerId);
+  
+  if(!trainerId) res.send("No courses")
   try {
-    const courses = await Course.find({ trainer_id: req.user.id });
-    res.status(200).json(courses);
+    // Fetch courses by trainer_id
+    const courses = await Course.find({ trainer_id: trainerId })
+      .populate("category_id", "category_name -_id")
+      .populate("trainer_id", "f_Name l_Name -_id");
+
+    // Map the courses to include full image URLs
+    const coursesWithFullImageUrls = courses.map((course) => ({
+      ...course._doc,
+      thumbnail_image: `http://${req.headers.host}/${course.thumbnail_image}`,
+      gallary_image: `http://${req.headers.host}/${course.gallary_image}`,
+      trainer_materialImage: `http://${req.headers.host}/${course.trainer_materialImage}`,
+    }));
+
+    // Send response with courses data
+    res.status(200).json(coursesWithFullImageUrls);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err });
+    // console.error(err);
+    res.status(500).json({
+      message: "Server Error",
+      error: err.message || "An error occurred while fetching courses.",
+    });
   }
 });
 
