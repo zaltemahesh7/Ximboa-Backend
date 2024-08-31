@@ -268,11 +268,9 @@ router.get("/", function (req, res) {
 
 // Get trainer by Id ----------------------------------------------------------
 router.get("/trainer", jwtAuthMiddleware, function (req, res) {
-  Registration.findById(req.user.id)
-    .then((result) => {
-      res.status(200).json({
-        allRegistration: result,
-      });
+  Registration.findById(req.user.id).select("-password -role -requested_Role -requests")
+    .then((trainer) => {
+      res.status(200).json(trainer);
     })
     .catch((err) => {
       console.error(err);
