@@ -31,6 +31,7 @@ const upload = multer({
 
 router.get("/", async (req, res, next) => {
   try {
+    const baseUrl = req.protocol + "://" + req.get("host");
     // Get page and limit from query parameters with default values
     const page = parseInt(req.query.page) || 1; // Default to page 1
     const limit = parseInt(req.query.limit) || 4; // Default to 10 courses per page
@@ -79,6 +80,7 @@ router.post(
     { name: "trainer_materialImage", maxCount: 1 },
   ]),
   (req, res) => {
+    const baseUrl = req.protocol + "://" + req.get("host");
     const course = new Course({
       course_name: req.body.course_name,
       online_offline: req.body.online_offline,
@@ -118,6 +120,7 @@ router.post(
 
 // ========================= course/:id ====================================
 router.get("/:id", (req, res, next) => {
+  const baseUrl = req.protocol + "://" + req.get("host");
   Course.find({ _id: req.params.id })
     .populate("category_id", "category_name -_id")
     .populate("trainer_id", "f_Name l_Name")
@@ -125,10 +128,16 @@ router.get("/:id", (req, res, next) => {
       const coursesWithFullImageUrls = result.map((course) => ({
         ...course._doc,
         category_id: course.category_id.category_name,
-        thumbnail_image: `http://${req.headers.host}/${course.thumbnail_image}`,
+        thumbnail_image: `http://${
+          req.headers.host
+        }/${course.thumbnail_image.replace(/\\/g, "/")}`,
 
-        gallary_image: `http://${req.headers.host}/${course.gallary_image}`,
-        trainer_materialImage: `http://${req.headers.host}/${course.trainer_materialImage}`,
+        gallary_image: `http://${
+          req.headers.host
+        }/${course.gallary_image.replace(/\\/g, "/")}`,
+        trainer_materialImage: `http://${
+          req.headers.host
+        }/${course.trainer_materialImage.replace(/\\/g, "/")}`,
       }));
       // console.log(coursesWithFullImageUrls),
       res.status(200).json(coursesWithFullImageUrls[0]);
@@ -149,6 +158,7 @@ router.put(
     { name: "trainer_materialImage", maxCount: 1 },
   ]),
   async (req, res) => {
+    const baseUrl = req.protocol + "://" + req.get("host");
     const courseId = req.params.id;
     const updateData = {
       course_name: req.body.course_name,
@@ -208,6 +218,7 @@ router.put(
 // DELETE a course by ID
 router.delete("/:id", async (req, res, next) => {
   try {
+    const baseUrl = req.protocol + "://" + req.get("host");
     const data = await Course.deleteOne({ _id: req.params.id });
     if (!data.deletedCount) res.status(400).json({ msg: "Not Found" });
     else {
@@ -223,8 +234,8 @@ router.delete("/:id", async (req, res, next) => {
 router.get("/trainer", async (req, res) => {
   const { trainerId } = req.user.id;
   console.log(trainerId);
-  
-  if(!trainerId) res.send("No courses")
+
+  if (!trainerId) res.send("No courses");
   try {
     // Fetch courses by trainer_id
     const courses = await Course.find({ trainer_id: trainerId })
@@ -234,9 +245,16 @@ router.get("/trainer", async (req, res) => {
     // Map the courses to include full image URLs
     const coursesWithFullImageUrls = courses.map((course) => ({
       ...course._doc,
-      thumbnail_image: `http://${req.headers.host}/${course.thumbnail_image}`,
-      gallary_image: `http://${req.headers.host}/${course.gallary_image}`,
-      trainer_materialImage: `http://${req.headers.host}/${course.trainer_materialImage}`,
+      thumbnail_image: `http://${
+        req.headers.host
+      }/${course.thumbnail_image.replace(/\\/g, "/")}`,
+      gallary_image: `http://${req.headers.host}/${course.gallary_image.replace(
+        /\\/g,
+        "/"
+      )}`,
+      trainer_materialImage: `http://${
+        req.headers.host
+      }/${course.trainer_materialImage.replace(/\\/g, "/")}`,
     }));
 
     // Send response with courses data
@@ -250,19 +268,27 @@ router.get("/trainer", async (req, res) => {
   }
 });
 
-router.get("/", async (req, res) => {
-  const result = await Course.findById(req.params.id);
-  // .populate("trainer_id")
+router.get("/releted/:category_id", async (req, res) => {
+  const baseUrl = req.protocol + "://" + req.get("host");
+  const result = await Course.find({
+    category_id: req.params.category_id,
+  }).populate("trainer_id", "f_Name l_Name");
 
   if (!result) return res.status(404).json({ message: "Course not found" });
   else {
-    const coursesWithFullImageUrls = [result].map((course) => ({
+    const coursesWithFullImageUrls = result.map((course) => ({
       ...course._doc,
-      thumbnail_image: `http://${req.headers.host}/${course.thumbnail_image}`,
-      gallary_image: `http://${req.headers.host}/${course.gallary_image}`,
-      trainer_materialImage: `http://${req.headers.host}/${course.trainer_materialImage}`,
+      thumbnail_image: `${baseUrl}/${course.thumbnail_image.replace(
+        /\\/g,
+        "/"
+      )}`,
+      gallary_image: `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`,
+      trainer_materialImage: `${baseUrl}/${course.trainer_materialImage.replace(
+        /\\/g,
+        "/"
+      )}`,
     }));
-    res.status(200).json({ courses: coursesWithFullImageUrls });
+    res.status(200).json(coursesWithFullImageUrls);
   }
 });
 

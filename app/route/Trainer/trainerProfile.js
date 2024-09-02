@@ -8,7 +8,7 @@ const Appointment = require("../../../model/Appointment/Appointment");
 const Enquiry = require("../../../model/Enquire");
 const Product = require("../../../model/product");
 const Event = require("../../../model/event");
-const About1 = require("../../../model/about");
+const about = require("../../../model/about");
 const Education = require("../../../model/education");
 const SocialMedia = require("../../../model/socialMedia");
 const testemonial = require("../../../model/testemonial");
@@ -108,7 +108,7 @@ router.get("/:id", async (req, res) => {
     });
 
     // Find About by the trainer
-    const About = await About1.find({ trainer: trainerId });
+    const About = await about.find({ trainer: trainerId });
 
     // Get reviews and groups for each course
     // const courseIds = courses.map((course) => course._id);
