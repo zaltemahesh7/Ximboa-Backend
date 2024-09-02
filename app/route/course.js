@@ -268,7 +268,7 @@ router.get("/trainer", async (req, res) => {
   }
 });
 
-router.get("/releted/:category_id", async (req, res) => {
+router.get("/related/:category_id", async (req, res) => {
   const baseUrl = req.protocol + "://" + req.get("host");
   const result = await Course.find({
     category_id: req.params.category_id,
