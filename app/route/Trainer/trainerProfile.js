@@ -127,11 +127,9 @@ router.get("/:id", async (req, res) => {
     const gallarysWithoutImages = await gallary.find({
       trainer_id: { $in: trainerId },
     });
-    const gallarys = await gallarysWithoutImages[0]?.photos?.map((photo) => {
-      return {
-        photos: photo ? `${baseUrl}/${photo}` : "",
-      };
-    });
+    const gallarys = await gallarysWithoutImages[0]?.photos?.map((photo) =>
+      photo ? `${baseUrl}/${photo.replace(/\\/g, "/")}` : ""
+    );
 
     const currentDate = new Date().toISOString();
 
