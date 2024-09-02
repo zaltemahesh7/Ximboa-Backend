@@ -74,7 +74,7 @@ router.get("/student", jwtAuthMiddleware, async (req, res) => {
         .status(404)
         .send({ message: "No enrollments found for this student" });
     }
-    res.status(200).send(enrollments);
+    res.status(200).send(enrollments[0]);
   } catch (error) {
     res.status(500).send({ message: "Error fetching enrollments", error });
   }

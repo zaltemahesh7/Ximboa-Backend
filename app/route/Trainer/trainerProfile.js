@@ -23,7 +23,7 @@ router.get("/:id", async (req, res) => {
     const trainerId = req.params.id;
 
     // Find the trainer
-    const trainer = await Trainer.findById(trainerId);
+    const trainer = await Trainer.findById(trainerId).select("-password -role");
     if (!trainer) {
       return res.status(404).send({ message: "Trainer not found" });
     }
@@ -69,9 +69,11 @@ router.get("/:id", async (req, res) => {
     });
 
     // Find Events by the trainer
-    const events = await Event.find({ trainerid: trainerId })
-      .populate("event_category", "category_name")
-      .populate("trainerid", "f_Name l_Name");
+    const events = await Event.find({ trainerid: trainerId }).populate(
+      "event_category",
+      "category_name"
+    );
+    // .populate("trainerid", "f_Name l_Name");
 
     const eventsWithThumbnailUrl = events.map((event) => {
       return {
@@ -125,11 +127,9 @@ router.get("/:id", async (req, res) => {
     const gallarysWithoutImages = await gallary.find({
       trainer_id: { $in: trainerId },
     });
-    const gallarys = gallarysWithoutImages.map((gallary) => {
+    const gallarys = await gallarysWithoutImages[0]?.photos?.map((photo) => {
       return {
-        photos: gallary.photos.map((photo) => {
-          photo ? `${baseUrl}/${photo}` : "";
-        }),
+        photos: photo ? `${baseUrl}/${photo}` : "",
       };
     });
 

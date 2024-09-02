@@ -48,7 +48,6 @@ router.post("/", upload.single("trainer_image"), async function (req, res) {
     l_Name,
     email_id,
     password,
-    role,
     isTrainer,
     mobile_number,
     date_of_birth,
@@ -70,7 +69,6 @@ router.post("/", upload.single("trainer_image"), async function (req, res) {
     l_Name,
     email_id,
     password,
-    role,
     isTrainer,
     mobile_number,
     trainer_image,
@@ -104,12 +102,16 @@ router.post("/", upload.single("trainer_image"), async function (req, res) {
     .save()
     .then((result) => {
       sendSuccessEmail(email_id, f_Name);
-      res.status(200).json(
-        new ApiResponse(200, "Registration Success", {
-          name: result.f_Name,
-          role: result.role,
-        })
-      );
+
+      // Generate a token
+      const payload = {
+        id: newRegistration.id,
+        role: newRegistration.role,
+        username: newRegistration.email_id,
+      };
+      const token = generateToken(payload, req);
+
+      res.status(200).json({ token });
     })
     .catch((err) => {
       console.log(err);
@@ -142,7 +144,7 @@ router.post("/login", async (req, res) => {
       username: user.email_id,
     };
     const token = generateToken(payload, req);
-    res.status(200).json({ token, role: user.role });
+    res.status(200).json({ token });
   } catch (err) {
     console.error(err);
     res
@@ -158,7 +160,7 @@ router.put(
   upload.single("trainer_image"),
   async (req, res) => {
     try {
-      const userId = req.user.id; // Assuming req.user.id is populated by authentication middleware
+      const userId = req.user.id; // req.user.id is populated by authentication middleware
       const user = await Registration.findById(userId);
       const {
         user_name,
@@ -268,7 +270,8 @@ router.get("/", function (req, res) {
 
 // Get trainer by Id ----------------------------------------------------------
 router.get("/trainer", jwtAuthMiddleware, function (req, res) {
-  Registration.findById(req.user.id).select("-password -role -requested_Role -requests")
+  Registration.findById(req.user.id)
+    .select("-password -role -requested_Role -requests")
     .then((trainer) => {
       res.status(200).json(trainer);
     })

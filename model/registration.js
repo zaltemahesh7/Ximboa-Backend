@@ -45,7 +45,7 @@ var RegistrationSchema = new mongoose.Schema(
     },
     requested_Role: {
       type: String,
-      enum: AvailableUserRoles,
+      enum: [...AvailableUserRoles, ""],
     },
     trainer_image: String,
     date_of_birth: {

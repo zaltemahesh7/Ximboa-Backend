@@ -125,11 +125,9 @@ router.get("/", async (req, res) => {
     const gallarysWithoutImages = await gallary.find({
       trainer_id: { $in: trainerId },
     });
-    const gallarys = gallarysWithoutImages.map((gallary) => {
+    const gallarys = await gallarysWithoutImages[0]?.photos?.map((photo) => {
       return {
-        photos: gallary.photos.map((photo) => {
-          photo ? `${baseUrl}/${photo}` : "";
-        }),
+        photos: photo ? `${baseUrl}/${photo}` : "",
       };
     });
 
