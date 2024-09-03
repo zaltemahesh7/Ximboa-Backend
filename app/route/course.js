@@ -268,28 +268,5 @@ router.get("/trainer", async (req, res) => {
   }
 });
 
-router.get("/related/:category_id", async (req, res) => {
-  const baseUrl = req.protocol + "://" + req.get("host");
-  const result = await Course.find({
-    category_id: req.params.category_id,
-  }).populate("trainer_id", "f_Name l_Name");
-
-  if (!result) return res.status(404).json({ message: "Course not found" });
-  else {
-    const coursesWithFullImageUrls = result.map((course) => ({
-      ...course._doc,
-      thumbnail_image: `${baseUrl}/${course.thumbnail_image.replace(
-        /\\/g,
-        "/"
-      )}`,
-      gallary_image: `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`,
-      trainer_materialImage: `${baseUrl}/${course.trainer_materialImage.replace(
-        /\\/g,
-        "/"
-      )}`,
-    }));
-    res.status(200).json(coursesWithFullImageUrls);
-  }
-});
 
 module.exports = router;

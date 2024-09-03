@@ -198,31 +198,68 @@ router.get("/alltrainers", async (req, res) => {
       trainersWithFullImageUrl,
     });
   } catch (err) {
-    console.log(err);
-    res.status(500).send({ message: "Error fetching trainer", err });
+    res
+      .status(500)
+      .json(new ApiError(500, err?.message || "Error fetching trainer", err));
   }
 });
 
 // ========================= course/:id ====================================
-router.get("/course/:id", (req, res, next) => {
-  Course.find({ _id: req.params.id })
-    .populate("category_id", "category_name")
-    .populate("trainer_id")
-    .then((result) => {
-      const coursesWithFullImageUrls = result.map((course) => ({
+router.get("/course/:id", async (req, res, next) => {
+  try {
+    const course_data = await Course.find({ _id: req.params.id })
+      .populate("category_id", "category_name")
+      .populate("trainer_id");
+
+    const baseUrl = req.protocol + "://" + req.get("host");
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 2;
+
+    const startIndex = (page - 1) * limit;
+    const result = await Course.find({
+      category_id: course_data[0].category_id.id,
+    })
+      .skip(startIndex)
+      .limit(limit)
+      .populate("trainer_id", "f_Name l_Name");
+
+    if (!result) return res.status(404).json({ message: "Course not found" });
+    else {
+      const relatedCourses = result.map((course) => ({
+        ...course._doc,
+        thumbnail_image: `${baseUrl}/${course.thumbnail_image.replace(
+          /\\/g,
+          "/"
+        )}`,
+        gallary_image: `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`,
+        trainer_materialImage: `${baseUrl}/${course.trainer_materialImage.replace(
+          /\\/g,
+          "/"
+        )}`,
+      }));
+
+      const coursesWithFullImageUrls = course_data.map((course) => ({
         ...course._doc,
         thumbnail_image: `http://${req.headers.host}/${course.thumbnail_image}`,
 
         gallary_image: `http://${req.headers.host}/${course.gallary_image}`,
         trainer_materialImage: `http://${req.headers.host}/${course.trainer_materialImage}`,
       }));
-      // console.log(coursesWithFullImageUrls),
-      res.status(200).json({ course: coursesWithFullImageUrls[0] });
-    })
-    .catch((err) => {
-      console.error(err);
-      res.status(500).json({ error: err });
-    });
+      res
+        .status(200)
+        .json({ course: coursesWithFullImageUrls[0], relatedCourses });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json(
+        new ApiError(
+          500,
+          err?.message || "Error Getting Course and Related courses",
+          err
+        )
+      );
+  }
 });
 
 // ========================= event/:id ====================================
@@ -322,6 +359,30 @@ router.get("/allproduct", async function (req, res, next) {
           )
         );
     });
+});
+
+router.get("/related/:category_id", async (req, res) => {
+  const baseUrl = req.protocol + "://" + req.get("host");
+  const result = await Course.find({
+    category_id: req.params.category_id,
+  }).populate("trainer_id", "f_Name l_Name");
+
+  if (!result) return res.status(404).json({ message: "Course not found" });
+  else {
+    const coursesWithFullImageUrls = result.map((course) => ({
+      ...course._doc,
+      thumbnail_image: `${baseUrl}/${course.thumbnail_image.replace(
+        /\\/g,
+        "/"
+      )}`,
+      gallary_image: `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`,
+      trainer_materialImage: `${baseUrl}/${course.trainer_materialImage.replace(
+        /\\/g,
+        "/"
+      )}`,
+    }));
+    res.status(200).json(coursesWithFullImageUrls);
+  }
 });
 
 module.exports = router;

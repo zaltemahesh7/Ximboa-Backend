@@ -93,6 +93,10 @@ app.use("/beforeLogin", beforeLoginRoutes);
 const footerRouter = require("./app/route/footer.router");
 app.use("/footer", footerRouter);
 
+
+const globalSearch = require("./app/route/Search/globleSearch.router");
+app.use("/search", globalSearch);
+
 var mongoose = require("mongoose");
 mongoose
   .connect("mongodb://127.0.0.1:27017/bhoj_soft_solution")
