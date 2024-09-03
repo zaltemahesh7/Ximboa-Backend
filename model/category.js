@@ -1,17 +1,20 @@
 // Category model
 const mongoose = require("mongoose");
 
-const categorySchema = new mongoose.Schema({
-  category_name: {
-    type: String,
-    required: true,
-    unique: true, // Ensure the category name is unique
+const categorySchema = new mongoose.Schema(
+  {
+    category_name: {
+      type: String,
+      required: true,
+      unique: true, // Ensure the category name is unique
+    },
+    trainer_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Registration",
+    },
+    category_image: String,
   },
-  trainer_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Registration",
-  },
-  category_image: String,
-});
+  { timestamps: true }
+);
 
 module.exports = mongoose.model("Category", categorySchema);

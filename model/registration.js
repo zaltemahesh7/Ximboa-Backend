@@ -3,7 +3,7 @@ const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const { UserRolesEnum, AvailableUserRoles } = require("../constants");
 
-var RegistrationSchema = new mongoose.Schema(
+const RegistrationSchema = new mongoose.Schema(
   {
     f_Name: {
       type: String,
@@ -59,7 +59,7 @@ var RegistrationSchema = new mongoose.Schema(
         },
         requestedRole: {
           type: String,
-          enum: ["admin", "trainer", "student"],
+          enum: [...AvailableUserRoles, ""],
         },
         requestDate: {
           type: Date,

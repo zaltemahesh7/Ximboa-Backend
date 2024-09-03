@@ -1,16 +1,32 @@
-var mongoose = require("mongoose");
+const mongoose = require("mongoose");
 
-var productSchema = new mongoose.Schema({
-  t_id: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Registration",
+const productSchema = new mongoose.Schema(
+  {
+    t_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Registration",
+    },
+    product_name: {
+      type: String,
+      required: true,
+    },
+    product_prize: {
+      type: Number,
+    },
+    product_selling_prize: {
+      type: Number,
+    },
+    products_info: {
+      type: String,
+    },
+    product_image: {
+      type: String,
+    },
+    product_gallary: {
+      type: String,
+    },
   },
-  product_name: String,
-  product_prize: Number,
-  product_selling_prize: Number,
-  products_info: String,
-  product_image: String,
-  product_gallary: String,
-});
+  { timestamps: true }
+);
 
 module.exports = mongoose.model("Product", productSchema);

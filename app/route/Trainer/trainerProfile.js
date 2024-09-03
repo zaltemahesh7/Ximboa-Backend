@@ -136,6 +136,7 @@ router.get("/:id", async (req, res) => {
     const currentDate = new Date().toISOString();
 
     const ongoingCourses = await Course.find({
+      trainer_id: { $in: trainerId },
       start_date: { $lte: currentDate },
       end_date: { $gte: currentDate },
     })
@@ -160,6 +161,7 @@ router.get("/:id", async (req, res) => {
     });
 
     const upcomingCourses = await Course.find({
+      trainer_id: { $in: trainerId },
       start_date: { $gt: currentDate },
     })
       .populate("trainer_id", "f_Name l_Name")
