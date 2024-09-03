@@ -24,14 +24,14 @@ const globalSearch = async (req, res) => {
     // Promise to search in all collections
     const [courses, categories, trainers, products, events] = await Promise.all(
       [
-        Course.find({ course_name: searchRegex }).limit(4),
-        Category.find({ category_name: searchRegex }).limit(4),
+        Course.find({ course_name: searchRegex }).limit(4).select("course_name thumbnail_image"),
+        Category.find({ category_name: searchRegex }).limit(4).select("category_name category_image"),
         Registration.find({
           role: { $in: ["TRAINER", "SELF_TRAINER"] },
           $or: [{ f_Name: searchRegex }, { l_Name: searchRegex }],
-        }).limit(4),
-        Product.find({ product_name: searchRegex }).limit(4),
-        Event.find({ event_name: searchRegex }).limit(4),
+        }).limit(4).select("f_Name, l_Name, trainer_image"),
+        Product.find({ product_name: searchRegex }).limit(4).select("product_name product_image"),
+        Event.find({ event_name: searchRegex }).limit(4).select("event_name event_thumbnail"),
       ]
     );
 
