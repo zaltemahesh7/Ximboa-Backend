@@ -47,15 +47,13 @@ const globalSearch = async (req, res) => {
     );
 
     // Send results in response
-    res.status(200).json(
-      new ApiResponse(200, "search reault", {
-        courses,
-        categories,
-        trainers,
-        products,
-        events,
-      })
-    );
+    res.status(200).json({
+      courses,
+      categories,
+      trainers,
+      products,
+      events,
+    });
   } catch (error) {
     // console.error(error);
     res
