@@ -14,6 +14,7 @@ router.post(
       const {
         event_name,
         event_category,
+        event_date,
         event_type,
         event_start_time,
         event_end_time,
@@ -27,6 +28,7 @@ router.post(
       const newEvent = new Event({
         event_name,
         event_type,
+        event_date,
         event_category,
         event_thumbnail,
         event_start_time,

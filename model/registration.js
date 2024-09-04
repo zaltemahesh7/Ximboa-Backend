@@ -72,6 +72,7 @@ const RegistrationSchema = new mongoose.Schema(
         },
       },
     ],
+    categories: [String],
     address1: {
       type: String,
     },
