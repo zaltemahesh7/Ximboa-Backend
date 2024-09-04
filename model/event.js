@@ -24,6 +24,10 @@ const eventSchema = new Schema(
       ref: "Registration",
       required: true,
     },
+    event_date: {
+      type: Date,
+      required: true,
+    },
     event_start_time: {
       type: String,
       required: true,

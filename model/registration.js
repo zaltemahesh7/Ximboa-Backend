@@ -72,12 +72,24 @@ const RegistrationSchema = new mongoose.Schema(
         },
       },
     ],
-    address1: String,
-    address2: String,
-    city: String,
-    country: String,
-    state: String,
-    pincode: String,
+    address1: {
+      type: String,
+    },
+    address2: {
+      type: String,
+    },
+    city: {
+      type: String,
+    },
+    country: {
+      type: String,
+    },
+    state: {
+      type: String,
+    },
+    pincode: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
