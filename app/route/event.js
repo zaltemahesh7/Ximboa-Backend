@@ -64,7 +64,10 @@ router.get("/:id", async (req, res) => {
       ...eventWithFullThumbnailUrl,
       event_categories: eventWithFullThumbnailUrl.event_category.category_name, // Directly include category_name
       event_thumbnail: eventWithFullThumbnailUrl.event_thumbnail
-        ? `${baseUrl}/${eventWithFullThumbnailUrl.event_thumbnail.replace(/\\/g, "/")}`
+        ? `${baseUrl}/${eventWithFullThumbnailUrl.event_thumbnail.replace(
+            /\\/g,
+            "/"
+          )}`
         : "",
     };
 
@@ -156,6 +159,7 @@ router.put("/:id", async (req, res) => {
         $set: {
           event_name: req.body.event_name,
           event_type: req.body.event_type,
+          event_date: req.body.event_date,
           event_categories: req.body.event_categories,
           event_start_time: req.body.event_start_time,
           event_end_time: req.body.event_end_time,
