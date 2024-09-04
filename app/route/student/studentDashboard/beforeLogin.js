@@ -7,6 +7,7 @@ const Course = require("../../../../model/course");
 const Event = require("../../../../model/event");
 const Product = require("../../../../model/product");
 const { ApiError } = require("../../../../utils/ApiError");
+const registration = require("../../../../model/registration");
 
 // Get courses with specific fields, including trainer name populated
 router.get("/home", async (req, res) => {
@@ -164,6 +165,44 @@ router.get("/allcourses", async (req, res) => {
     res.status(500).send({ message: "Error fetching courses", error });
   }
 });
+
+// Route to get trainers by category with pagination
+router.get("/trainers-by-category/:categoryId", async (req, res) => {
+  const { categoryId } = req.params;
+  const { page = 1, limit = 100 } = req.query; // Default page = 1, limit = 10
+
+  try {
+    // Find trainers that belong to the specified category and have the role TRAINER or SELF_TRAINER
+    const trainers = await registration.find({
+      categories: { $in: [categoryId] },
+      role: { $in: ["TRAINER", "SELF_TRAINER"] },
+    })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .select("f_Name l_Name email_id trainer_image role"); // Select fields to return
+
+    // Get total count of trainers for pagination
+    const totalTrainers = await registration.countDocuments({
+      categories: categoryId,
+      role: { $in: ["TRAINER", "SELF_TRAINER"] },
+    });
+
+    // Calculate total pages
+    const totalPages = Math.ceil(totalTrainers / limit);
+    // Send the response
+    res.status(200).json({
+      trainers,
+      currentPage: parseInt(page),
+      totalPages,
+      totalTrainers,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json(new ApiError(500, err.message || "Server Error", err));
+  }
+});
+
+module.exports = router;
 
 // ========================= All Trainers ====================================
 router.get("/alltrainers", async (req, res) => {

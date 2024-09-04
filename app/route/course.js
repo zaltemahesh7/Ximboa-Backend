@@ -4,6 +4,7 @@ const Course = require("../../model/course");
 const multer = require("multer");
 const { ApiResponse } = require("../../utils/ApiResponse");
 const { ApiError } = require("../../utils/ApiError");
+const registration = require("../../model/registration");
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -79,8 +80,7 @@ router.post(
     { name: "gallary_image", maxCount: 1 },
     { name: "trainer_materialImage", maxCount: 1 },
   ]),
-  (req, res) => {
-    const baseUrl = req.protocol + "://" + req.get("host");
+  async (req, res) => {
     const course = new Course({
       course_name: req.body.course_name,
       online_offline: req.body.online_offline,
@@ -101,20 +101,35 @@ router.post(
         ? req.files["trainer_materialImage"][0].path
         : "",
       category_id: req.body.category_id,
-      trainer_id: req.user.id, // Don't pass Trainer id it will fetched from token payload
+      trainer_id: req.user.id, // Fetch Trainer ID from token payload
     });
 
-    course
-      .save()
-      .then((result) => {
-        res.status(200).json(course);
-      })
-      .catch((err) => {
-        console.error(err);
-        res
-          .status(500)
-          .json(new ApiError(500, err.message || "Server Error", err));
-      });
+    try {
+      // Save the course
+      const savedCourse = await course.save();
+
+      // Check if the category_id is already in the trainer's categories array
+      await registration.findByIdAndUpdate(
+        req.user.id, // Trainer ID
+        { $addToSet: { categories: req.body.category_id } }, // Only add if it doesn't exist
+        { new: true } // Return the updated document
+      );
+
+      res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            "Course Added Successfully",
+            savedCourse.course_name
+          )
+        );
+    } catch (err) {
+      console.error(err);
+      res
+        .status(500)
+        .json(new ApiError(500, err.message || "Server Error", err));
+    }
   }
 );
 
@@ -267,6 +282,5 @@ router.get("/trainer", async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;

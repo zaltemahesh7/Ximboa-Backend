@@ -72,7 +72,7 @@ const RegistrationSchema = new mongoose.Schema(
         },
       },
     ],
-    categories: [String],
+    categories: [mongoose.Schema.Types.ObjectId],
     address1: {
       type: String,
     },
