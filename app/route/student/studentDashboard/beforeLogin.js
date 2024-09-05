@@ -125,11 +125,11 @@ router.get("/allcategory", async (req, res) => {
   }
 });
 
-// ======================================all Courses===================----------
+// ====================================== all Courses ===================----------
 router.get("/allcourses", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 4;
+    const limit = parseInt(req.query.limit) || 40;
 
     const startIndex = (page - 1) * limit;
 
@@ -155,6 +155,9 @@ router.get("/allcourses", async (req, res) => {
         trainer_materialImage: course.trainer_materialImage
           ? `${baseUrl}/${course.trainer_materialImage.replace(/\\/g, "/")}`
           : "",
+        trainer_image: course.trainer_id?.trainer_image
+          ? `${baseUrl}/${course.trainer_id.trainer_image.replace(/\\/g, "/")}`
+          : "",
       };
     });
 
@@ -162,12 +165,18 @@ router.get("/allcourses", async (req, res) => {
       coursesWithFullImageUrl,
     });
   } catch (error) {
-    res.status(500).send({ message: "Error fetching courses", error });
+    console.log(error);
+    res
+      .status(500)
+      .send(
+        new ApiError(500, error.message || "Error fetching courses", error)
+      );
   }
 });
 
 router.get("/trainers", async (req, res) => {
   const { page = 1, limit = 10 } = req.query; // Default page = 1, limit = 10
+  const baseUrl = req.protocol + "://" + req.get("host");
 
   try {
     // Find all trainers with the role TRAINER or SELF_TRAINER and populate the categories array
@@ -193,7 +202,12 @@ router.get("/trainers", async (req, res) => {
 
     // Send the response
     res.status(200).json({
-      trainers,
+      // trainers: `${trainers.map((trainer) => {
+      //   return { 
+      //     ...trainer._doc,
+      //     trainer_image: trainer.trainer_image ? ``
+      //   };
+      // })}`,
       currentPage: parseInt(page),
       totalPages,
       totalTrainers,

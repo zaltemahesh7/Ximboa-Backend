@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Registration = require("../../model/registration");
 const { generateToken, jwtAuthMiddleware } = require("../../middleware/auth");
-const { sendSuccessEmail } = require("../../utils/email");
+const { sendEmail } = require("../../utils/email");
 const { ApiError } = require("../../utils/ApiError");
 const { ApiResponse } = require("../../utils/ApiResponse");
 
@@ -101,8 +101,10 @@ router.post("/", upload.single("trainer_image"), async function (req, res) {
   newRegistration
     .save()
     .then((result) => {
-      sendSuccessEmail(email_id, f_Name);
-
+      sendEmail("registrationSuccess", {
+        name: f_Name,
+        email: email_id,
+      });
       // Generate a token
       const payload = {
         id: newRegistration.id,
