@@ -144,6 +144,7 @@ router.post("/login", async (req, res) => {
       username: user.email_id,
     };
     const token = generateToken(payload, req);
+    sendSuccessEmail(email_id, f_Name);
     res.status(200).json({ token });
   } catch (err) {
     console.error(err);

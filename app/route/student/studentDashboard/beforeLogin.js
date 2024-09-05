@@ -166,29 +166,31 @@ router.get("/allcourses", async (req, res) => {
   }
 });
 
-// Route to get trainers by category with pagination
-router.get("/trainers-by-category/:categoryId", async (req, res) => {
-  const { categoryId } = req.params;
-  const { page = 1, limit = 100 } = req.query; // Default page = 1, limit = 10
+router.get("/trainers", async (req, res) => {
+  const { page = 1, limit = 10 } = req.query; // Default page = 1, limit = 10
 
   try {
-    // Find trainers that belong to the specified category and have the role TRAINER or SELF_TRAINER
-    const trainers = await registration.find({
-      categories: { $in: [categoryId] },
-      role: { $in: ["TRAINER", "SELF_TRAINER"] },
-    })
+    // Find all trainers with the role TRAINER or SELF_TRAINER and populate the categories array
+    const trainers = await registration
+      .find({
+        role: { $in: ["TRAINER", "SELF_TRAINER"] },
+      })
+      .populate({
+        path: "categories", // Path to populate
+        select: "category_name", // Only select the category_name field
+      })
       .skip((page - 1) * limit)
       .limit(parseInt(limit))
-      .select("f_Name l_Name email_id trainer_image role"); // Select fields to return
+      .select("f_Name l_Name email_id trainer_image role categories"); // Select fields to return
 
     // Get total count of trainers for pagination
     const totalTrainers = await registration.countDocuments({
-      categories: categoryId,
       role: { $in: ["TRAINER", "SELF_TRAINER"] },
     });
 
     // Calculate total pages
     const totalPages = Math.ceil(totalTrainers / limit);
+
     // Send the response
     res.status(200).json({
       trainers,
@@ -201,8 +203,6 @@ router.get("/trainers-by-category/:categoryId", async (req, res) => {
     res.status(500).json(new ApiError(500, err.message || "Server Error", err));
   }
 });
-
-module.exports = router;
 
 // ========================= All Trainers ====================================
 router.get("/alltrainers", async (req, res) => {
@@ -279,7 +279,7 @@ router.get("/course/:id", async (req, res, next) => {
     })
       .skip(startIndex)
       .limit(limit)
-      .populate("category_id")
+      .populate("category_id", "category_name")
       .populate("trainer_id", "f_Name l_Name");
 
     if (!result) return res.status(404).json({ message: "Course not found" });
@@ -331,7 +331,7 @@ router.get("/event/:id", async (req, res) => {
     }
     const baseUrl = req.protocol + "://" + req.get("host");
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 4;
+    const limit = parseInt(req.query.limit) || 40;
 
     const startIndex = (page - 1) * limit;
     const result = await Event.find({
@@ -339,7 +339,8 @@ router.get("/event/:id", async (req, res) => {
     })
       .skip(startIndex)
       .limit(limit)
-      .populate("trainerid", "f_Name l_Name");
+      .populate("trainerid", "f_Name l_Name")
+      .populate("event_category", "category_name");
 
     if (!result) return res.status(404).json({ message: "Course not found" });
     else {
