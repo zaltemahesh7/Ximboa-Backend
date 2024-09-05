@@ -1,24 +1,28 @@
 const nodemailer = require("nodemailer");
+const { emailTemplates } = require("../constants");
+require('dotenv').config()
 
 // Configure your email transport using the SMTP settings
 const transporter = nodemailer.createTransport({
-  host: 'smtp.ethereal.email',
-  port: 587,
+  service: "gmail",
   auth: {
-      user: 'gilbert.turcotte52@ethereal.email',
-      pass: 'GJbCtSeEmJFqZz7jan'
-  }
+    user: process.env.EMAIL_USER,
+    pass: "dddxjskkwtmexhga",
+  },
 });
 
 // Function to send a success email
-async function sendSuccessEmail(trainerEmail, trainerName) {
+async function sendEmail(emailType, recipient, data = "") {
   try {
+    const { subject, text } = emailTemplates[emailType];
+    if (!subject || !text) {
+      throw new Error("Invalid email type");
+    }
     const info = await transporter.sendMail({
-      from: '"Ximbo" <orlando.howe39@ethereal.emai>', // Sender address
-      to: trainerEmail, // List of receivers
-      subject: "Registration Successful", // Subject line
-      text: `Hello ${trainerName},\n\nYour registration was successful! Welcome to XIMBO.\n\nBest Regards,\nXimbo`, // Plain text body
-      html: `<p>Hello ${trainerName},</p><p>Your registration was successful! Welcome to XIMBO.</p><p>Best Regards,<br>nXimbo</p>`, // HTML body
+      from: `"XIMBOA" <${process.env.EMAIL_USER}>`,
+      to: recipient.email,
+      subject: subject,
+      text: text(recipient.name, ...data), // Passing dynamic data to template
     });
 
     console.log("Email sent:", info.messageId);
@@ -27,4 +31,4 @@ async function sendSuccessEmail(trainerEmail, trainerName) {
   }
 }
 
-module.exports = { sendSuccessEmail };
+module.exports = { sendEmail };
