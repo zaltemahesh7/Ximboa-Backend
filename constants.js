@@ -17,23 +17,23 @@ const AvailableUserRoles = Object.values(UserRolesEnum);
 const emailTemplates = {
   registrationSuccess: {
     subject: "Welcome to Ximboa!",
-    text: (f_Name) =>
-      `Hello ${f_Name},\n\nThank you for registering at Ximboa! We're excited to have you on board.`,
+    text: (name) =>
+      `Hello ${name},\n\nThank you for registering at Ximboa! We're excited to have you on board.`,
   },
   loginSuccess: {
     subject: "Login Successful",
-    text: (f_Name) =>
-      `Hello ${f_Name},\n\nYou have successfully logged in to your account.`,
+    text: (name) =>
+      `Hello ${name},\n\nYou have successfully logged in to your account.`,
   },
   resetPassword: {
     subject: "Password Reset Request",
-    text: (f_Name, resetLink) =>
-      `Hello ${f_Name},\n\nClick the link below to reset your password:\n${resetLink}`,
+    text: (name, resetLink) =>
+      `Hello ${name},\n\nClick the link below to reset your password:\n${resetLink}`,
   },
   enrollment: {
     subject: "Course Enrollment Successful",
-    text: (f_Name, courseName) =>
-      `Hello ${f_Name},\n\nYou have successfully enrolled in the course: ${courseName}.`,
+    text: (name, courseName) =>
+      `Hello ${name},\n\nYou have successfully enrolled in the course: ${courseName}.`,
   },
 };
 
