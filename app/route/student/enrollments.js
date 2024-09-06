@@ -4,6 +4,7 @@ const Course = require("../../../model/course");
 const { jwtAuthMiddleware } = require("../../../middleware/auth");
 const { ApiError } = require("../../../utils/ApiError");
 const Registration = require("../../../model/registration");
+const { sendEmail } = require("../../../utils/email");
 
 const router = express.Router();
 
@@ -42,7 +43,17 @@ router.post("/", jwtAuthMiddleware, async (req, res) => {
       course_id,
     });
 
-    const result = await enrollment.save();
+    const result = await enrollment.save().then(() => {
+      const courseName = course.course_name;
+      sendEmail(
+        "enrollment",
+        {
+          name: student.f_Name,
+          email: student.email_id,
+        },
+        [courseName]
+      );
+    });
     res
       .status(201)
       .json({ message: "Enrollment successful", enrollment: result });
