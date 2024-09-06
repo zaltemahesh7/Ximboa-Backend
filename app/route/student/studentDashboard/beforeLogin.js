@@ -129,9 +129,10 @@ router.get("/allcategory", async (req, res) => {
 router.get("/allcourses", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 40;
+    const limit = parseInt(req.query.limit) || 4;
 
     const startIndex = (page - 1) * limit;
+    const totalCourses = await Course.countDocuments();
 
     const courses = await Course.find()
       .skip(startIndex)
@@ -163,6 +164,12 @@ router.get("/allcourses", async (req, res) => {
 
     res.status(200).send({
       coursesWithFullImageUrl,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalCourses / limit),
+        totalItems: totalCourses,
+        pageSize: limit,
+      },
     });
   } catch (error) {
     console.log(error);
@@ -202,12 +209,14 @@ router.get("/trainers", async (req, res) => {
 
     // Send the response
     res.status(200).json({
-      // trainers: `${trainers.map((trainer) => {
-      //   return { 
-      //     ...trainer._doc,
-      //     trainer_image: trainer.trainer_image ? ``
-      //   };
-      // })}`,
+      trainers: trainers.map((trainer) => {
+        return {
+          ...trainer._doc,
+          trainer_image: trainer.trainer_image
+            ? `${baseUrl}/${trainer.trainer_image.replace(/\\/g, "/")}`
+            : "",
+        };
+      }),
       currentPage: parseInt(page),
       totalPages,
       totalTrainers,
@@ -345,7 +354,7 @@ router.get("/event/:id", async (req, res) => {
     }
     const baseUrl = req.protocol + "://" + req.get("host");
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 40;
+    const limit = parseInt(req.query.limit) || 4;
 
     const startIndex = (page - 1) * limit;
     const result = await Event.find({

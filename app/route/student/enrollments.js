@@ -1,5 +1,4 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const Enrollment = require("../../../model/Student/Enrollment");
 const Course = require("../../../model/course");
 const { jwtAuthMiddleware } = require("../../../middleware/auth");
@@ -58,25 +57,44 @@ router.post("/", jwtAuthMiddleware, async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const enrollment = await Enrollment.find();
-    res.status(200).send(enrollment);
+    res.status(200).json(enrollment);
   } catch (error) {
-    res.status(500).send(error);
+    res
+      .status(500)
+      .json(
+        new ApiError(500, error.message || "Error fetching enrollments", error)
+      );
   }
 });
 
 router.get("/student", jwtAuthMiddleware, async (req, res) => {
   try {
-    const enrollments = await Enrollment.find({
+    const baseUrl = req.protocol + "://" + req.get("host");
+    const enrollment = await Enrollment.find({
       userid: req.user.id,
-    }).populate("course_id", "course_name");
-    if (enrollments.length === 0) {
+    }).populate("course_id", "course_name thumbnail_image");
+    if (enrollment.length === 0) {
       return res
         .status(404)
-        .send({ message: "No enrollments found for this student" });
+        .json({ message: "No enrollments found for this student" });
     }
-    res.status(200).send(enrollments[0]);
+    const enrollments = enrollment.map((course) => {
+      return {
+        ...course._doc,
+        course_thumbnail: course.course_id?.thumbnail_image
+          ? `${baseUrl}/${course.course_id.thumbnail_image.replace(/\\/g, "/")}`
+          : "",
+      };
+    });
+
+    res.status(200).json(enrollments);
   } catch (error) {
-    res.status(500).send({ message: "Error fetching enrollments", error });
+    console.log(error);
+    res
+      .status(500)
+      .json(
+        new ApiError(500, error.message || "Error fetching enrollments", error)
+      );
   }
 });
 
@@ -92,7 +110,11 @@ router.get("/course/:course_id", async (req, res) => {
     }
     res.status(200).send(enrollments);
   } catch (error) {
-    res.status(500).send({ message: "Error fetching enrollments", error });
+    res
+      .status(500)
+      .json(
+        new ApiError(500, error.message || "Error fetching enrollments", error)
+      );
   }
 });
 
