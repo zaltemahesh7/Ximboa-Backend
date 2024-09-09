@@ -197,7 +197,7 @@ router.get("/trainers", async (req, res) => {
       })
       .skip((page - 1) * limit)
       .limit(parseInt(limit))
-      .select("f_Name l_Name email_id trainer_image role categories"); // Select fields to return
+      .select("_id f_Name l_Name email_id trainer_image role categories"); // Select fields to return
 
     // Get total count of trainers for pagination
     const totalTrainers = await registration.countDocuments({
