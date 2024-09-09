@@ -79,6 +79,7 @@ router.get("/home", async (req, res) => {
 
     const trainersWithFullImageUrl = trainers.map((trainer) => {
       return {
+        t_id: trainer._id,
         f_Name: trainer.f_Name,
         l_Name: trainer.l_Name,
         course_count: trainer.course_count,
