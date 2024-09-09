@@ -57,6 +57,12 @@ router.get("/home", async (req, res) => {
     });
 
     const trainers = await Trainer.aggregate([
+      // Add $match to filter users by role
+      {
+        $match: {
+          role: { $in: ["TRAINER", "SELF_TRAINER"] },
+        },
+      },
       {
         $lookup: {
           from: "courses",
@@ -70,18 +76,21 @@ router.get("/home", async (req, res) => {
           f_Name: 1,
           l_Name: 1,
           trainer_image: 1,
+          role: 1,
           course_count: { $size: "$courses" },
         },
       },
     ])
       .skip(startIndex)
       .limit(limit);
-
+    
+    // Update trainer image URL as before
     const trainersWithFullImageUrl = trainers.map((trainer) => {
       return {
         t_id: trainer._id,
         f_Name: trainer.f_Name,
         l_Name: trainer.l_Name,
+        role: trainer.role,
         course_count: trainer.course_count,
         trainer_image: trainer.trainer_image
           ? `${baseUrl}/${trainer.trainer_image.replace(/\\/g, "/")}`
