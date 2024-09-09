@@ -1,10 +1,11 @@
-import multer from "multer";
+// import multer from "multer";
+const multer = require("multer");
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     // This storage needs public/images folder in the root directory
     // Else it will throw an error saying cannot find path public/images
-    cb(null, "./public/images");
+    cb(null, "./public/Institute");
   },
   // Store file in a .png/.jpeg/.jpg format instead of binary
   filename: function (req, file, cb) {
@@ -30,9 +31,11 @@ const storage = multer.diskStorage({
 });
 
 // Middleware responsible to read form data and upload the File object to the mentioned path
-export const upload = multer({
+const upload = multer({
   storage,
   limits: {
-    fileSize: 1 * 1000 * 1000,
+    fileSize: 5 * 1000 * 1000,
   },
 });
+
+module.exports = { upload };

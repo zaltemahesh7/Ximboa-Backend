@@ -260,7 +260,6 @@ router.get("/email/:email_id", async (req, res) => {
 });
 
 // Get all trainer ----------------------------------------------------------
-
 router.get("/", function (req, res) {
   Registration.find()
     .then((result) => {
@@ -294,19 +293,16 @@ router.post("/forget-password", forgetPassward);
 router.post("/reset-password/:token", async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
-
   try {
     const user = await Registration.findOne({
       resetPasswordToken: token,
       resetPasswordExpires: { $gt: Date.now() },
     });
-
     if (!user) {
       return res
         .status(400)
         .json({ message: "Password reset token is invalid or has expired" });
     }
-
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;

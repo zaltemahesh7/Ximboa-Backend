@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const { UserRolesEnum, AvailableUserRoles } = require("../constants");
+const InstituteModel = require("./Institute/Institute.model");
 
 const RegistrationSchema = new mongoose.Schema(
   {
@@ -32,6 +33,10 @@ const RegistrationSchema = new mongoose.Schema(
       required: [true, "Email is required"],
       unique: true,
       trim: true,
+    },
+    institute: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: InstituteModel
     },
     password: {
       type: String,
