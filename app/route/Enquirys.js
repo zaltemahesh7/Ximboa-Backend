@@ -5,10 +5,9 @@ const { ApiError } = require("../../utils/ApiError");
 const { ApiResponse } = require("../../utils/ApiResponse");
 
 // Create a new enquiry
-router.post("/:trainerid", async (req, res) => {
+router.post("/", async (req, res) => {
   try {
-    const { description } = req.body;
-    const { trainerid } = req.params;
+    const { description, trainerid } = req.body;
     const userid = req.user.id;
     const newEnquiry = new Enquiry({ trainerid, description, userid });
     console.log(newEnquiry);

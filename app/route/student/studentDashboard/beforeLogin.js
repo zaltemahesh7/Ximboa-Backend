@@ -83,7 +83,7 @@ router.get("/home", async (req, res) => {
     ])
       .skip(startIndex)
       .limit(limit);
-    
+
     // Update trainer image URL as before
     const trainersWithFullImageUrl = trainers.map((trainer) => {
       return {
@@ -191,23 +191,23 @@ router.get("/allcourses", async (req, res) => {
   }
 });
 
+// ========================= All Trainers with pagination ====================================
 router.get("/trainers", async (req, res) => {
   const { page = 1, limit = 10 } = req.query; // Default page = 1, limit = 10
   const baseUrl = req.protocol + "://" + req.get("host");
 
   try {
     // Find all trainers with the role TRAINER or SELF_TRAINER and populate the categories array
-    const trainers = await registration
-      .find({
-        role: { $in: ["TRAINER", "SELF_TRAINER"] },
-      })
+    const trainers = await registration.find({
+      role: { $in: ["TRAINER", "SELF_TRAINER"] },
+    })
       .populate({
-        path: "categories", // Path to populate
-        select: "category_name", // Only select the category_name field
+        path: "categories", // Populating the categories field
+        select: "category_name", // Selecting only the category_name from the populated categories
       })
       .skip((page - 1) * limit)
       .limit(parseInt(limit))
-      .select("_id f_Name l_Name email_id trainer_image role categories"); // Select fields to return
+      .select("_id f_Name l_Name email_id trainer_image role categories");
 
     // Get total count of trainers for pagination
     const totalTrainers = await registration.countDocuments({
@@ -237,49 +237,48 @@ router.get("/trainers", async (req, res) => {
   }
 });
 
-// ========================= All Trainers ====================================
-router.get("/alltrainers", async (req, res) => {
-  try {
-    const baseUrl = req.protocol + "://" + req.get("host");
-    const trainers = await Trainer.aggregate([
-      {
-        $lookup: {
-          from: "courses",
-          localField: "_id",
-          foreignField: "trainer_id",
-          as: "courses",
-        },
-      },
-      {
-        $project: {
-          f_Name: 1,
-          l_Name: 1,
-          trainer_image: 1,
-          course_count: { $size: "$courses" },
-        },
-      },
-    ]);
+// router.get("/alltrainers", async (req, res) => {
+//   try {
+//     const baseUrl = req.protocol + "://" + req.get("host");
+//     const trainers = await Trainer.aggregate([
+//       {
+//         $lookup: {
+//           from: "courses",
+//           localField: "_id",
+//           foreignField: "trainer_id",
+//           as: "courses",
+//         },
+//       },
+//       {
+//         $project: {
+//           f_Name: 1,
+//           l_Name: 1,
+//           trainer_image: 1,
+//           course_count: { $size: "$courses" },
+//         },
+//       },
+//     ]);
 
-    const trainersWithFullImageUrl = trainers.map((trainer) => {
-      return {
-        t_id: trainer._id,
-        f_Name: trainer.f_Name,
-        l_Name: trainer.l_Name,
-        course_count: trainer.course_count,
-        trainer_image: trainer.trainer_image
-          ? `${baseUrl}/${trainer.trainer_image.replace(/\\/g, "/")}`
-          : "",
-      };
-    });
-    res.status(200).send({
-      trainersWithFullImageUrl,
-    });
-  } catch (err) {
-    res
-      .status(500)
-      .json(new ApiError(500, err?.message || "Error fetching trainer", err));
-  }
-});
+//     const trainersWithFullImageUrl = trainers.map((trainer) => {
+//       return {
+//         t_id: trainer._id,
+//         f_Name: trainer.f_Name,
+//         l_Name: trainer.l_Name,
+//         course_count: trainer.course_count,
+//         trainer_image: trainer.trainer_image
+//           ? `${baseUrl}/${trainer.trainer_image.replace(/\\/g, "/")}`
+//           : "",
+//       };
+//     });
+//     res.status(200).send({
+//       trainersWithFullImageUrl,
+//     });
+//   } catch (err) {
+//     res
+//       .status(500)
+//       .json(new ApiError(500, err?.message || "Error fetching trainer", err));
+//   }
+// });
 
 // ========================= course/:id ====================================
 router.get("/course/:id", async (req, res, next) => {
