@@ -66,18 +66,6 @@ const emailTemplates = {
         <p>Best regards,<br>Ximboa Team</p>
       </div>`,
   },
-  enrollment: {
-    subject: "Course Enrollment Successful",
-    html: (name, courseName, logoUrl) => `
-      <div style="font-family: Arial, sans-serif; color: #333;">
-        <div style="text-align: center;">
-          <img src="${logoUrl}" alt="Ximboa Logo" style="width: 150px; margin-bottom: 20px;">
-        </div>
-        <h2>Hello ${name},</h2>
-        <p>You have successfully enrolled in the course: <strong>${courseName}</strong>.</p>
-        <p>Best regards,<br>Ximboa Team</p>
-      </div>`,
-  },
 
   trainerRequest: {
     subject: "Trainer Request Pending Approval",
@@ -94,6 +82,19 @@ const emailTemplates = {
       </div>`,
   },
 
+  enrollment: {
+    subject: "Course Enrollment Successful",
+    html: (name, courseName, logoUrl) => `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <div style="text-align: center;">
+            <img src="${logoUrl}" alt="Ximboa Logo" style="width: 150px; margin-bottom: 20px;">
+          </div>
+          <h2>Hello ${name},</h2>
+          <p>You have successfully enrolled in the course: <strong>${courseName}</strong>.</p>
+          <p>Best regards,<br>Ximboa Team</p>
+        </div>`,
+  },
+
   enrollmentNotificationToTrainer: {
     subject: "New Student Enrollment in Your Course!",
     html: (trainerName, studentName, courseName, logoUrl) => `
@@ -107,6 +108,54 @@ const emailTemplates = {
         <p>You can view more details about the enrollment and manage your courses through your trainer dashboard.</p>
         <p>Thank you for being an important part of our team, and we look forward to seeing your students thrive under your guidance.</p>
         <p>Best regards,<br>Ximboa Team</p>
+      </div>
+    `,
+  },
+
+  roleChangeRequestToUser: {
+    subject: "Your Role Change Request is Pending Approval",
+    html: (userName, requested_Role) => `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        <h2>Hello ${userName},</h2>
+        <p>Your request to change your role to <strong>${requested_Role}</strong> has been successfully submitted. It is currently awaiting approval by the admin.</p>
+        <p>We will notify you once your request has been reviewed.</p>
+        <p>Thank you,<br>The Team</p>
+      </div>
+    `,
+  },
+
+  roleChangeRequestToSuperAdmin: {
+    subject: "Role Change Request",
+    html: (requested_Role, userId, userEmail, userName) => `
+      <div>
+        <h3>New Role Change Request</h3>
+        <p>User <strong>${userName}</strong> (${userEmail}) has requested to change their role to <strong>${requested_Role}</strong>.</p>
+        <p>User ID: ${userId}</p>
+        <p>Please log in to your admin dashboard to approve or deny this request.</p>
+      </div>
+    `,
+  },
+
+  roleChangeApproved: {
+    subject: "Your Role Change Request Has Been Approved",
+    html: (userName, approvedRole) => `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        <h2>Hello ${userName},</h2>
+        <p>We are pleased to inform you that your request to change your role to <strong>${approvedRole}</strong> has been approved.</p>
+        <p>Welcome to your new role!</p>
+        <p>Best regards,<br>The Team</p>
+      </div>
+    `,
+  },
+
+  roleChangeDenied: {
+    subject: "Your Role Change Request Has Been Denied",
+    html: (userName, requestedRole) => `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        <h2>Hello ${userName},</h2>
+        <p>Unfortunately, your request to change your role to <strong>${requestedRole}</strong> has been denied.</p>
+        <p>If you have any questions, feel free to contact us.</p>
+        <p>Best regards,<br>The Team</p>
       </div>
     `,
   },

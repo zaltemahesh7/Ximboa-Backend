@@ -1,5 +1,10 @@
 const InstituteModel = require("../../model/Institute/Institute.model");
 const Registration = require("../../model/registration");
+const Course = require("../../model/course"); // Course model
+const Enrollment = require("../../model/Student/Enrollment"); // Enrollment model
+const Product = require("../../model/product"); // Product model
+
+
 const { ApiError } = require("../../utils/ApiError");
 const { ApiResponse } = require("../../utils/ApiResponse");
 const { asyncHandler } = require("../../utils/asyncHandler");
@@ -147,22 +152,71 @@ const forgetPassward = async (req, res) => {
   }
 };
 
-// controllers/roleController.js
-
-// Request role change
+// controllers For Role Change Request.
 const requestRoleChange = asyncHandler(async (req, res) => {
   const { requested_Role } = req.body;
   const userId = req.user.id;
 
   try {
-    // Validate requested role
-    // Update user's role in the database
+    // Validate the requested role
+    if (!["INSTITUTE", "SELF_TRAINER", "TRAINER"].includes(requested_Role)) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, "Invalid role request."));
+    }
+
+    // Check if a request is already pending for the same role
+    const user = await Registration.findById(userId);
+
+    if (user.requested_Role) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, "Role change request is already pending."));
+    }
+
+    // Update the user's requested role in the database
     await Registration.findByIdAndUpdate(userId, {
       requested_Role: requested_Role,
     });
 
+    const superAdmin = await Registration.findOne({ role: "SUPER_ADMIN" });
+    // If the requested role is INSTITUTE or SELF_TRAINER, notify SUPER_ADMIN
+    if (requested_Role === "INSTITUTE" || requested_Role === "SELF_TRAINER") {
+      if (!superAdmin) {
+        return res
+          .status(500)
+          .json(
+            new ApiError(500, "No SUPER_ADMIN found to approve the request.")
+          );
+      }
+
+      // Send an email notification to SUPER_ADMIN
+      const userEmail = req.user.username;
+      const userName = user.f_Name;
+
+      sendEmail(
+        "roleChangeRequestToSuperAdmin",
+        {
+          name: superAdmin.f_Name,
+          email: superAdmin.email_id,
+        },
+        [requested_Role, userId, userEmail, userName]
+      );
+    }
+
+    // Send an email to the user confirming that their request has been submitted
+    sendEmail(
+      "roleChangeRequestToUser", // Email template type
+      {
+        name: user.f_Name,
+        email: user.email_id,
+      }, // Recipient information
+      [requested_Role] // Data to be used in the email template
+    );
+
+    // Push the request into the admin's request array
     await Registration.findByIdAndUpdate(
-      "66cd6fea183630e08a2214f5", // The ID of the document you want to update
+      superAdmin.id, // Replace with the correct admin ID or logic to find the right admin
       {
         $push: {
           requests: {
@@ -172,18 +226,20 @@ const requestRoleChange = asyncHandler(async (req, res) => {
         },
       }
     );
+
     res
       .status(200)
       .json(
         new ApiResponse(200, "Role change request submitted successfully.")
       );
   } catch (err) {
+    console.log(err);
     res
       .status(500)
       .json(
         new ApiError(
           500,
-          err.error || "Error processing role change request.",
+          err.message || "Error processing role change request.",
           err
         )
       );
@@ -193,94 +249,99 @@ const requestRoleChange = asyncHandler(async (req, res) => {
 // const approveRoleChange = asyncHandler(async (req, res) => {
 //   try {
 //     const { userid, approved } = req.body;
-//     const admin = req.user.role;
-//     const adminid = req.user.id;
+//     const requestingAdmin = req.user;
 
-//     if (admin !== "ADMIN" && admin !== "SUPER_ADMIN") {
+//     // Check if the requester has the appropriate role
+//     if (requestingAdmin.role !== "SUPER_ADMIN") {
 //       return res
-//         .status(200)
+//         .status(403)
 //         .json(
 //           new ApiResponse(
-//             200,
-//             "You are NOT authorized to approve or deny requests."
+//             403,
+//             "You are NOT authorized to approve or deny role change requests."
 //           )
 //         );
 //     }
 
+//     // Find the user whose role change is being approved/denied
 //     const user = await Registration.findById(userid);
 //     if (!user) {
 //       return res.status(404).json(new ApiError(404, "User not found."));
 //     }
 
+//     // If approval is granted
 //     if (approved) {
+//       // Handle special case for "INSTITUTE" role change (only SUPER_ADMIN can approve)
 //       if (user.requested_Role === "INSTITUTE") {
-//         // Super Admin approval required for institutes
-//         if (admin === "SUPER_ADMIN") {
-//           // Find the related institute and update its verification status
-//           await InstituteModel.findOneAndUpdate(
-//             { createdBy: userid }, // Assuming that the user is an admin of the institute
-//             { isVerifiedBySuperAdmin: true },
-//             { new: true }
-//           );
-//           // Update the user's role to "INSTITUTE"
-//           await Registration.findByIdAndUpdate(userid, {
-//             role: "INSTITUTE",
-//             requested_Role: "",
-//           });
-//           // Update the request status to 'approved'
-//           await Registration.updateOne(
-//             { _id: adminid, "requests.userid": userid },
-//             { $set: { "requests.$.status": "approved" } }
-//           );
-//           return res
-//             .status(200)
-//             .json(
-//               new ApiResponse(
-//                 200,
-//                 "Institute verified and role change approved."
-//               )
-//             );
-//         } else {
+//         if (requestingAdmin.role !== "SUPER_ADMIN") {
 //           return res
 //             .status(403)
 //             .json(
 //               new ApiResponse(
 //                 403,
-//                 "Only SUPER_ADMIN can approve INSTITUTE roles."
+//                 "Only SUPER_ADMIN can approve the INSTITUTE role."
 //               )
 //             );
 //         }
-//       } else {
-//         // For non-INSTITUTE roles, process approval by ADMIN
+
+//         // Mark the institute as verified by SUPER_ADMIN
+//         await InstituteModel.findOneAndUpdate(
+//           { createdBy: userid },
+//           { isVerifiedBySuperAdmin: true },
+//           { new: true }
+//         );
+
+//         // Update user's role to INSTITUTE
 //         await Registration.findByIdAndUpdate(userid, {
-//           role: user.requested_Role,
+//           role: "INSTITUTE",
 //           requested_Role: "",
 //         });
 
+//         // Update the request status for logging purposes
 //         await Registration.updateOne(
-//           { _id: adminid, "requests.userid": userid },
+//           { _id: requestingAdmin.id, "requests.userid": userid },
 //           { $set: { "requests.$.status": "approved" } }
 //         );
 
 //         return res
 //           .status(200)
-//           .json(new ApiResponse(200, "Role change approved."));
+//           .json(
+//             new ApiResponse(200, "Institute verified and role change approved.")
+//           );
 //       }
-//     } else {
-//       // Deny the role change request
+
+//       // Handle other role changes (e.g., TRAINER, SELF_TRAINER) – can be approved by either ADMIN or SUPER_ADMIN
+//       await Registration.findByIdAndUpdate(userid, {
+//         role: user.requested_Role,
+//         requested_Role: "",
+//       });
+
+//       // Update the request status to 'approved'
+//       await Registration.updateOne(
+//         { _id: requestingAdmin.id, "requests.userid": userid },
+//         { $set: { "requests.$.status": "approved" } }
+//       );
+
+//       return res
+//         .status(200)
+//         .json(new ApiResponse(200, "Role change approved."));
+//     }
+//     // If approval is denied
+//     else {
+//       // Clear the requested_Role field without changing the current role
 //       await Registration.findByIdAndUpdate(userid, {
 //         requested_Role: "",
 //       });
 
-//       res.status(200).json({ message: "Role change denied." });
+//       return res.status(200).json(new ApiResponse(200, "Role change denied."));
 //     }
 //   } catch (err) {
-//     res
+//     return res
 //       .status(500)
 //       .json(
 //         new ApiError(
 //           500,
-//           err.message || "Error processing approval request.",
+//           err.message || "Error processing role change request.",
 //           err
 //         )
 //       );
@@ -289,100 +350,93 @@ const requestRoleChange = asyncHandler(async (req, res) => {
 
 const approveRoleChange = asyncHandler(async (req, res) => {
   try {
-    const { userid, approved } = req.body;
-    const requestingAdmin = req.user;
+    const { userid, approved } = req.body; // Get user ID and approval status from the request body
+    const adminRole = req.user.role; // Get the role of the logged-in admin (SUPER_ADMIN)
+    const adminId = req.user.id; // Get the ID of the logged-in admin
 
-    // Check if the requester has the appropriate role
-    if (requestingAdmin.role !== "SUPER_ADMIN") {
+    // Ensure only SUPER_ADMIN can approve the role change requests
+    if (adminRole !== "SUPER_ADMIN") {
       return res
         .status(403)
         .json(
           new ApiResponse(
             403,
-            "You are NOT authorized to approve or deny role change requests."
+            "You are NOT authorized to approve or deny requests."
           )
         );
     }
 
-    // Find the user whose role change is being approved/denied
+    // Find the user by their user ID
     const user = await Registration.findById(userid);
     if (!user) {
       return res.status(404).json(new ApiError(404, "User not found."));
     }
 
-    // If approval is granted
+    // Check if the user has a pending role change request
+    if (!user.requested_Role) {
+      return res
+        .status(400)
+        .json(
+          new ApiResponse(400, "No pending role change request for this user.")
+        );
+    }
+
     if (approved) {
-      // Handle special case for "INSTITUTE" role change (only SUPER_ADMIN can approve)
-      if (user.requested_Role === "INSTITUTE") {
-        if (requestingAdmin.role !== "SUPER_ADMIN") {
-          return res
-            .status(403)
-            .json(
-              new ApiResponse(
-                403,
-                "Only SUPER_ADMIN can approve the INSTITUTE role."
-              )
-            );
-        }
-
-        // Mark the institute as verified by SUPER_ADMIN
-        await InstituteModel.findOneAndUpdate(
-          { createdBy: userid },
-          { isVerifiedBySuperAdmin: true },
-          { new: true }
-        );
-
-        // Update user's role to INSTITUTE
-        await Registration.findByIdAndUpdate(userid, {
-          role: "INSTITUTE",
-          requested_Role: "",
-        });
-
-        // Update the request status for logging purposes
-        await Registration.updateOne(
-          { _id: requestingAdmin.id, "requests.userid": userid },
-          { $set: { "requests.$.status": "approved" } }
-        );
-
-        return res
-          .status(200)
-          .json(
-            new ApiResponse(200, "Institute verified and role change approved.")
-          );
-      }
-
-      // Handle other role changes (e.g., TRAINER, SELF_TRAINER) – can be approved by either ADMIN or SUPER_ADMIN
+      // If the role change is approved, update the user's role in the database
       await Registration.findByIdAndUpdate(userid, {
-        role: user.requested_Role,
-        requested_Role: "",
+        role: user.requested_Role, // Set the role to the requested role
+        requested_Role: "", // Clear the requested_Role after approval
       });
 
-      // Update the request status to 'approved'
+      // Update the request status in the requests array to 'approved'
       await Registration.updateOne(
-        { _id: requestingAdmin.id, "requests.userid": userid },
+        { _id: adminId, "requests.userid": userid },
         { $set: { "requests.$.status": "approved" } }
+      );
+
+      // Send a confirmation email to the user about their approved role change
+      const approvedRole = user.requested_Role;
+      sendEmail(
+        "roleChangeApproved", // Template for role change approval email
+        { name: user.f_Name, email: user.email_id }, // User's name and email
+        [approvedRole] // Data to be used in the email template
       );
 
       return res
         .status(200)
-        .json(new ApiResponse(200, "Role change approved."));
-    }
-    // If approval is denied
-    else {
-      // Clear the requested_Role field without changing the current role
+        .json(new ApiResponse(200, "Role change approved successfully."));
+    } else {
+      // If the role change is denied, clear the user's requested_Role
       await Registration.findByIdAndUpdate(userid, {
-        requested_Role: "",
+        requested_Role: "", // Clear the requested_Role after denial
       });
 
-      return res.status(200).json(new ApiResponse(200, "Role change denied."));
+      // Update the request status in the requests array to 'denied'
+      await Registration.updateOne(
+        { _id: adminId, "requests.userid": userid },
+        { $set: { "requests.$.status": "denied" } }
+      );
+
+      // Send a denial email to the user
+      const requestedRole = user.requested_Role;
+      sendEmail(
+        "roleChangeDenied", // Template for role change denial email
+        { name: user.f_Name, email: user.email_id }, // User's name and email
+        [requestedRole] // Data to be used in the email template
+      );
+
+      return res
+        .status(200)
+        .json(new ApiResponse(200, "Role change request denied."));
     }
   } catch (err) {
-    return res
+    console.log(err);
+    res
       .status(500)
       .json(
         new ApiError(
           500,
-          err.message || "Error processing role change request.",
+          err.message || "Error processing role change approval request.",
           err
         )
       );
@@ -477,6 +531,81 @@ const requestToBecomeTrainer = asyncHandler(async (req, res) => {
       .json(new ApiError(500, error.message || "Error sending request", error));
   }
 });
+
+
+
+// const Event = require("../models/Event"); // Event model
+// const Booking = require("../models/Booking"); // Booking model (for event seats)
+
+const getUserDashboard = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    // 1. Total Courses created by the user (if user is a trainer/self-trainer)
+    const totalCourses = await Course.countDocuments({ trainer_id: userId });
+
+    // 2. Total Enrollments of the user (if user is a student)
+    const totalEnrollments = await Enrollment.countDocuments({ userid: userId });
+
+    // 3. Upcoming Courses for the user (courses with start date in the future)
+    const upcomingCourses = await Course.countDocuments({
+      trainer_id: userId,
+      start_date: { $gt: new Date() }, // filter for future start dates
+    });
+
+    // 4. Total Products created by the user
+    const totalProducts = await Product.countDocuments({ created_by: userId });
+
+    // 5. Total sold products
+    const totalSoldProducts = await Product.countDocuments({
+      created_by: userId,
+      sold: true,
+    });
+
+    // 6. Available Products (unsold)
+    const availableProducts = await Product.countDocuments({
+      created_by: userId,
+      sold: false,
+    });
+
+    // 7. Total Events created by the user
+    const totalEvents = await Event.countDocuments({ created_by: userId });
+
+    // 8. Total booked seats in events by the user
+    const totalBookedSeats = await Booking.countDocuments({
+      userid: userId,
+    });
+
+    // 9. Upcoming Events (events with start date in the future)
+    const upcomingEvents = await Event.countDocuments({
+      created_by: userId,
+      start_date: { $gt: new Date() }, // filter for future events
+    });
+
+    // Return the dashboard data
+    res.status(200).json({
+      totalCourses,
+      totalEnrollments,
+      upcomingCourses,
+      totalProducts,
+      totalSoldProducts,
+      availableProducts,
+      totalEvents,
+      totalBookedSeats,
+      upcomingEvents,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Error fetching user dashboard data",
+      error: error.message || "Server Error",
+    });
+  }
+});
+
+module.exports = { getUserDashboard };
+
+
 
 module.exports = {
   userRegistration,

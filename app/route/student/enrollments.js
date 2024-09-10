@@ -9,6 +9,75 @@ const { sendEmail } = require("../../../utils/email");
 const router = express.Router();
 
 // POST route to enroll in a course
+// router.post("/", jwtAuthMiddleware, async (req, res) => {
+//   try {
+//     const { course_id } = req.body;
+//     const userid = req.user.id;
+
+//     // Check if the course exists
+//     const course = await Course.findById(course_id);
+//     if (!course) {
+//       return res.status(404).json({ message: "Course not found" });
+//     }
+//     const trainer_data = await Registration.findById(course.trainer_id).select(
+//       "email_id f_Name"
+//     );
+
+//     // Check if the student exists
+//     const student = await Registration.findById(userid);
+//     if (!student) {
+//       return res.status(404).json({ message: "Student not found" });
+//     }
+
+//     // Check if the student is already enrolled in the course
+//     const existingEnrollment = await Enrollment.findOne({
+//       userid,
+//       course_id,
+//     });
+//     if (existingEnrollment) {
+//       return res
+//         .status(400)
+//         .json({ message: "Student is already enrolled in this course" });
+//     }
+
+//     // Create a new enrollment
+//     const enrollment = new Enrollment({
+//       userid,
+//       course_id,
+//     });
+
+//     const result = await enrollment.save().then(() => {
+//       const courseName = course.course_name;
+//       sendEmail(
+//         "enrollment",
+//         {
+//           name: student.f_Name,
+//           email: student.email_id,
+//         },
+//         [courseName]
+//       );
+//       const trainerName = trainer_data.f_Name;
+//       const studentName = student.f_Name;
+//       sendEmail(
+//         "enrollmentNotificationToTrainer",
+//         {
+//           name: trainer_data.f_Name,
+//           email: trainer_data.email_id,
+//         },
+//         [trainerName, studentName, courseName]
+//       );
+//     });
+//     res
+//       .status(201)
+//       .json({ message: "Enrollment successful", enrollment: result });
+//   } catch (error) {
+//     console.error(error);
+//     res
+//       .status(500)
+//       .json(new ApiError(500, error.message || "Server Error", error));
+//   }
+// });
+
 router.post("/", jwtAuthMiddleware, async (req, res) => {
   try {
     const { course_id } = req.body;
@@ -19,12 +88,20 @@ router.post("/", jwtAuthMiddleware, async (req, res) => {
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
     }
+
+    // Get trainer details based on the trainer_id from the course
     const trainer_data = await Registration.findById(course.trainer_id).select(
       "email_id f_Name"
     );
 
+    if (!trainer_data) {
+      return res.status(404).json({ message: "Trainer not found" });
+    }
+
     // Check if the student exists
-    const student = await Registration.findById(userid);
+    const student = await Registration.findById(userid).select(
+      "f_Name email_id"
+    );
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
@@ -34,6 +111,7 @@ router.post("/", jwtAuthMiddleware, async (req, res) => {
       userid,
       course_id,
     });
+
     if (existingEnrollment) {
       return res
         .status(400)
@@ -46,27 +124,32 @@ router.post("/", jwtAuthMiddleware, async (req, res) => {
       course_id,
     });
 
-    const result = await enrollment.save().then(() => {
-      const courseName = course.course_name;
-      sendEmail(
-        "enrollment",
-        {
-          name: student.f_Name,
-          email: student.email_id,
-        },
-        [courseName]
-      );
-      const trainerName = trainer_data.f_Name;
-      const studentName = student.f_Name;
-      sendEmail(
-        "enrollmentNotificationToTrainer",
-        {
-          name: trainer_data.f_Name,
-          email: trainer_data.email_id,
-        },
-        [trainerName, studentName, courseName]
-      );
-    });
+    const result = await enrollment.save();
+
+    // Send email to student after successful enrollment
+    const courseName = course.course_name;
+    sendEmail(
+      "enrollment",
+      {
+        name: student.f_Name,
+        email: student.email_id,
+      },
+      [courseName]
+    );
+
+    // Send email to the trainer notifying about the new student enrollment
+    const trainerName = trainer_data.f_Name;
+    const studentName = student.f_Name;
+    sendEmail(
+      "enrollmentNotificationToTrainer",
+      {
+        name: trainer_data.f_Name,
+        email: trainer_data.email_id,
+      },
+      [trainerName, studentName, courseName]
+    );
+
+    // Return success response with enrollment details
     res
       .status(201)
       .json({ message: "Enrollment successful", enrollment: result });

@@ -14,8 +14,8 @@ app.use(bodyparser.json());
 const adminRoutes = require("./app/adminRoutes/adminRoutes");
 app.use("/admin", adminRoutes); // Register auth routes
 
-const authRoutes = require("./app/route/student/student");
-app.use("/student", authRoutes); // Register auth routes
+// const authRoutes = require("./app/route/student/student");
+// app.use("/student", authRoutes); // Register auth routes
 
 const enrollCourse = require("./app/route/student/enrollments");
 app.use("/enrollcourse", jwtAuthMiddleware, enrollCourse); // Register auth routes

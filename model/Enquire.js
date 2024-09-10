@@ -3,19 +3,19 @@ const Schema = mongoose.Schema;
 
 const enquirySchema = new Schema(
   {
-    t_id: {
+    trainerid: {
       type: Schema.Types.ObjectId,
-      ref: "Trainer",
+      ref: "Registration",
       required: true,
     },
     description: {
       type: String,
       required: true,
     },
-    u_id: {
+    userid: {
       type: Schema.Types.ObjectId,
-      ref: "User",
-    }, // Assuming you have a User model
+      ref: "Registration",
+    },
   },
   { timestamps: true }
 );
