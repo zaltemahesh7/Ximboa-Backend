@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Enquiry = require("../../model/Enquire");
 const { ApiError } = require("../../utils/ApiError");
+const { ApiResponse } = require("../../utils/ApiResponse");
 
 // Create a new enquiry
 router.post("/:trainerid", async (req, res) => {
@@ -62,19 +63,16 @@ router.delete("/:enquiryId", async (req, res) => {
 
     const deletedEnquiry = await Enquiry.findByIdAndDelete(enquiryId);
     console.log(deletedEnquiry);
-    
 
     // Check if the enquiry exists
     if (!deletedEnquiry) {
       return res.status(404).json(new ApiError(404, "Enquiry not found"));
     }
 
-    res
-      .status(200)
-      .json(
-        new ApiResponse(200, "Enquiry deleted successfully", deletedEnquiry)
-      );
+    res.status(200).json(new ApiResponse(200, "Enquiry deleted successfully"));
   } catch (error) {
+    console.log(error);
+
     res.status(500).json(new ApiError(500, "Error deleting enquiry", error));
   }
 });
