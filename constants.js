@@ -78,6 +78,38 @@ const emailTemplates = {
         <p>Best regards,<br>Ximboa Team</p>
       </div>`,
   },
+
+  trainerRequest: {
+    subject: "Trainer Request Pending Approval",
+    html: (adminName, userName, instituteName, logoUrl) => `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        <div style="text-align: center;">
+          <img src="${logoUrl}" alt="Institute Logo" style="width: 150px; margin-bottom: 20px;">
+        </div>
+        <h2>Hello ${adminName},</h2>
+        <p>A new request has been submitted by <strong>${userName}</strong> to become a trainer under your institute <strong>${instituteName}</strong>.</p>
+        <p>Please log in to your admin panel to review and approve this request.</p>
+        <p>If you have any questions, feel free to contact us.</p>
+        <p>Best regards,<br>Ximboa Team</p>
+      </div>`,
+  },
+
+  enrollmentNotificationToTrainer: {
+    subject: "New Student Enrollment in Your Course!",
+    html: (trainerName, studentName, courseName, logoUrl) => `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        <div style="text-align: center;">
+          <img src="${logoUrl}" alt="Course Logo" style="width: 150px; margin-bottom: 20px;">
+        </div>
+        <h2>Hello ${trainerName},</h2>
+        <p>We're excited to inform you that <strong>${studentName}</strong> has just enrolled in your course <strong>${courseName}</strong>!</p>
+        <p>This is a great opportunity to share your expertise and help ${studentName} achieve their goals.</p>
+        <p>You can view more details about the enrollment and manage your courses through your trainer dashboard.</p>
+        <p>Thank you for being an important part of our team, and we look forward to seeing your students thrive under your guidance.</p>
+        <p>Best regards,<br>Ximboa Team</p>
+      </div>
+    `,
+  },
 };
 
 module.exports = { UserRolesEnum, AvailableUserRoles, emailTemplates };

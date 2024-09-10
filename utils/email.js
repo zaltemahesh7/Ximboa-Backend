@@ -25,7 +25,7 @@ async function sendEmail(emailType, recipient, data = "") {
       subject: subject,
       html: html(recipient.name, ...data, logoUrl), // Passing dynamic data to template
     });
-    console.log("Email sent:", info.messageId);
+    console.log("Email sent:", info.messageId, data);
   } catch (error) {
     console.error("Error sending email:", error);
   }

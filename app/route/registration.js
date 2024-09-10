@@ -12,6 +12,7 @@ const {
   requestRoleChange,
   approveRoleChange,
   getAllRequestsByAdminId,
+  requestToBecomeTrainer,
 } = require("../../controllers/Registration/registration.controller");
 
 // Multer configuration for file uploads
@@ -331,6 +332,8 @@ router.post("/logout", (req, res) => {
 router.post("/request-role-change", jwtAuthMiddleware, requestRoleChange);
 
 router.post("/approve-role-change", jwtAuthMiddleware, approveRoleChange);
+
+router.post("/request-role-trainer", jwtAuthMiddleware, requestToBecomeTrainer);
 
 // Get all Role_Change_Requests
 router.get(

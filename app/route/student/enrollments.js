@@ -19,6 +19,9 @@ router.post("/", jwtAuthMiddleware, async (req, res) => {
     if (!course) {
       return res.status(404).json({ message: "Course not found" });
     }
+    const trainer_data = await Registration.findById(course.trainer_id).select(
+      "email_id f_Name"
+    );
 
     // Check if the student exists
     const student = await Registration.findById(userid);
@@ -52,6 +55,16 @@ router.post("/", jwtAuthMiddleware, async (req, res) => {
           email: student.email_id,
         },
         [courseName]
+      );
+      const trainerName = trainer_data.f_Name;
+      const studentName = student.f_Name;
+      sendEmail(
+        "enrollmentNotificationToTrainer",
+        {
+          name: trainer_data.f_Name,
+          email: trainer_data.email_id,
+        },
+        [trainerName, studentName, courseName]
       );
     });
     res
