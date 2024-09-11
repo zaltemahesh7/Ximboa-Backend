@@ -8,7 +8,6 @@ const Event = require("../../../../model/event");
 const Product = require("../../../../model/product");
 const { ApiError } = require("../../../../utils/ApiError");
 const registration = require("../../../../model/registration");
-const category = require("../../../../model/category");
 
 // Get courses with specific fields, including trainer name populated
 router.get("/home", async (req, res) => {
@@ -194,7 +193,7 @@ router.get("/allcourses", async (req, res) => {
 
 // ========================= All Trainers with pagination ====================================
 router.get("/trainers", async (req, res) => {
-  const { page = 1, limit = 100 } = req.query; // Default page = 1, limit = 10
+  const { page = 1, limit = 10 } = req.query; // Default page = 1, limit = 10
   const baseUrl = req.protocol + "://" + req.get("host");
 
   try {
@@ -219,20 +218,11 @@ router.get("/trainers", async (req, res) => {
     // Calculate total pages
     const totalPages = Math.ceil(totalTrainers / limit);
 
-    const categoriesList = trainers.categories?.map(async (cid) => {
-      return await category.findById(cid).select("category_name");
-    });
-
-    console.log(categoriesList);
-
     // Send the response
     res.status(200).json({
       trainers: trainers.map((trainer) => {
         return {
           ...trainer._doc,
-          categoriesList: trainer.categories?.map(async (cid) => {
-            return await category.findById(cid).select("category_name");
-          }),
           trainer_image: trainer.trainer_image
             ? `${baseUrl}/${trainer.trainer_image.replace(/\\/g, "/")}`
             : "",
@@ -469,7 +459,7 @@ router.get("/allproduct", async function (req, res, next) {
         product_image: `http://${req.headers.host}/${product.product_image}`,
       }));
       // console.log(productsWithFullImageUrls),
-      res.status(200).json(productsWithFullImageUrls);
+      res.status(200).json({ productsWithFullImageUrls });
     })
     .catch((err) => {
       console.log(err);

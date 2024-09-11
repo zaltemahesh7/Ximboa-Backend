@@ -447,7 +447,10 @@ const getAllRequestsByAdminId = async (req, res) => {
   const adminId = req.user.id;
 
   try {
-    const admin = await Registration.findById(adminId, "requests");
+    const admin = await Registration.findById(adminId, "requests").populate({
+      path: "requests.userid", // Populating the categories field
+      select: "f_Name l_Name", // Selecting only the category_name from the populated categories
+    })
     if (!admin) {
       (err) => {
         return res

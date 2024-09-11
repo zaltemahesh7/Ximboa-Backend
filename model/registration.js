@@ -77,7 +77,12 @@ const RegistrationSchema = new mongoose.Schema(
         },
       },
     ],
-    categories: [mongoose.Schema.Types.ObjectId],
+    categories: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category", // Ensure the ref is set to the correct model name
+      },
+    ],
     address1: {
       type: String,
     },
