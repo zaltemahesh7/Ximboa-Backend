@@ -144,6 +144,7 @@ router.put(
           req.body.product_selling_prize ||
           existingProduct.product_selling_prize,
         products_info: req.body.products_info || existingProduct.products_info,
+        categoryid: req.body.categoryid || existingProduct.categoryid,
         product_image: req.files["product_image"]
           ? req.files["product_image"][0].path
           : existingProduct.product_image,
@@ -173,6 +174,7 @@ router.put(
 // Get products by trainer ID
 router.get("/bytrainer", function (req, res, next) {
   Product.find({ trainer_id: req.user.id })
+    .populate("categoryid", "category_name")
     .then((result) => {
       res.status(200).json({
         productsByTrainerId: result,
