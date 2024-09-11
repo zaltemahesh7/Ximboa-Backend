@@ -198,9 +198,10 @@ router.get("/trainers", async (req, res) => {
 
   try {
     // Find all trainers with the role TRAINER or SELF_TRAINER and populate the categories array
-    const trainers = await registration.find({
-      role: { $in: ["TRAINER", "SELF_TRAINER"] },
-    })
+    const trainers = await registration
+      .find({
+        role: { $in: ["TRAINER", "SELF_TRAINER"] },
+      })
       .populate({
         path: "categories", // Populating the categories field
         select: "category_name", // Selecting only the category_name from the populated categories
@@ -448,7 +449,8 @@ router.get("/product/:id", async function (req, res, next) {
 
 // Get a single product by ID
 router.get("/allproduct", async function (req, res, next) {
-  Product.find().populate("categoryid", "category_name")
+  Product.find()
+    .populate("categoryid", "category_name")
     .populate("t_id", "f_Name l_Name")
     .then((result) => {
       const productsWithFullImageUrls = result.map((product) => ({
@@ -459,6 +461,8 @@ router.get("/allproduct", async function (req, res, next) {
       res.status(200).json({ productsWithFullImageUrls });
     })
     .catch((err) => {
+      console.log(err);
+      
       res
         .status(500)
         .json(
