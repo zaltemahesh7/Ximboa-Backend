@@ -102,6 +102,12 @@ router.get("/home", async (req, res) => {
       trainersWithFullImageUrl,
       categoriesWithFullImageUrl,
       coursesWithFullImageUrl,
+      // pagination: {
+      //   currentPage: page,
+      //   totalPages: Math.ceil(totalCourses / limit),
+      //   totalItems: totalCourses,
+      //   pageSize: limit,
+      // },
     });
   } catch (err) {
     console.log(err);

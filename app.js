@@ -70,7 +70,7 @@ app.use("/appointment", jwtAuthMiddleware, appointmentRoute);
 const ReviewRoute = require("./app/route/ReviewRoute");
 app.use("/review", jwtAuthMiddleware, ReviewRoute);
 
-const QuestionsRoute = require("./app/route/QuestionsRoute/Questions");
+const QuestionsRoute = require("./app/route/student/questions");
 app.use("/questions", jwtAuthMiddleware, QuestionsRoute);
 
 const TrainerRoute = require("./app/route/trainner");
