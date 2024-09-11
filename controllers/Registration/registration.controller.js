@@ -4,7 +4,6 @@ const Course = require("../../model/course"); // Course model
 const Enrollment = require("../../model/Student/Enrollment"); // Enrollment model
 const Product = require("../../model/product"); // Product model
 
-
 const { ApiError } = require("../../utils/ApiError");
 const { ApiResponse } = require("../../utils/ApiResponse");
 const { asyncHandler } = require("../../utils/asyncHandler");
@@ -382,19 +381,16 @@ const approveRoleChange = asyncHandler(async (req, res) => {
     }
 
     if (approved) {
-      // If the role change is approved, update the user's role in the database
       await Registration.findByIdAndUpdate(userid, {
         role: user.requested_Role, // Set the role to the requested role
         requested_Role: "", // Clear the requested_Role after approval
       });
 
-      // Update the request status in the requests array to 'approved'
       await Registration.updateOne(
         { _id: adminId, "requests.userid": userid },
         { $set: { "requests.$.status": "approved" } }
       );
 
-      // Send a confirmation email to the user about their approved role change
       const approvedRole = user.requested_Role;
       sendEmail(
         "roleChangeApproved", // Template for role change approval email
@@ -406,18 +402,15 @@ const approveRoleChange = asyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, "Role change approved successfully."));
     } else {
-      // If the role change is denied, clear the user's requested_Role
       await Registration.findByIdAndUpdate(userid, {
-        requested_Role: "", // Clear the requested_Role after denial
+        requested_Role: "",
       });
 
-      // Update the request status in the requests array to 'denied'
       await Registration.updateOne(
         { _id: adminId, "requests.userid": userid },
         { $set: { "requests.$.status": "denied" } }
       );
 
-      // Send a denial email to the user
       const requestedRole = user.requested_Role;
       sendEmail(
         "roleChangeDenied", // Template for role change denial email
@@ -450,7 +443,7 @@ const getAllRequestsByAdminId = async (req, res) => {
     const admin = await Registration.findById(adminId, "requests").populate({
       path: "requests.userid", // Populating the categories field
       select: "f_Name l_Name", // Selecting only the category_name from the populated categories
-    })
+    });
     if (!admin) {
       (err) => {
         return res
@@ -458,9 +451,12 @@ const getAllRequestsByAdminId = async (req, res) => {
           .json(new ApiError(404, err.message || "Admin not found"));
       };
     }
-
+    const requests = admin.requests.filter(
+      (request) => request.status === "pending"
+    );
+    console.log(requests);
     // Send back the requests
-    res.status(200).json({ requests: admin.requests });
+    res.status(200).json(requests);
   } catch (err) {
     console.error(err);
     res
@@ -535,8 +531,6 @@ const requestToBecomeTrainer = asyncHandler(async (req, res) => {
   }
 });
 
-
-
 // const Event = require("../models/Event"); // Event model
 // const Booking = require("../models/Booking"); // Booking model (for event seats)
 
@@ -548,7 +542,9 @@ const getUserDashboard = asyncHandler(async (req, res) => {
     const totalCourses = await Course.countDocuments({ trainer_id: userId });
 
     // 2. Total Enrollments of the user (if user is a student)
-    const totalEnrollments = await Enrollment.countDocuments({ userid: userId });
+    const totalEnrollments = await Enrollment.countDocuments({
+      userid: userId,
+    });
 
     // 3. Upcoming Courses for the user (courses with start date in the future)
     const upcomingCourses = await Course.countDocuments({
@@ -607,8 +603,6 @@ const getUserDashboard = asyncHandler(async (req, res) => {
 });
 
 module.exports = { getUserDashboard };
-
-
 
 module.exports = {
   userRegistration,
