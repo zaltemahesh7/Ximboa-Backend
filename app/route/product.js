@@ -82,7 +82,8 @@ router.get("/", function (req, res, next) {
 
 // Get a single product by ID
 router.get("/:id", async function (req, res, next) {
-  Product.find({ _id: req.params.id })
+  Product.findById(req.params.id)
+    .populate("categoryid", "category_name")
     .select("-t_id")
     .then((result) => {
       const productsWithFullImageUrls = result.map((product) => ({
