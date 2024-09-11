@@ -6,6 +6,10 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Registration",
     },
+    categoryid: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
+    },
     product_name: {
       type: String,
       required: true,

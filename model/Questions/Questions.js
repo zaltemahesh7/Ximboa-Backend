@@ -2,14 +2,14 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const questionSchema = new Schema({
-  c_id: {
+  userid: {
     type: Schema.Types.ObjectId,
-    ref: "Course",
+    ref: "Registration",
     required: true,
   },
-  t_id: {
+  trainerid: {
     type: Schema.Types.ObjectId,
-    ref: "Trainer",
+    ref: "Registration",
     required: true,
   },
   question: {

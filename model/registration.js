@@ -34,13 +34,13 @@ const RegistrationSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
-    institute: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: InstituteModel
-    },
     password: {
       type: String,
       required: [true, "Password is required"],
+    },
+    institute: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: InstituteModel,
     },
     role: {
       type: String,

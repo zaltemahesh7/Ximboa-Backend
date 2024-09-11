@@ -26,6 +26,7 @@ const globalSearch = async (req, res) => {
     const [courses, categories, trainers, products, events] = await Promise.all(
       [
         Course.find({ course_name: searchRegex })
+          .populate("category_id", "category_name")
           .limit(4)
           .select("course_name thumbnail_image"),
         Category.find({ category_name: searchRegex })
@@ -38,6 +39,7 @@ const globalSearch = async (req, res) => {
           .limit(4)
           .select("f_Name l_Name trainer_image"),
         Product.find({ product_name: searchRegex })
+          .populate("categoryid", "category_name")
           .limit(4)
           .select("product_name product_image"),
         Event.find({ event_name: searchRegex })

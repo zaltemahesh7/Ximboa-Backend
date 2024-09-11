@@ -37,8 +37,9 @@ router.post(
   ]),
   (req, res, next) => {
     var product = new Product({
-      t_id: req.user.id, // Don't pass Trainer id it will fetched from token payload
+      t_id: req.user.id,
       product_name: req.body.product_name,
+      categoryid: req.body.categoryid,
       product_prize: req.body.product_prize,
       product_selling_prize: req.body.product_selling_prize,
       products_info: req.body.products_info,
@@ -67,6 +68,7 @@ router.post(
 // Get all products
 router.get("/", function (req, res, next) {
   Product.find()
+    .populate("categoryid", "category_name")
     .then((result) => {
       res.status(200).json({
         allProducts: result,
@@ -81,7 +83,7 @@ router.get("/", function (req, res, next) {
 // Get a single product by ID
 router.get("/:id", async function (req, res, next) {
   Product.find({ _id: req.params.id })
-  .select("-t_id")
+    .select("-t_id")
     .then((result) => {
       const productsWithFullImageUrls = result.map((product) => ({
         ...product._doc,
