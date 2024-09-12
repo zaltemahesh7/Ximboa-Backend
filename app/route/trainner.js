@@ -48,11 +48,11 @@ router.get("/", async (req, res) => {
     });
 
     // Find question by the trainer
-    const question = await Question.find({ t_id: trainerId });
+    const question = await Question.find({ trainerid: trainerId });
     // Find Appointment by the trainer
     const Appointments = await Appointment.find({ t_id: trainerId });
     // Find Enquiry by the trainer
-    const Enquirys = await Enquiry.find({ t_id: trainerId });
+    const Enquirys = await Enquiry.find({ trainerid: trainerId });
     // Find Products by the trainer
     const Products = await Product.find({ t_id: trainerId });
 

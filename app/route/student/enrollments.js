@@ -5,79 +5,11 @@ const { jwtAuthMiddleware } = require("../../../middleware/auth");
 const { ApiError } = require("../../../utils/ApiError");
 const Registration = require("../../../model/registration");
 const { sendEmail } = require("../../../utils/email");
+const NotificationModel = require("../../../model/Notifications/Notification.model");
 
 const router = express.Router();
 
 // POST route to enroll in a course
-// router.post("/", jwtAuthMiddleware, async (req, res) => {
-//   try {
-//     const { course_id } = req.body;
-//     const userid = req.user.id;
-
-//     // Check if the course exists
-//     const course = await Course.findById(course_id);
-//     if (!course) {
-//       return res.status(404).json({ message: "Course not found" });
-//     }
-//     const trainer_data = await Registration.findById(course.trainer_id).select(
-//       "email_id f_Name"
-//     );
-
-//     // Check if the student exists
-//     const student = await Registration.findById(userid);
-//     if (!student) {
-//       return res.status(404).json({ message: "Student not found" });
-//     }
-
-//     // Check if the student is already enrolled in the course
-//     const existingEnrollment = await Enrollment.findOne({
-//       userid,
-//       course_id,
-//     });
-//     if (existingEnrollment) {
-//       return res
-//         .status(400)
-//         .json({ message: "Student is already enrolled in this course" });
-//     }
-
-//     // Create a new enrollment
-//     const enrollment = new Enrollment({
-//       userid,
-//       course_id,
-//     });
-
-//     const result = await enrollment.save().then(() => {
-//       const courseName = course.course_name;
-//       sendEmail(
-//         "enrollment",
-//         {
-//           name: student.f_Name,
-//           email: student.email_id,
-//         },
-//         [courseName]
-//       );
-//       const trainerName = trainer_data.f_Name;
-//       const studentName = student.f_Name;
-//       sendEmail(
-//         "enrollmentNotificationToTrainer",
-//         {
-//           name: trainer_data.f_Name,
-//           email: trainer_data.email_id,
-//         },
-//         [trainerName, studentName, courseName]
-//       );
-//     });
-//     res
-//       .status(201)
-//       .json({ message: "Enrollment successful", enrollment: result });
-//   } catch (error) {
-//     console.error(error);
-//     res
-//       .status(500)
-//       .json(new ApiError(500, error.message || "Server Error", error));
-//   }
-// });
-
 router.post("/", jwtAuthMiddleware, async (req, res) => {
   try {
     const { course_id } = req.body;
@@ -136,6 +68,24 @@ router.post("/", jwtAuthMiddleware, async (req, res) => {
       },
       [courseName]
     );
+
+    // Create notification for the student
+    const studentNotification = new NotificationModel({
+      recipient: userid,
+      message: `You have successfully enrolled in the course: ${course.course_name}`,
+      activityType: "COURSE_ENROLLMENT",
+      relatedId: course._id,
+    });
+    await studentNotification.save();
+
+    // Create notification for the trainer
+    const trainerNotification = new NotificationModel({
+      recipient: course.trainer_id,
+      message: `A student has enrolled in your course: ${course.course_name}`,
+      activityType: "COURSE_ENROLLMENT",
+      relatedId: course._id,
+    });
+    await trainerNotification.save();
 
     // Send email to the trainer notifying about the new student enrollment
     const trainerName = trainer_data.f_Name;

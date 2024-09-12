@@ -79,21 +79,11 @@ router.post(
 );
 
 // GET route to get questions related to a course
-router.get("/course/:courseId", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const courseId = req.params.courseId;
-    const questions = await Question.find({ course_id: courseId }).populate(
-      "student_id",
-      "name"
-    );
+    const questions = await Question.find();
 
-    if (!questions) {
-      return res
-        .status(404)
-        .json({ message: "No questions found for this course" });
-    }
-
-    res.status(200).json({ questions: questions });
+    res.status(200).json(questions);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error });
