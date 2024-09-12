@@ -11,7 +11,7 @@ const appointmentSchema = new Schema(
     u_id: {
       type: Schema.Types.ObjectId,
       ref: "User",
-    }, // Assuming you have a User model
+    }, 
     date: {
       type: Date,
       required: true,
