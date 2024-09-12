@@ -5,12 +5,12 @@ const appointmentSchema = new Schema(
   {
     t_id: {
       type: Schema.Types.ObjectId,
-      ref: "Trainer",
+      ref: "Registration",
       required: true,
     },
     u_id: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Registration",
     }, // Assuming you have a User model
     date: {
       type: Date,

@@ -4,6 +4,6 @@ const {
 const express = require("express");
 const router = express.Router();
 
-router.get("/globle", globalSearch);
+router.get("/global", globalSearch);
 
 module.exports = router;
