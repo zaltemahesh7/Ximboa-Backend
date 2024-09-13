@@ -407,6 +407,14 @@ const approveRoleChange = asyncHandler(async (req, res) => {
         [approvedRole] // Data to be used in the email template
       );
 
+      const notificationForApproval = new NotificationModel({
+        recipient: user._id, // User ID
+        message: `Congratulations ${user.f_Name} ${user.l_Name}, your request to change your role to ${user.role} has been approved.`,
+        activityType: "ROLE_CHANGE_APPROVED",
+        relatedId: user._id,
+      });
+      await notificationForApproval.save();
+
       return res
         .status(200)
         .json(new ApiResponse(200, "Role change approved successfully."));

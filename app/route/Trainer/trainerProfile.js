@@ -126,6 +126,7 @@ router.get("/:id", async (req, res) => {
           : "",
         review: review?.review,
         star_count: review?.star_count,
+        createdAt: review?.createdAt,
       };
     });
     const Educations = await Education.find({ trainer_id: { $in: trainerId } });
