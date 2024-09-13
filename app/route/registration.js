@@ -39,9 +39,6 @@ const upload = multer({
   fileFilter: fileFilter,
 });
 
-// Create a new trainer
-// Register a new user----------------------------------------------------------
-
 router.post("/", upload.single("trainer_image"), async function (req, res) {
   const {
     f_Name,

@@ -3,6 +3,8 @@ var router = express.Router();
 var mongoose = require("mongoose");
 var Product = require("../../model/product");
 const multer = require("multer");
+const NotificationModel = require("../../model/Notifications/Notification.model");
+const { ApiError } = require("../../utils/ApiError");
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -35,37 +37,44 @@ router.post(
     { name: "product_image", maxCount: 1 },
     { name: "product_gallary", maxCount: 1 },
   ]),
-  (req, res, next) => {
-    var product = new Product({
-      t_id: req.user.id,
-      product_name: req.body.product_name,
-      categoryid: req.body.categoryid,
-      product_prize: req.body.product_prize,
-      product_selling_prize: req.body.product_selling_prize,
-      products_info: req.body.products_info,
-      product_image: req.files["product_image"]
-        ? req.files["product_image"][0].path
-        : "",
-      product_gallary: req.files["product_gallary"]
-        ? req.files["product_gallary"][0].path
-        : "",
-    });
-
-    product
-      .save()
-      .then((result) => {
-        res.status(200).json({
-          newProduct: result,
-        });
-      })
-      .catch((err) => {
-        console.error(err);
-        res.status(500).json({ error: err });
+  async (req, res, next) => {
+    try {
+      const product = new Product({
+        t_id: req.user.id,
+        product_name: req.body.product_name,
+        categoryid: req.body.categoryid,
+        product_prize: req.body.product_prize,
+        product_selling_prize: req.body.product_selling_prize,
+        products_info: req.body.products_info,
+        product_image: req.files["product_image"]
+          ? req.files["product_image"][0].path
+          : "",
+        product_gallary: req.files["product_gallary"]
+          ? req.files["product_gallary"][0].path
+          : "",
       });
+
+      const result = await product.save();
+
+      const notification = new NotificationModel({
+        recipient: req.user.id,
+        message: `Your product "${result.product_name}" has been added successfully.`,
+        activityType: "PRODUCT_ADDED",
+        relatedId: result._id,
+      });
+
+      await notification.save();
+
+      res.status(200).json({
+        newProduct: result,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error });
+    }
   }
 );
 
-// Get all products
 router.get("/", function (req, res, next) {
   Product.find()
     .populate("categoryid", "category_name")
@@ -107,18 +116,56 @@ router.get("/:id", async function (req, res, next) {
 });
 
 // Delete a product
-router.delete("/:id", function (req, res, next) {
-  Product.deleteOne({ _id: req.params.id })
-    .then((result) => {
-      res.status(200).json({
-        msg: "Product deleted successfully",
-        result: result,
-      });
-    })
-    .catch((err) => {
-      console.error(err);
-      res.status(500).json({ error: err });
+// router.delete("/:id", async (req, res) => {
+//   try {
+//     const product = await Product.findById(req.param.id);
+//     if (!product) {
+//       return res.status(404).json(new ApiError(404, "product not found"));
+//     }
+//     await Product.deleteOne({ _id: req.params.id });
+//     const notification = new NotificationModel({
+//       recipient: req.user.id, // User ID
+//       message: `Your product "${product.product_name}" has been deleted successfully.`,
+//       activityType: "PRODUCT_DELETED", // Activity type for product deletion
+//       relatedId: product._id, // Reference to the deleted product
+//     });
+
+//     await notification.save();
+//     res.send("deleted");
+//   } catch (error) {
+//     console.log(error);
+//     res.send(error);
+//   }
+// });
+
+router.delete("/:productId", async (req, res) => {
+  try {
+    const productId = req.params.productId;
+
+    // Find and delete the product
+    const deletedProduct = await Product.findByIdAndDelete(productId);
+
+    if (!deletedProduct) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // Create notification for the deleted product
+    const notification = new NotificationModel({
+      recipient: req.user.id,
+      message: `Your product "${deletedProduct.product_name}" has been deleted successfully.`,
+      activityType: "PRODUCT_DELETED",
+      relatedId: deletedProduct._id,
     });
+    await notification.save();
+
+    res.status(200).json({
+      message: "Product deleted successfully",
+      deletedProduct: deletedProduct,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error deleting the product" });
+  }
 });
 
 // Update a product
@@ -130,13 +177,11 @@ router.put(
   ]),
   async function (req, res, next) {
     try {
-      // Find the existing product first
       const existingProduct = await Product.findById(req.params.id);
       if (!existingProduct) {
         return res.status(400).json({ msg: "Product not found" });
       }
 
-      // Prepare the update data based on the request and existing data
       const updateData = {
         product_name: req.body.product_name || existingProduct.product_name,
         product_prize: req.body.product_prize || existingProduct.product_prize,
@@ -151,10 +196,17 @@ router.put(
         product_gallary: req.files["product_gallary"]
           ? req.files["product_gallary"][0].path
           : existingProduct.product_gallary,
-        trainer_id: req.user.id, // Update the trainer ID if needed
+        trainer_id: req.user.id,
       };
 
-      // Update the product with the new data
+      const notification = new NotificationModel({
+        recipient: req.user.id,
+        message: `Your product "${updateData.product_name}" has been updated successfully.`,
+        activityType: "PRODUCT_UPDATED",
+        relatedId: existingProduct._id,
+      });
+      notification.save();
+
       const product = await Product.findByIdAndUpdate(
         req.params.id,
         { $set: updateData },
