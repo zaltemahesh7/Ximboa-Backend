@@ -1,24 +1,23 @@
 const express = require("express");
 const router = express.Router();
 const Review = require("../../model/Review");
+const { jwtAuthMiddleware } = require("../../middleware/auth");
 
 // POST request to add a new review
-router.post("/", async (req, res) => {
-  const { t_id, c_id, user_id, review, star_count } = req.body;
+router.post("/", jwtAuthMiddleware, async (req, res) => {
+  const { t_id, c_id, review, star_count } = req.body;
+  const user_id = req.user.id;
 
-  // Check if all fields are provided
-  if (!t_id || !c_id || !user_id || !review || !star_count) {
-    return res.status(400).json({ message: "All fields are required." });
-  }
+  console.log({ t_id, c_id, review, star_count, user_id });
 
   try {
-    // Create a new review object   
+    // Create a new review object
     const newReview = new Review({
       t_id,
       c_id,
       user_id,
       review,
-      star_count
+      star_count,
     });
 
     // Save the review to the database
@@ -55,7 +54,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Update Review
-router.put("/:id", async (req, res) => {
+router.put("/:id", jwtAuthMiddleware, async (req, res) => {
   try {
     const review = await Review.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -71,11 +70,11 @@ router.put("/:id", async (req, res) => {
 });
 
 // Delete Review
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", jwtAuthMiddleware, async (req, res) => {
   try {
     const review = await Review.findByIdAndDelete(req.params.id);
     if (!review) {
-      return res.status(404).send();
+      return res.status(404).send("Not found");
     }
     res.status(200).send("review deleted sucessfully");
   } catch (error) {
@@ -88,23 +87,19 @@ router.get("/reviews/trainer/:trainerId", async (req, res) => {
   const { trainerId } = req.params;
 
   try {
-    const reviews = await Review.find({ t_id:trainerId })
+    const reviews = await Review.find({ t_id: trainerId })
       .populate({
-        path: 'user_id',
-        select: ' trainer_image f_Name l_Name',
+        path: "user_id",
+        select: " trainer_image f_Name l_Name",
       })
-      .select('star_count date review')
+      .select("star_count date review")
       .exec();
 
     res.status(200).json(reviews);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({ message: "Error fetching reviews", error });
   }
 });
-
-
-
-
 
 module.exports = router;
