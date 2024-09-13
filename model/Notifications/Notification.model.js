@@ -13,7 +13,16 @@ const notificationSchema = new Schema({
   },
   activityType: {
     type: String,
-    enum: ["COURSE_ENROLLMENT", "COURSE_UPDATE", "EVENT", "ROLE_CHANGE", "OTHER"], // Example activities
+    enum: [
+      "COURSE_ENROLLMENT",
+      "COURSE_UPDATE",
+      "EVENT",
+      "ROLE_CHANGE",
+      "EVENT_REGISTRATION",
+      "EVENT_UPDATE",
+      "OTHER",
+      "COURSE_CREATE",
+    ], // Example activities
     required: true,
   },
   relatedId: {

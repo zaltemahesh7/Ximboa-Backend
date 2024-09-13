@@ -36,6 +36,12 @@ const eventSchema = new Schema(
       type: String,
       required: true,
     },
+    registered_users: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Registration",
+      },
+    ],
   },
   { timestamps: true }
 );

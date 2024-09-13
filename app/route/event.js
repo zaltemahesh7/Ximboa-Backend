@@ -3,6 +3,9 @@ const router = express.Router();
 const Event = require("../../model/event");
 const upload = require("../../middleware/multerConfig");
 const { jwtAuthMiddleware } = require("../../middleware/auth");
+const registration = require("../../model/registration");
+const NotificationModel = require("../../model/Notifications/Notification.model");
+const { ApiResponse } = require("../../utils/ApiResponse");
 
 // Create a new event
 router.post(
@@ -173,11 +176,29 @@ router.put("/:id", async (req, res) => {
       return res.status(404).json({ message: "Event not found" });
     }
 
-    res.status(200).json({
-      message: "Event updated successfully",
-      updatedEvent,
+    const attendees = updatedEvent.registered_users;
+    // Create notifications for each attendee
+    const notifications = attendees.map((attendee) => {
+      return {
+        recipient: attendee._id,
+        message: `The event "${updatedEvent.event_name}" has been updated: ${updatedEvent}`,
+        activityType: "EVENT_UPDATE",
+        relatedId: updatedEvent._id,
+      };
     });
+    await NotificationModel.insertMany(notifications);
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          400,
+          "Event updated successfully",
+          updatedEvent.event_name
+        )
+      );
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Error updating event", error });
   }
 });
@@ -192,6 +213,62 @@ router.delete("/:id", async (req, res) => {
     res.status(200).json({ message: "Event deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting event", error });
+  }
+});
+
+// Route to register a user for an event
+router.post("/registerevent/:eventId", async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const userId = req.user.id;
+
+    // Find the event by ID
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    // Find the user by ID
+    const user = await registration.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if the user is already registered for the event
+    if (event.registered_users.includes(userId)) {
+      return res
+        .status(400)
+        .json({ message: "User is already registered for this event" });
+    }
+
+    // Add the user to the registered users array
+    event.registered_users.push(userId);
+    await event.save();
+
+    // Create a notification for the student
+    const notification = new NotificationModel({
+      recipient: userId,
+      message: `You have successfully registered for the event: ${event.event_name}`,
+      activityType: "EVENT_REGISTRATION",
+      relatedId: event._id,
+    });
+    await notification.save();
+
+    // Create a notification for the trainer
+    const notificationToTrainer = new NotificationModel({
+      recipient: event.trainerid,
+      message: `A ${user.f_Name} ${user.l_Name} has register for event: ${event.event_name}`,
+      activityType: "EVENT_REGISTRATION",
+      relatedId: event._id,
+    });
+    await notificationToTrainer.save();
+
+    res
+      .status(200)
+      .json({ message: "User registered for the event successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "An error occurred", error });
   }
 });
 
