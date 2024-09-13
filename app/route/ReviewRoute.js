@@ -89,11 +89,11 @@ router.get("/reviews/trainer/:trainerId", async (req, res) => {
 
   try {
     const reviews = await Review.find({ t_id:trainerId })
-      // .populate({
-      //   path: 'user_id',
-      //   select: 'user_image user_firstname user_lastname',
-      // })
-      .select('star_count date review_message')
+      .populate({
+        path: 'user_id',
+        select: ' trainer_image f_Name l_Name',
+      })
+      .select('star_count date review')
       .exec();
 
     res.status(200).json(reviews);

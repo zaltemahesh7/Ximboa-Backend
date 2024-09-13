@@ -4,7 +4,7 @@ const ReviewSchema = new mongoose.Schema(
   {
     t_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Trainer",
+      ref: "Registration",
       required: true,
     },
     c_id: {
@@ -14,7 +14,7 @@ const ReviewSchema = new mongoose.Schema(
     },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Registration",
       required: true,
     },
     review: { type: String, required: true },
