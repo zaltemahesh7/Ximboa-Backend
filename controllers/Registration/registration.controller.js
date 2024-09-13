@@ -8,6 +8,7 @@ const { ApiError } = require("../../utils/ApiError");
 const { ApiResponse } = require("../../utils/ApiResponse");
 const { asyncHandler } = require("../../utils/asyncHandler");
 const { sendEmail } = require("../../utils/email");
+const NotificationModel = require("../../model/Notifications/Notification.model");
 
 const userRegistration = asyncHandler(async (req, res) => {
   const {
@@ -179,7 +180,6 @@ const requestRoleChange = asyncHandler(async (req, res) => {
     });
 
     const superAdmin = await Registration.findOne({ role: "SUPER_ADMIN" });
-    // If the requested role is INSTITUTE or SELF_TRAINER, notify SUPER_ADMIN
     if (requested_Role === "INSTITUTE" || requested_Role === "SELF_TRAINER") {
       if (!superAdmin) {
         return res
@@ -188,6 +188,14 @@ const requestRoleChange = asyncHandler(async (req, res) => {
             new ApiError(500, "No SUPER_ADMIN found to approve the request.")
           );
       }
+      await Registration.findByIdAndUpdate(superAdmin.id, {
+        $push: {
+          requests: {
+            userid: userId,
+            requestedRole: requested_Role,
+          },
+        },
+      });
 
       // Send an email notification to SUPER_ADMIN
       const userEmail = req.user.username;
@@ -203,29 +211,30 @@ const requestRoleChange = asyncHandler(async (req, res) => {
       );
     }
 
+    const notificationToSuperAdmin = new NotificationModel({
+      recipient: superAdmin._id, // Super Admin ID
+      message: `User ${user.f_Name} ${user.l_Name} has requested to change their role to ${requested_Role}.`,
+      activityType: "ROLE_CHANGE_REQUEST",
+      relatedId: user._id,
+    });
+    await notificationToSuperAdmin.save();
+
     // Send an email to the user confirming that their request has been submitted
     sendEmail(
-      "roleChangeRequestToUser", // Email template type
+      "roleChangeRequestToUser",
       {
         name: user.f_Name,
         email: user.email_id,
-      }, // Recipient information
-      [requested_Role] // Data to be used in the email template
+      },
+      [requested_Role]
     );
-
-    // Push the request into the admin's request array
-    await Registration.findByIdAndUpdate(
-      superAdmin.id, // Replace with the correct admin ID or logic to find the right admin
-      {
-        $push: {
-          requests: {
-            userid: userId,
-            requestedRole: requested_Role,
-          },
-        },
-      }
-    );
-
+    const notificationToUser = new NotificationModel({
+      recipient: user._id, // User ID
+      message: `Hello ${user.f_Name} ${user.l_Name}, your request to change your role to ${requested_Role} has been sent successfully.`,
+      activityType: "ROLE_CHANGE_REQUEST_SENT",
+      relatedId: superAdmin._id,
+    });
+    await notificationToUser.save();
     res
       .status(200)
       .json(
