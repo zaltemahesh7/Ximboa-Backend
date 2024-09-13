@@ -5,6 +5,7 @@ const multer = require("multer");
 const { ApiResponse } = require("../../utils/ApiResponse");
 const { ApiError } = require("../../utils/ApiError");
 const registration = require("../../model/registration");
+const NotificationModel = require("../../model/Notifications/Notification.model");
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -73,6 +74,66 @@ router.get("/", async (req, res, next) => {
 });
 
 // POST a new course
+// router.post(
+//   "/",
+//   upload.fields([
+//     { name: "thumbnail_image", maxCount: 1 },
+//     { name: "gallary_image", maxCount: 1 },
+//     { name: "trainer_materialImage", maxCount: 1 },
+//   ]),
+//   async (req, res) => {
+//     const course = new Course({
+//       course_name: req.body.course_name,
+//       online_offline: req.body.online_offline,
+//       price: req.body.price,
+//       offer_prize: req.body.offer_prize,
+//       start_date: req.body.start_date,
+//       end_date: req.body.end_date,
+//       start_time: req.body.start_time,
+//       end_time: req.body.end_time,
+//       course_information: req.body.course_information,
+//       thumbnail_image: req.files["thumbnail_image"]
+//         ? req.files["thumbnail_image"][0].path
+//         : "",
+//       gallary_image: req.files["gallary_image"]
+//         ? req.files["gallary_image"][0].path
+//         : "",
+//       trainer_materialImage: req.files["trainer_materialImage"]
+//         ? req.files["trainer_materialImage"][0].path
+//         : "",
+//       category_id: req.body.category_id,
+//       trainer_id: req.user.id, // Fetch Trainer ID from token payload
+//     });
+
+//     try {
+//       // Save the course
+//       const savedCourse = await course.save();
+
+//       // Check if the category_id is already in the trainer's categories array
+//       await registration.findByIdAndUpdate(
+//         req.user.id, // Trainer ID
+//         { $addToSet: { categories: req.body.category_id } }, // Only add if it doesn't exist
+//         { new: true } // Return the updated document
+//       );
+
+//       res
+//         .status(200)
+//         .json(
+//           new ApiResponse(
+//             200,
+//             "Course Added Successfully",
+//             savedCourse.course_name
+//           )
+//         );
+//     } catch (err) {
+//       console.error(err);
+//       res
+//         .status(500)
+//         .json(new ApiError(500, err.message || "Server Error", err));
+//     }
+//   }
+// );
+
 router.post(
   "/",
   upload.fields([
@@ -108,12 +169,16 @@ router.post(
       // Save the course
       const savedCourse = await course.save();
 
-      // Check if the category_id is already in the trainer's categories array
-      await registration.findByIdAndUpdate(
-        req.user.id, // Trainer ID
-        { $addToSet: { categories: req.body.category_id } }, // Only add if it doesn't exist
-        { new: true } // Return the updated document
-      );
+      // Notify the trainer about the new course
+      const notification = new NotificationModel({
+        recipient: req.user.id, // Trainer ID
+        message: `Your course "${savedCourse.course_name}" has been created successfully.`,
+        activityType: "COURSE_CREATE",
+        relatedId: savedCourse._id,
+      });
+      await notification.save();
+
+      // (Optional) Notify users who follow the trainer about the new course (add custom logic to find such users)
 
       res
         .status(200)
@@ -165,6 +230,85 @@ router.get("/:id", (req, res, next) => {
     });
 });
 
+// router.put(
+//   "/:id",
+//   upload.fields([
+//     { name: "thumbnail_image", maxCount: 1 },
+//     { name: "gallary_image", maxCount: 1 },
+//     { name: "trainer_materialImage", maxCount: 1 },
+//   ]),
+//   async (req, res) => {
+//     const courseId = req.params.id;
+//     const updateData = {
+//       course_name: req.body.course_name,
+//       online_offline: req.body.online_offline,
+//       price: req.body.price,
+//       offer_prize: req.body.offer_prize,
+//       start_date: req.body.start_date,
+//       end_date: req.body.end_date,
+//       start_time: req.body.start_time,
+//       end_time: req.body.end_time,
+//       course_information: req.body.course_information,
+//       thumbnail_image: req.files["thumbnail_image"]
+//         ? req.files["thumbnail_image"][0].path
+//         : undefined, // Use undefined to avoid setting empty string if no file uploaded
+//       gallary_image: req.files["gallary_image"]
+//         ? req.files["gallary_image"][0].path
+//         : undefined,
+//       trainer_materialImage: req.files["trainer_materialImage"]
+//         ? req.files["trainer_materialImage"][0].path
+//         : undefined,
+//       category_id: req.body.category_id,
+//       trainer_id: req.user.id, // Assuming trainer ID is fetched from the token payload
+//     };
+
+//     try {
+//       // Find the course by ID and update with the new data
+//       const updatedCourse = await Course.findByIdAndUpdate(
+//         courseId,
+//         updateData,
+//         {
+//           new: true, // Return the updated document
+//           runValidators: true, // Run schema validation on updates
+//         }
+//       );
+
+//       if (!updatedCourse) {
+//         return res.status(404).json(new ApiError(404, "Course not found"));
+//       }
+
+//       const attendees = updatedEvent.registered_users;
+//       // Create notifications for each attendee
+//       const notifications = attendees.map((attendee) => {
+//         return {
+//           recipient: attendee._id,
+//           message: `The course "${updatedCourse.course_name}" has been updated`,
+//           activityType: "COURSE_UPDATE",
+//           relatedId: updatedCourse._id,
+//         };
+//       });
+//       await NotificationModel.insertMany(notifications);
+
+//       res
+//         .status(200)
+//         .json(
+//           new ApiResponse(
+//             200,
+//             "Course updated successfully",
+//             updatedCourse.course_name
+//           )
+//         );
+//     } catch (err) {
+//       console.error(err);
+//       res
+//         .status(500)
+//         .json(new ApiError(500, err.message || "Server Error", err));
+//     }
+//   }
+// );
+
+// DELETE a course by ID
+
 router.put(
   "/:id",
   upload.fields([
@@ -173,7 +317,6 @@ router.put(
     { name: "trainer_materialImage", maxCount: 1 },
   ]),
   async (req, res) => {
-    const baseUrl = req.protocol + "://" + req.get("host");
     const courseId = req.params.id;
     const updateData = {
       course_name: req.body.course_name,
@@ -187,7 +330,7 @@ router.put(
       course_information: req.body.course_information,
       thumbnail_image: req.files["thumbnail_image"]
         ? req.files["thumbnail_image"][0].path
-        : undefined, // Use undefined to avoid setting empty string if no file uploaded
+        : undefined,
       gallary_image: req.files["gallary_image"]
         ? req.files["gallary_image"][0].path
         : undefined,
@@ -195,31 +338,45 @@ router.put(
         ? req.files["trainer_materialImage"][0].path
         : undefined,
       category_id: req.body.category_id,
-      trainer_id: req.user.id, // Assuming trainer ID is fetched from the token payload
+      trainer_id: req.user.id,
     };
 
     try {
-      // Find the course by ID and update with the new data
       const updatedCourse = await Course.findByIdAndUpdate(
         courseId,
         updateData,
-        {
-          new: true, // Return the updated document
-          runValidators: true, // Run schema validation on updates
-        }
+        { new: true, runValidators: true }
       );
 
       if (!updatedCourse) {
         return res.status(404).json(new ApiError(404, "Course not found"));
       }
+
+      const notification = new NotificationModel({
+        recipient: req.user.id,
+        message: `Your course "${updatedCourse.course_name}" has been updated successfully.`,
+        activityType: "COURSE_UPDATE",
+        relatedId: updatedCourse._id,
+      });
+
+      await notification.save();
+
+      const attendees = updatedCourse.registered_users;
+
+      if (attendees) {
+        const notifications = attendees?.map((attendee) => ({
+          recipient: attendee,
+          message: `The course "${updatedCourse.course_name}" has been updated.`,
+          activityType: "COURSE_UPDATE",
+          relatedId: updatedCourse._id,
+        }));
+        await NotificationModel.insertMany(notifications);
+      }
+
       res
         .status(200)
         .json(
-          new ApiResponse(
-            200,
-            "Course updated successfully",
-            updatedCourse.course_name
-          )
+          new ApiResponse(200, "Course updated successfully", updatedCourse)
         );
     } catch (err) {
       console.error(err);
@@ -230,7 +387,6 @@ router.put(
   }
 );
 
-// DELETE a course by ID
 router.delete("/:id", async (req, res, next) => {
   try {
     const baseUrl = req.protocol + "://" + req.get("host");
@@ -243,6 +399,42 @@ router.delete("/:id", async (req, res, next) => {
     }
   } catch (error) {
     res.status(500).json({ error: error });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
+
+    if (!course) {
+      return res.status(404).json(new ApiError(404, "Course not found"));
+    }
+
+    await Course.deleteOne({ _id: req.params.id });
+
+    const attendees = course.registered_users;
+
+    const notifications = attendees.map((attendee) => ({
+      recipient: attendee,
+      message: `The course "${course.course_name}" has been deleted.`,
+      notificationType: "COURSE_DELETE",
+      course: course._id,
+    }));
+
+    const notification = new NotificationModel({
+      recipient: req.user.id,
+      message: `Your course "${deletedCourse.course_name}" has been deleted successfully.`,
+      activityType: "COURSE_DELETE",
+      relatedId: deletedCourse._id,
+    });
+
+    await notification.save();
+
+    res.status(200).json({
+      message: "Course deleted successfully and notifications sent.",
+    });
+  } catch (error) {
+    res.status(500).json(new ApiError(500, error.message || "Server Error"));
   }
 });
 
