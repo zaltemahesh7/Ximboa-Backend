@@ -1,15 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const Review = require("../../model/Review");
+const { jwtAuthMiddleware } = require("../../middleware/auth");
 
 // POST request to add a new review
-router.post("/", async (req, res) => {
-  const { t_id, c_id, user_id, review, star_count } = req.body;
+router.post("/", jwtAuthMiddleware, async (req, res) => {
+  const { t_id, c_id, review, star_count } = req.body;
+  const user_id = req.user.id;
 
-  // Check if all fields are provided
-  if (!t_id || !c_id || !user_id || !review || !star_count) {
-    return res.status(400).json({ message: "All fields are required." });
-  }
+  console.log({ t_id, c_id, review, star_count, user_id });
 
   try {
     // Create a new review object
@@ -55,7 +54,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Update Review
-router.put("/:id", async (req, res) => {
+router.put("/:id", jwtAuthMiddleware, async (req, res) => {
   try {
     const review = await Review.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
@@ -71,11 +70,11 @@ router.put("/:id", async (req, res) => {
 });
 
 // Delete Review
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", jwtAuthMiddleware, async (req, res) => {
   try {
     const review = await Review.findByIdAndDelete(req.params.id);
     if (!review) {
-      return res.status(404).send();
+      return res.status(404).send("Not found");
     }
     res.status(200).send("review deleted sucessfully");
   } catch (error) {

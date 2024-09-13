@@ -68,10 +68,10 @@ const appointmentRoute = require("./app/AppointmentRoute");
 app.use("/appointment", jwtAuthMiddleware, appointmentRoute);
 
 const ReviewRoute = require("./app/route/ReviewRoute");
-app.use("/review", jwtAuthMiddleware, ReviewRoute);
+app.use("/review", ReviewRoute);
 
 const QuestionsRoute = require("./app/route/student/questions");
-app.use("/questions",  QuestionsRoute);
+app.use("/questions", QuestionsRoute);
 
 const TrainerRoute = require("./app/route/trainner");
 app.use("/trainers", jwtAuthMiddleware, TrainerRoute);
@@ -94,9 +94,8 @@ app.use("/footer", footerRouter);
 const globalSearch = require("./app/route/Search/globleSearch.router");
 app.use("/search", globalSearch);
 
-const notificationRoutes = require('./app/route/Notification/Notification.router');
+const notificationRoutes = require("./app/route/Notification/Notification.router");
 app.use("/notifications", notificationRoutes);
-
 
 const institute = require("./app/route/Institute/Institute.router");
 app.use("/institute", institute);

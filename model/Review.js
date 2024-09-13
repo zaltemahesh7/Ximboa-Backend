@@ -10,7 +10,6 @@ const ReviewSchema = new mongoose.Schema(
     c_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Course",
-      required: true,
     },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
