@@ -12,13 +12,13 @@ router.post("/", async (req, res) => {
   }
 
   try {
-    // Create a new review object   
+    // Create a new review object
     const newReview = new Review({
       t_id,
       c_id,
       user_id,
       review,
-      star_count
+      star_count,
     });
 
     // Save the review to the database
@@ -88,23 +88,19 @@ router.get("/reviews/trainer/:trainerId", async (req, res) => {
   const { trainerId } = req.params;
 
   try {
-    const reviews = await Review.find({ t_id:trainerId })
+    const reviews = await Review.find({ t_id: trainerId })
       .populate({
-        path: 'user_id',
-        select: ' trainer_image f_Name l_Name',
+        path: "user_id",
+        select: " trainer_image f_Name l_Name",
       })
-      .select('star_count date review')
+      .select("star_count date review")
       .exec();
 
     res.status(200).json(reviews);
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({ message: "Error fetching reviews", error });
   }
 });
-
-
-
-
 
 module.exports = router;
