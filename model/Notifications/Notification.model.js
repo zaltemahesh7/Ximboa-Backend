@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const notificationSchema = new Schema({
   recipient: {
     type: Schema.Types.ObjectId,
-    ref: "Registration", // Reference to the user receiving the notification
+    ref: "Registration",
     required: true,
   },
   message: {
@@ -20,21 +20,24 @@ const notificationSchema = new Schema({
       "ROLE_CHANGE",
       "EVENT_REGISTRATION",
       "EVENT_UPDATE",
-      "OTHER",
       "COURSE_CREATE",
-    ], // Example activities
+      "PRODUCT_ADDED",
+      "PRODUCT_UPDATED",
+      "PRODUCT_DELETED",
+      "OTHER",
+    ],
     required: true,
   },
   relatedId: {
-    type: Schema.Types.ObjectId, // Reference to the related entity (course, event, etc.)
+    type: Schema.Types.ObjectId,
     required: false,
   },
   isSeen: {
     type: Boolean,
-    default: false, // All notifications are initially unseen
+    default: false,
   },
   seenAt: {
-    type: Date, // Timestamp for when the notification was viewed
+    type: Date,
   },
   createdAt: {
     type: Date,
