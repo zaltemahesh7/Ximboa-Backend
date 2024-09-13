@@ -27,6 +27,8 @@ const notificationSchema = new Schema({
       "REGISTRATION_SUCCESS",
       "LOGIN_SUCCESS",
       "PROFILE_UPDATED",
+      "ROLE_CHANGE_REQUEST",
+      "ROLE_CHANGE_REQUEST_SENT",
       "OTHER",
     ],
     required: true,

@@ -8,8 +8,6 @@ router.post("/", jwtAuthMiddleware, async (req, res) => {
   const { t_id, c_id, review, star_count } = req.body;
   const user_id = req.user.id;
 
-  console.log({ t_id, c_id, review, star_count, user_id });
-
   try {
     // Create a new review object
     const newReview = new Review({
@@ -20,10 +18,8 @@ router.post("/", jwtAuthMiddleware, async (req, res) => {
       star_count,
     });
 
-    // Save the review to the database
     const savedReview = await newReview.save();
 
-    // Respond with the saved review data
     res.status(201).json(savedReview);
   } catch (error) {
     res.status(500).json({ message: "Error adding review", error });

@@ -110,10 +110,24 @@ router.get("/:id", async (req, res) => {
     // Find About by the trainer
     const About = await about.find({ trainer: trainerId });
 
-    // Get reviews and groups for each course
     // const courseIds = courses.map((course) => course._id);
-    const reviews = await Review.find({ t_id: trainerId });
-
+    const reviewsData = await Review.find({ t_id: trainerId }).populate(
+      "user_id",
+      "f_Name l_Name trainer_image"
+    );
+    const reviews = reviewsData.map((review) => {
+      return {
+        _id: review?._id,
+        user_id: review?.user_id?._id,
+        f_Name: review?.user_id?.f_Name,
+        l_Name: review?.user_id?.l_Name,
+        user_image: review?.user_id?.trainer_image
+          ? `${baseUrl}/${review?.user_id?.trainer_image.replace(/\\/g, "/")}`
+          : "",
+        review: review?.review,
+        star_count: review?.star_count,
+      };
+    });
     const Educations = await Education.find({ trainer_id: { $in: trainerId } });
 
     const SocialMedias = await SocialMedia.find({
