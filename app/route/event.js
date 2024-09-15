@@ -181,7 +181,7 @@ router.put("/:id", async (req, res) => {
     const notifications = attendees.map((attendee) => {
       return {
         recipient: attendee._id,
-        message: `The event "${updatedEvent.event_name}" has been updated: ${updatedEvent}`,
+        message: `The event "${updatedEvent.event_name}" has been updated: ${updatedEvent.event_name}`,
         activityType: "EVENT_UPDATE",
         relatedId: updatedEvent._id,
       };
@@ -259,7 +259,7 @@ router.post("/registerevent/:eventId", async (req, res) => {
       recipient: event.trainerid,
       message: `A ${user.f_Name} ${user.l_Name} has register for event: ${event.event_name}`,
       activityType: "EVENT_REGISTRATION",
-      relatedId: event._id,
+      relatedId: userId,
     });
     await notificationToTrainer.save();
 

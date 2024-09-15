@@ -3,6 +3,7 @@ const router = express.Router();
 const Enquiry = require("../../model/Enquire");
 const { ApiError } = require("../../utils/ApiError");
 const { ApiResponse } = require("../../utils/ApiResponse");
+const NotificationModel = require("../../model/Notifications/Notification.model");
 
 // Create a new enquiry
 router.post("/", async (req, res) => {
@@ -13,6 +14,15 @@ router.post("/", async (req, res) => {
     console.log(newEnquiry);
 
     await newEnquiry.save();
+
+    const notification = new NotificationModel({
+      recipient: trainerid,
+      message: `New inquiry received from ${req.user.id}".`,
+      activityType: "NEW_ENQUIRY",
+      relatedId: newEnquiry._id,
+    });
+    await notification.save();
+
     res.status(201).send(newEnquiry);
   } catch (error) {
     res.status(400).send({ message: "Error creating enquiry", error });
