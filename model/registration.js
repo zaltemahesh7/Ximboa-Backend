@@ -101,6 +101,12 @@ const RegistrationSchema = new mongoose.Schema(
     pincode: {
       type: String,
     },
+    resetPasswordToken: {
+      type: String,
+    },
+    resetPasswordExpires: {
+      type: Number,
+    },
   },
   { timestamps: true }
 );

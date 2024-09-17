@@ -33,8 +33,8 @@ const markNotificationAsSeen = async (req, res) => {
 const getUnseenNotifications = async (req, res) => {
   try {
     const userId = req.user.id;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 3;
+    const limit = parseInt(req.query.limit) || 3;
     const startIndex = (page - 1) * limit;
 
     const notifications = await Notification.find({
@@ -56,18 +56,12 @@ const getUnseenNotifications = async (req, res) => {
         .json(new ApiResponse(200, "No new notifications.", []));
     }
 
-    res.status(200).json(
-      new ApiResponse(
-        200,
-        `You have ${notifications.length} new notifications.`,
-        {
-          notifications,
-          total: totalNotifications,
-          currentPage: page,
-          totalPages: Math.ceil(totalNotifications / limit),
-        }
-      )
-    );
+    res.status(200).json({
+      notifications,
+      total: totalNotifications,
+      currentPage: page,
+      totalPages: Math.ceil(totalNotifications / limit),
+    });
   } catch (error) {
     res
       .status(500)

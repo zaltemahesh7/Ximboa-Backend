@@ -149,19 +149,19 @@ const forgetPassward = async (req, res) => {
   }
 };
 
+// Reset Passward controller ----------------------------------------------------------------
 const resetPassword = async (req, res) => {
   const { newPassword } = req.body;
-  const { token } = req.params;
+  const token = req.query.token;
+  console.log(token, newPassword);
 
   try {
-    // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Find the user by token and check if the token is expired
     const user = await Registration.findOne({
       _id: decoded.userId,
       resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }, // Check if the token is still valid
+      resetPasswordExpires: { $gt: Date.now() },
     });
 
     if (!user) {
@@ -170,20 +170,15 @@ const resetPassword = async (req, res) => {
         .json(new ApiError(400, "Invalid or expired token"));
     }
 
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    // Update the password and clear the reset token fields
     user.password = newPassword;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
 
-    // Save the updated user
     await user.save();
 
     res.status(200).json({ message: "Password reset successfully" });
   } catch (error) {
-    console.log(error);
+    // console.log(error);
     res.status(500).json(new ApiError(500, error.message, error));
   }
 };
@@ -290,6 +285,7 @@ const requestRoleChange = asyncHandler(async (req, res) => {
   }
 });
 
+// controllers For approve Role Change Request.
 const approveRoleChange = asyncHandler(async (req, res) => {
   try {
     const { userid, approved } = req.body; // Get user ID and approval status from the request body
