@@ -464,6 +464,6 @@ router.get(
 router.post("/forget-password", forgetPassward);
 
 // Route to handle password reset requests
-router.post("/reset-password/:token", resetPassword);
+router.post("/reset-password", resetPassword);
 
 module.exports = router;
