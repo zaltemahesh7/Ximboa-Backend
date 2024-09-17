@@ -11,7 +11,7 @@ const { sendEmail } = require("../../utils/email");
 const NotificationModel = require("../../model/Notifications/Notification.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-require("dotenv").config()
+require("dotenv").config();
 
 const userRegistration = asyncHandler(async (req, res) => {
   const {
@@ -86,7 +86,7 @@ const userRegistration = asyncHandler(async (req, res) => {
     });
 });
 
-// GET route to validate user login ----------------------------------------------------------------
+// POST route to validate user login ----------------------------------------------------------------
 const userLogin = async (req, res) => {
   try {
     const { email_id, password } = req.body;
@@ -134,7 +134,7 @@ const forgetPassward = async (req, res) => {
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
     sendEmail(
-      "enrollmentNotificationToTrainer",
+      "forgotPassword",
       {
         name: user.f_Name,
         email: user.email_id,
@@ -142,18 +142,49 @@ const forgetPassward = async (req, res) => {
       [resetLink]
     );
 
-    transporter.sendMail(mailOptions, (err) => {
-      if (err) {
-        console.log(err);
-        return res
-          .status(500)
-          .json(new ApiError(500, err.message || "Error sending email", err));
-      }
-      res.status(200).json({ message: "Reset link sent to email" });
-    });
+    res.status(200).json({ message: "Reset link sent to email" });
   } catch (err) {
     console.log(err);
     res.status(500).json(new ApiError(500, err.message, err));
+  }
+};
+
+const resetPassword = async (req, res) => {
+  const { newPassword } = req.body;
+  const { token } = req.params;
+
+  try {
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Find the user by token and check if the token is expired
+    const user = await Registration.findOne({
+      _id: decoded.userId,
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }, // Check if the token is still valid
+    });
+
+    if (!user) {
+      return res
+        .status(400)
+        .json(new ApiError(400, "Invalid or expired token"));
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update the password and clear the reset token fields
+    user.password = newPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    // Save the updated user
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(new ApiError(500, error.message, error));
   }
 };
 
@@ -531,6 +562,7 @@ module.exports = {
   userRegistration,
   userLogin,
   forgetPassward,
+  resetPassword,
   requestRoleChange,
   requestToBecomeTrainer,
   approveRoleChange,

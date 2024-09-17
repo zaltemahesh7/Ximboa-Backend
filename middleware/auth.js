@@ -1,26 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { ApiError } = require("../utils/ApiError");
 
-// Browser specific token genration ============
-// const crypto = require('crypto');
-
-// function generateBrowserIdentifier() {
-//   const userAgent = navigator.userAgent;
-//   const randomString = crypto.randomBytes(16).toString('hex');
-//   return crypto.createHash('sha256').update(userAgent + randomString).digest('hex');
-// }
-
-// const jwt = require('jsonwebtoken');
-
-// function generateToken(user, browserIdentifier) {
-//   const payload = {
-//     userId: user.id,
-//     browserId: browserIdentifier
-//   };
-//   return jwt.sign(payload, process.env.TOKEN_SECRET, { expiresIn: '1h' });
-// }
-// =========------------------=========
-
 const jwtAuthMiddleware = (req, res, next) => {
   // first check request headers has authorization or not
   const authorization = req.headers.authorization;
@@ -31,7 +11,6 @@ const jwtAuthMiddleware = (req, res, next) => {
   if (!token) return res.status(401).json({ error: "Unauthorized" });
 
   try {
-    // Verify the JWT token
     const decoded = jwt.verify(token, "bhojsoft");
 
     // Attach user information to the request object
