@@ -7,6 +7,8 @@ const { upload } = require("../../../middleware/multer.middlewares");
 const { jwtAuthMiddleware } = require("../../../middleware/auth");
 const {
   bulkInsertInstitutes,
+  bulkInsertInstitutesFromExcel,
+  upload1,
 } = require("../../../controllers/InstituteDummy/InstituteDummy.controller");
 
 // Route to create an institute with photo upload
@@ -21,6 +23,13 @@ router.post(
   "/bulk-insert",
   upload.array("institute_photos", 10),
   bulkInsertInstitutes
+);
+
+// Route for bulk insert from Excel
+router.post(
+  "/bulk-insert/excel",
+  upload1.single("file"),
+  bulkInsertInstitutesFromExcel
 );
 
 module.exports = router;
