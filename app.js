@@ -100,6 +100,9 @@ app.use("/notifications", notificationRoutes);
 const institute = require("./app/route/Institute/Institute.router");
 app.use("/institute", institute);
 
+const cart = require("./app/route/Cart/Cart.router");
+app.use("/cart", cart);
+
 const mongoose = require("mongoose");
 mongoose
   .connect("mongodb://127.0.0.1:27017/bhoj_soft_solution")

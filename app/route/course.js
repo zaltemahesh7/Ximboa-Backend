@@ -420,6 +420,7 @@ router.delete("/:id", async (req, res) => {
       notificationType: "COURSE_DELETE",
       course: course._id,
     }));
+    await notifications.save();
 
     const notification = new NotificationModel({
       recipient: req.user.id,

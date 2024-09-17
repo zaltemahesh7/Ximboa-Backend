@@ -7,9 +7,17 @@ const { sendEmail } = require("../../utils/email");
 // Controller to create an institute
 const createInstitute = async (req, res) => {
   try {
-    const { institute_name, admins, trainers } = req.body;
+    const {
+      institute_name,
+      location,
+      courses,
+      establishedYear,
+      createdBy,
+      admins,
+      trainers,
+      institute_photos,
+    } = req.body;
 
-    // Get the current admin (assuming you're using a token-based authentication)
     const userid = req.user.id;
     const userRole = await registration.findById(userid).select("role");
 
@@ -18,31 +26,27 @@ const createInstitute = async (req, res) => {
         .status(404)
         .json(new ApiError(404, "You are already an Institute"));
     } else {
-      // Validate input
       if (!institute_name) {
         return res.status(400).json({ message: "Institute name is required" });
       }
 
-      // Collect uploaded photos
       const institutePhotos = req.files
         ? req.files.map((file) => file.path)
         : [];
 
-      // Create the institute
       const newInstitute = new Institute({
         institute_name,
+        location,
+        courses,
+        establishedYear,
         createdBy: userid,
-        updatedBy: userid,
-        admins: admins || userid, // Add any provided admins
-        trainers: trainers || [], // Add any provided trainers
-        institute_photos: institutePhotos, // Add the photo paths
+        admins: admins || userid,
+        trainers: trainers || [],
+        institute_photos: institutePhotos,
       });
 
-      // Save the institute
       const savedInstitute = await newInstitute.save();
 
-      // Validate requested role
-      // Update user's role in the database
       await registration.findByIdAndUpdate(userid, {
         requested_Role: "INSTITUTE",
         institute: savedInstitute.id,
@@ -56,7 +60,6 @@ const createInstitute = async (req, res) => {
           },
         },
       });
-      // Respond with success message
       res.status(201).json({
         message:
           "Institute created successfully. Awaiting super admin approval.",

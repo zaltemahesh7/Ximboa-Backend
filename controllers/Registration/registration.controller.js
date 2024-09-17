@@ -9,6 +9,9 @@ const { ApiResponse } = require("../../utils/ApiResponse");
 const { asyncHandler } = require("../../utils/asyncHandler");
 const { sendEmail } = require("../../utils/email");
 const NotificationModel = require("../../model/Notifications/Notification.model");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+require("dotenv").config()
 
 const userRegistration = asyncHandler(async (req, res) => {
   const {
@@ -120,22 +123,24 @@ const forgetPassward = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "Email not found" });
     }
-    // Generate a reset token
-    const resetToken = crypto.randomBytes(20).toString("hex");
+    const generateResetToken = (userId) => {
+      return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    };
+    const token = generateResetToken(user._id);
     const resetTokenExpiry = Date.now() + 3600000; // 1 hour
-    user.resetPasswordToken = resetToken;
+    user.resetPasswordToken = token;
     user.resetPasswordExpires = resetTokenExpiry;
     await user.save();
-    // Send email with the reset token
-    const mailOptions = {
-      to: email_id,
-      from: "",
-      subject: "Password Reset",
-      text: `You are receiving this because you have requested the reset of the password for your account.\n\n
-            Please click on the following link, or paste this into your browser to complete the process:\n\n
-            http://localhost:3000/reset-password/${resetToken}\n\n
-            If you did not request this, please ignore this email and your password will remain unchanged.\n`,
-    };
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    sendEmail(
+      "enrollmentNotificationToTrainer",
+      {
+        name: user.f_Name,
+        email: user.email_id,
+      },
+      [resetLink]
+    );
 
     transporter.sendMail(mailOptions, (err) => {
       if (err) {
@@ -254,108 +259,6 @@ const requestRoleChange = asyncHandler(async (req, res) => {
   }
 });
 
-// const approveRoleChange = asyncHandler(async (req, res) => {
-//   try {
-//     const { userid, approved } = req.body;
-//     const requestingAdmin = req.user;
-
-//     // Check if the requester has the appropriate role
-//     if (requestingAdmin.role !== "SUPER_ADMIN") {
-//       return res
-//         .status(403)
-//         .json(
-//           new ApiResponse(
-//             403,
-//             "You are NOT authorized to approve or deny role change requests."
-//           )
-//         );
-//     }
-
-//     // Find the user whose role change is being approved/denied
-//     const user = await Registration.findById(userid);
-//     if (!user) {
-//       return res.status(404).json(new ApiError(404, "User not found."));
-//     }
-
-//     // If approval is granted
-//     if (approved) {
-//       // Handle special case for "INSTITUTE" role change (only SUPER_ADMIN can approve)
-//       if (user.requested_Role === "INSTITUTE") {
-//         if (requestingAdmin.role !== "SUPER_ADMIN") {
-//           return res
-//             .status(403)
-//             .json(
-//               new ApiResponse(
-//                 403,
-//                 "Only SUPER_ADMIN can approve the INSTITUTE role."
-//               )
-//             );
-//         }
-
-//         // Mark the institute as verified by SUPER_ADMIN
-//         await InstituteModel.findOneAndUpdate(
-//           { createdBy: userid },
-//           { isVerifiedBySuperAdmin: true },
-//           { new: true }
-//         );
-
-//         // Update user's role to INSTITUTE
-//         await Registration.findByIdAndUpdate(userid, {
-//           role: "INSTITUTE",
-//           requested_Role: "",
-//         });
-
-//         // Update the request status for logging purposes
-//         await Registration.updateOne(
-//           { _id: requestingAdmin.id, "requests.userid": userid },
-//           { $set: { "requests.$.status": "approved" } }
-//         );
-
-//         return res
-//           .status(200)
-//           .json(
-//             new ApiResponse(200, "Institute verified and role change approved.")
-//           );
-//       }
-
-//       // Handle other role changes (e.g., TRAINER, SELF_TRAINER) – can be approved by either ADMIN or SUPER_ADMIN
-//       await Registration.findByIdAndUpdate(userid, {
-//         role: user.requested_Role,
-//         requested_Role: "",
-//       });
-
-//       // Update the request status to 'approved'
-//       await Registration.updateOne(
-//         { _id: requestingAdmin.id, "requests.userid": userid },
-//         { $set: { "requests.$.status": "approved" } }
-//       );
-
-//       return res
-//         .status(200)
-//         .json(new ApiResponse(200, "Role change approved."));
-//     }
-//     // If approval is denied
-//     else {
-//       // Clear the requested_Role field without changing the current role
-//       await Registration.findByIdAndUpdate(userid, {
-//         requested_Role: "",
-//       });
-
-//       return res.status(200).json(new ApiResponse(200, "Role change denied."));
-//     }
-//   } catch (err) {
-//     return res
-//       .status(500)
-//       .json(
-//         new ApiError(
-//           500,
-//           err.message || "Error processing role change request.",
-//           err
-//         )
-//       );
-//   }
-// });
-
 const approveRoleChange = asyncHandler(async (req, res) => {
   try {
     const { userid, approved } = req.body; // Get user ID and approval status from the request body
@@ -411,7 +314,7 @@ const approveRoleChange = asyncHandler(async (req, res) => {
         recipient: user._id, // User ID
         message: `Congratulations ${user.f_Name} ${user.l_Name}, your request to change your role to ${user.role} has been approved.`,
         activityType: "ROLE_CHANGE_APPROVED",
-        relatedId: user._id,
+        relatedId: adminId,
       });
       await notificationForApproval.save();
 
@@ -430,10 +333,18 @@ const approveRoleChange = asyncHandler(async (req, res) => {
 
       const requestedRole = user.requested_Role;
       sendEmail(
-        "roleChangeDenied", // Template for role change denial email
-        { name: user.f_Name, email: user.email_id }, // User's name and email
-        [requestedRole] // Data to be used in the email template
+        "roleChangeDenied",
+        { name: user.f_Name, email: user.email_id },
+        [requestedRole]
       );
+
+      const notificationForRejection = new NotificationModel({
+        recipient: user._id,
+        message: `Hello ${user.f_Name} ${user.l_Name}, unfortunately, your request to change your role to ${user.requestedRole} has been rejected.`,
+        activityType: "ROLE_CHANGE_REJECTED",
+        relatedId: adminId,
+      });
+      await notificationForRejection.save();
 
       return res
         .status(200)
@@ -548,9 +459,6 @@ const requestToBecomeTrainer = asyncHandler(async (req, res) => {
   }
 });
 
-// const Event = require("../models/Event"); // Event model
-// const Booking = require("../models/Booking"); // Booking model (for event seats)
-
 const getUserDashboard = asyncHandler(async (req, res) => {
   const userId = req.user.id;
 
@@ -619,8 +527,6 @@ const getUserDashboard = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { getUserDashboard };
-
 module.exports = {
   userRegistration,
   userLogin,
@@ -629,4 +535,5 @@ module.exports = {
   requestToBecomeTrainer,
   approveRoleChange,
   getAllRequestsByAdminId,
+  getUserDashboard,
 };

@@ -32,35 +32,42 @@ const markNotificationAsSeen = async (req, res) => {
 
 const getUnseenNotifications = async (req, res) => {
   try {
-    const userId = req.user.id; // Get logged-in user ID from token
+    const userId = req.user.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const startIndex = (page - 1) * limit;
 
-    // Fetch unseen notifications
     const notifications = await Notification.find({
       recipient: userId,
-      isSeen: false, // Fetch only unseen notifications
+      isSeen: false,
     })
-      .sort({ createdAt: -1 }) // Sort by newest notifications first
-      .limit(10);
+      .sort({ createdAt: -1 })
+      .skip(startIndex)
+      .limit(limit);
 
-    const notificationCount = notifications.length; // Count the number of notifications
+    const totalNotifications = await Notification.countDocuments({
+      recipient: userId,
+      isSeen: false,
+    });
 
-    if (notificationCount === 0) {
-      // Handle case where no notifications are found
+    if (notifications.length === 0) {
       return res
         .status(200)
         .json(new ApiResponse(200, "No new notifications.", []));
     }
 
-    // Return the notifications with the count
-    res
-      .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          `You have ${notificationCount} new notifications.`,
-          notifications
-        )
-      );
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        `You have ${notifications.length} new notifications.`,
+        {
+          notifications,
+          total: totalNotifications,
+          currentPage: page,
+          totalPages: Math.ceil(totalNotifications / limit),
+        }
+      )
+    );
   } catch (error) {
     res
       .status(500)
