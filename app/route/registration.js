@@ -14,6 +14,7 @@ const {
   approveRoleChange,
   getAllRequestsByAdminId,
   requestToBecomeTrainer,
+  resetPassword,
 } = require("../../controllers/Registration/registration.controller");
 
 // Multer configuration for file uploads
@@ -399,43 +400,40 @@ router.get("/trainer", jwtAuthMiddleware, function (req, res) {
     });
 });
 
-// POST route to initiate password reset
-router.post("/forget-password", forgetPassward);
-
 // POST route to reset the password
-router.post("/reset-password/:token", async (req, res) => {
-  const { token } = req.params;
-  const { password } = req.body;
-  try {
-    const user = await Registration.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() },
-    });
-    if (!user) {
-      return res
-        .status(400)
-        .json({ message: "Password reset token is invalid or has expired" });
-    }
-    user.password = password;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
+// router.post("/reset-password/:token", async (req, res) => {
+//   const { token } = req.params;
+//   const { password } = req.body;
+//   try {
+//     const user = await Registration.findOne({
+//       resetPasswordToken: token,
+//       resetPasswordExpires: { $gt: Date.now() },
+//     });
+//     if (!user) {
+//       return res
+//         .status(400)
+//         .json({ message: "Password reset token is invalid or has expired" });
+//     }
+//     user.password = password;
+//     user.resetPasswordToken = undefined;
+//     user.resetPasswordExpires = undefined;
 
-    await user.save();
+//     await user.save();
 
-    const notification = new NotificationModel({
-      recipient: user._id,
-      message: `Hello ${user.f_Name} ${user.l_Name}, Your Profile updated successfully :).`,
-      activityType: "PROFILE_UPDATED",
-      relatedId: user._id,
-    });
-    await notification.save();
+//     const notification = new NotificationModel({
+//       recipient: user._id,
+//       message: `Hello ${user.f_Name} ${user.l_Name}, Your Profile updated successfully :).`,
+//       activityType: "PROFILE_UPDATED",
+//       relatedId: user._id,
+//     });
+//     await notification.save();
 
-    res.status(200).json({ message: "Password has been reset" });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: err });
-  }
-});
+//     res.status(200).json({ message: "Password has been reset" });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json({ error: err });
+//   }
+// });
 
 // POST route to logout user
 router.post("/logout", (req, res) => {
@@ -461,5 +459,11 @@ router.get(
   jwtAuthMiddleware,
   getAllRequestsByAdminId
 );
+
+// POST route to initiate password reset
+router.post("/forget-password", forgetPassward);
+
+// Route to handle password reset requests
+router.post("/reset-password/:token", resetPassword);
 
 module.exports = router;
