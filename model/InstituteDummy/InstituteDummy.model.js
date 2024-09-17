@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 // Define the schema for a dummy institute collection
-const instituteSchema = new Schema(
+const InstituteDummySchema = new Schema(
   {
     institute_name: {
       type: String,
@@ -64,4 +64,4 @@ const instituteSchema = new Schema(
   }
 );
 
-module.exports = mongoose.model("Institute", instituteSchema);
+module.exports = mongoose.model("InstituteDummy", InstituteDummySchema);

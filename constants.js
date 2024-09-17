@@ -67,6 +67,22 @@ const emailTemplates = {
       </div>`,
   },
 
+  forgotPassword: {
+    subject: "Password Reset Request",
+    html: (name, resetLink, logoUrl) => `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        <div style="text-align: center;">
+          <img src="${logoUrl}" alt="Ximboa Logo" style="width: 150px; margin-bottom: 20px;">
+        </div>
+        <h2>Hello ${name},</h2>
+        <p>We received a request to reset your password for your <strong>Ximboa</strong> account.</p>
+        <p>Please click the link below to reset your password:</p>
+        <p><a href="${resetLink}" style="color: #1a73e8;">Reset Password</a></p>
+        <p>If you did not request a password reset, please ignore this email or contact support if you have any questions.</p>
+        <p>Best regards,<br>Ximboa Team</p>
+      </div>`,
+  },
+
   trainerRequest: {
     subject: "Trainer Request Pending Approval",
     html: (adminName, userName, instituteName, logoUrl) => `

@@ -9,6 +9,9 @@ const { ApiResponse } = require("../../utils/ApiResponse");
 const { asyncHandler } = require("../../utils/asyncHandler");
 const { sendEmail } = require("../../utils/email");
 const NotificationModel = require("../../model/Notifications/Notification.model");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+require("dotenv").config()
 
 const userRegistration = asyncHandler(async (req, res) => {
   const {
@@ -120,22 +123,24 @@ const forgetPassward = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "Email not found" });
     }
-    // Generate a reset token
-    const resetToken = crypto.randomBytes(20).toString("hex");
+    const generateResetToken = (userId) => {
+      return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    };
+    const token = generateResetToken(user._id);
     const resetTokenExpiry = Date.now() + 3600000; // 1 hour
-    user.resetPasswordToken = resetToken;
+    user.resetPasswordToken = token;
     user.resetPasswordExpires = resetTokenExpiry;
     await user.save();
-    // Send email with the reset token
-    const mailOptions = {
-      to: email_id,
-      from: "",
-      subject: "Password Reset",
-      text: `You are receiving this because you have requested the reset of the password for your account.\n\n
-            Please click on the following link, or paste this into your browser to complete the process:\n\n
-            http://localhost:3000/reset-password/${resetToken}\n\n
-            If you did not request this, please ignore this email and your password will remain unchanged.\n`,
-    };
+
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+    sendEmail(
+      "enrollmentNotificationToTrainer",
+      {
+        name: user.f_Name,
+        email: user.email_id,
+      },
+      [resetLink]
+    );
 
     transporter.sendMail(mailOptions, (err) => {
       if (err) {
@@ -453,9 +458,6 @@ const requestToBecomeTrainer = asyncHandler(async (req, res) => {
       .json(new ApiError(500, error.message || "Error sending request", error));
   }
 });
-
-// const Event = require("../models/Event"); // Event model
-// const Booking = require("../models/Booking"); // Booking model (for event seats)
 
 const getUserDashboard = asyncHandler(async (req, res) => {
   const userId = req.user.id;

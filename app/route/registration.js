@@ -244,7 +244,7 @@ router.post("/login", async (req, res) => {
       email: user.email_id,
     });
     const notification = new NotificationModel({
-      recipient: user._id, // The ID of the newly registered user
+      recipient: user._id,
       message: `Welcome back ${user.f_Name} ${user.l_Name}, Login successful.`,
       activityType: "LOGIN_SUCCESS",
       relatedId: user._id,
@@ -271,7 +271,7 @@ router.put(
   upload.single("trainer_image"),
   async (req, res) => {
     try {
-      const userId = req.user.id; // req.user.id is populated by authentication middleware
+      const userId = req.user.id;
       const user = await Registration.findById(userId);
       const {
         user_name,
