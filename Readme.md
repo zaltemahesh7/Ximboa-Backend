@@ -7,7 +7,7 @@ To run the FreeAPI project locally, follow these steps:
 3. Navigate to the project directory.
 
 ```bash
-   cd limbo
+   cd Ximboa-Backend
 ```
 
 5. Install the packages:
