@@ -20,6 +20,6 @@ app.use('/', router);
 
 conndb().then(() => {
     app.listen(PORT, () => {
-        console.log("Listenning.....", PORT);
+        console.log("Listenning on Port:", PORT);
     })
 });

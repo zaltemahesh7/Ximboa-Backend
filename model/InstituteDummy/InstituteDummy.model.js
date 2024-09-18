@@ -12,6 +12,27 @@ const InstituteDummySchema = new Schema(
       type: String,
       required: [true, "Location is required"],
     },
+    Email: {
+      type: String,
+    },
+    Website: {
+      type: String,
+    },
+    About: {
+      type: String,
+    },
+    Facebook: {
+      type: String,
+    },
+    Twitter: {
+      type: String,
+    },
+    Instagram: {
+      type: String,
+    },
+    Phone_No: {
+      type: Number,
+    },
     courses: {
       type: [String],
       //   required: [true, "At least one course is required"],
@@ -28,7 +49,6 @@ const InstituteDummySchema = new Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Registration",
-      required: [true, "Created by admin is required"],
     },
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,

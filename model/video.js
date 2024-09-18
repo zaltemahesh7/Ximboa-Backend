@@ -1,23 +1,26 @@
 // models/Video.js
 
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const videoSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: true,
+const videoSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+    },
+    description: {
+      type: String,
+    },
+    videoPath: {
+      type: String,
+      required: true,
+    },
+    uploadedAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  description: {
-    type: String,
-  },
-  videoPath: {
-    type: String,
-    required: true,
-  },
-  uploadedAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  { timestamps: true }
+);
 
-module.exports = mongoose.model('Video', videoSchema);
+module.exports = mongoose.model("Video", videoSchema);
