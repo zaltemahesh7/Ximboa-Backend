@@ -29,7 +29,9 @@ router.get("/:id", async (req, res) => {
     }
 
     // Find courses by the trainer
-    const courses = await Course.find({ trainer_id: trainerId });
+    const courses = await Course.find({ trainer_id: trainerId }).sort({
+      createdAt: -1,
+    });
     const baseUrl = req.protocol + "://" + req.get("host");
 
     const coursesWithFullImageUrl = courses.map((course) => {
@@ -48,13 +50,21 @@ router.get("/:id", async (req, res) => {
     });
 
     // Find question by the trainer
-    const question = await Question.find({ t_id: trainerId });
+    const question = await Question.find({ t_id: trainerId }).sort({
+      createdAt: -1,
+    });
     // Find Appointment by the trainer
-    const Appointments = await Appointment.find({ t_id: trainerId });
+    const Appointments = await Appointment.find({ t_id: trainerId }).sort({
+      createdAt: -1,
+    });
     // Find Enquiry by the trainer
-    const Enquirys = await Enquiry.find({ t_id: trainerId });
+    const Enquirys = await Enquiry.find({ t_id: trainerId }).sort({
+      createdAt: -1,
+    });
     // Find Products by the trainer
-    const Products = await Product.find({ t_id: trainerId });
+    const Products = await Product.find({ t_id: trainerId }).sort({
+      createdAt: -1,
+    });
 
     const productsWithFullImageUrl = Products.map((product) => {
       return {
@@ -69,10 +79,11 @@ router.get("/:id", async (req, res) => {
     });
 
     // Find Events by the trainer
-    const events = await Event.find({ trainerid: trainerId }).populate(
-      "event_category",
-      "category_name"
-    );
+    const events = await Event.find({ trainerid: trainerId })
+      .sort({
+        createdAt: -1,
+      })
+      .populate("event_category", "category_name");
     // .populate("trainerid", "f_Name l_Name");
 
     const eventsWithThumbnailUrl = events.map((event) => {
@@ -111,10 +122,11 @@ router.get("/:id", async (req, res) => {
     const About = await about.find({ trainer: trainerId });
 
     // const courseIds = courses.map((course) => course._id);
-    const reviewsData = await Review.find({ t_id: trainerId }).populate(
-      "user_id",
-      "f_Name l_Name trainer_image"
-    );
+    const reviewsData = await Review.find({ t_id: trainerId })
+      .sort({
+        createdAt: -1,
+      })
+      .populate("user_id", "f_Name l_Name trainer_image");
     const reviews = reviewsData.map((review) => {
       return {
         _id: review?._id,
@@ -135,13 +147,21 @@ router.get("/:id", async (req, res) => {
       trainer_id: { $in: trainerId },
     });
 
-    const testimonials = await testemonial.find({
-      trainer_id: { $in: trainerId },
-    });
+    const testimonials = await testemonial
+      .find({
+        trainer_id: { $in: trainerId },
+      })
+      .sort({
+        createdAt: -1,
+      });
 
-    const gallarysWithoutImages = await gallary.find({
-      trainer_id: { $in: trainerId },
-    });
+    const gallarysWithoutImages = await gallary
+      .find({
+        trainer_id: { $in: trainerId },
+      })
+      .sort({
+        createdAt: -1,
+      });
     const gallarys = await gallarysWithoutImages[0]?.photos?.map((photo) => {
       return {
         photos: photo ? `${baseUrl}/${photo.replace(/\\/g, "/")}` : "",
@@ -155,6 +175,9 @@ router.get("/:id", async (req, res) => {
       start_date: { $lte: currentDate },
       end_date: { $gte: currentDate },
     })
+      ?.sort({
+        createdAt: -1,
+      })
       .populate("trainer_id", "f_Name l_Name")
       .populate("category_id", "category_name");
 
@@ -179,6 +202,9 @@ router.get("/:id", async (req, res) => {
       trainer_id: { $in: trainerId },
       start_date: { $gt: currentDate },
     })
+      .sort({
+        createdAt: -1,
+      })
       .populate("trainer_id", "f_Name l_Name")
       .populate("category_id", "category_name");
 
@@ -232,7 +258,7 @@ router.get("/:id", async (req, res) => {
     //   }));
 
     // }
-    
+
     res.status(200).json({
       trainer,
       coursesWithFullImageUrl,

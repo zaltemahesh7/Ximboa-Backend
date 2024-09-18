@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const path = require("path");
-const { jwtAuthMiddleware, generateToken } = require("./middleware/auth");
+const { jwtAuthMiddleware } = require("./middleware/auth");
 
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use(cors());
