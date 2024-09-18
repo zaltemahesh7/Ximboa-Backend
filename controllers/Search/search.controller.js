@@ -100,13 +100,13 @@ const globalSearch = async (req, res) => {
     };
 
     // Promise to search in all collections
-    const [courses, categories, trainers, products, events] = await Promise.all(
+    const [formattedCourses, categories, trainers, products, events] = await Promise.all(
       [
         // Search courses by course_name, description, and tags
         Course.find(searchQuery)
           .populate("category_id", "category_name")
           .limit(4)
-          .select("course_name thumbnail_image description tags"),
+          .select("course_name thumbnail_image"),
 
         // Search categories by name
         Category.find({ category_name: searchRegex })
@@ -151,10 +151,19 @@ const globalSearch = async (req, res) => {
           .select("event_name event_thumbnail event_description"),
       ]
     );
-
-    // Send results in response
+    const Courses = formattedCourses.map((course) => ({
+      _id: course._id,
+      course_name: course.course_name,
+      thumbnail_image: course.thumbnail_image,
+      description: course.description,
+      tags: course.tags,
+      category_name: course.category_id
+        ? course.category_id.category_name
+        : null,
+    }));
+    
     res.status(200).json({
-      courses,
+      Courses,
       categories,
       trainers,
       products,
