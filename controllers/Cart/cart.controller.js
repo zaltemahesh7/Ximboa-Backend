@@ -60,7 +60,7 @@ const addToCart = async (req, res) => {
 
     return res.status(200).json({
       message: "Product added to cart successfully",
-      cart,
+      // cart,
     });
   } catch (error) {
     console.error(error);
@@ -86,16 +86,22 @@ const getAllCartItems = async (req, res) => {
         items: [],
       });
     }
+    const baseUrl = req.protocol + "://" + req.get("host");
 
     return res.status(200).json({
       message: "Cart items fetched successfully",
       items: cart.items.map((item) => ({
         productId: item.productId._id,
         productName: item.productId.product_name,
-        productPrice: item.productId.product_selling_prize,
-        productImage: item.productId.product_image,
         quantity: item.quantity,
+        productPrice: item.price,
+        productTotalPrice: item.price * item.quantity,
+        productImage: `${baseUrl}/${item.productId.product_image.replace(
+          /\\/g,
+          "/"
+        )}`,
       })),
+      totalPrice: cart.totalPrice,
     });
   } catch (error) {
     console.error(error);
