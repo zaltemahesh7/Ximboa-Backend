@@ -193,8 +193,8 @@ const globalSearch = async (req, res) => {
 
     const events = unFormattedEvents.map((event) => ({
       _id: event?._id,
-      product_name: event?.event_name,
-      product_image: event?.event_thumbnail
+      event_name: event?.event_name,
+      event_image: event?.event_thumbnail
         ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
         : "",
       events_category: event?.event_category?.category_name,
