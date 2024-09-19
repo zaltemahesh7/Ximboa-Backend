@@ -12,13 +12,13 @@ app.use(bodyparser.urlencoded({ extended: false }));
 app.use(bodyparser.json());
 
 const adminRoutes = require("./app/adminRoutes/adminRoutes");
-app.use("/admin", adminRoutes); // Register auth routes
+app.use("/admin", adminRoutes);
 
 // const authRoutes = require("./app/route/student/student");
 // app.use("/student", authRoutes); // Register auth routes
 
 const enrollCourse = require("./app/route/student/enrollments");
-app.use("/enrollcourse", jwtAuthMiddleware, enrollCourse); // Register auth routes
+app.use("/enrollcourse", jwtAuthMiddleware, enrollCourse);
 
 const registerRoute = require("./app/route/registration");
 app.use("/registration", registerRoute);
@@ -102,15 +102,5 @@ app.use("/institute", institute);
 
 const cart = require("./app/route/Cart/Cart.router");
 app.use("/cart", cart);
-
-// const mongoose = require("mongoose");
-// mongoose
-//   .connect("mongodb://127.0.0.1:27017/bhoj_soft_solution")
-//   .then(function () {
-//     console.log("connection successful");
-//   })
-//   .catch(function () {
-//     console.log("failed");
-//   });
 
 module.exports = app;

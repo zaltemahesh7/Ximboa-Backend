@@ -1,12 +1,12 @@
-const Registration = require('../../model/registration')
+const Registration = require("../../model/registration");
 
 const getAllAdmins = async (req, res) => {
   try {
-    const users = await Registration.find({ role: 'ADMIN' });
+    const users = await Registration.find({ role: "ADMIN" });
     res.status(200).json(users);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Error fetching users', error });
+    res.status(500).json({ message: "Error fetching users", error });
   }
 };
 
