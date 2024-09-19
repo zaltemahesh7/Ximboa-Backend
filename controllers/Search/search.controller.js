@@ -197,7 +197,7 @@ const globalSearch = async (req, res) => {
       product_image: event?.event_thumbnail
         ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
         : "",
-      category: event?.event_category?.category_name,
+      events_category: event?.event_category?.category_name,
     }));
 
     res.status(200).json({

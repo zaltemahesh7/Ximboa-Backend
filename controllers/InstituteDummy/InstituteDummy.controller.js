@@ -38,21 +38,17 @@ const upload1 = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // Limit file size to 10MB
 });
 
-// Bulk insert controller for institutes from Excel
 const bulkInsertInstitutesFromExcel = async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: "No Excel file provided" });
     }
 
-    // Parse the Excel file from buffer (memory)
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
 
-    // Assume the data is in the first sheet
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
 
-    // Convert the sheet to JSON
     const institutes = XLSX.utils.sheet_to_json(sheet);
 
     if (institutes.length === 0) {
@@ -75,8 +71,52 @@ const bulkInsertInstitutesFromExcel = async (req, res) => {
   }
 };
 
+const getInstitutes = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, verified } = req.query;
+    const query = {};
+
+    if (verified) {
+      query.isVerifiedBySuperAdmin = verified === "true";
+    }
+
+    const skip = (page - 1) * limit;
+
+    const institutes = await InstituteDummy.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .exec();
+
+    const totalInstitutes = await InstituteDummy.countDocuments(query);
+
+    return res.status(200).json({
+      message: "Institutes fetched successfully",
+      institutes,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalInstitutes / limit),
+        totalItems: totalInstitutes,
+        pageSize: limit,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching institutes:", error);
+    return res
+      .status(500)
+      .json(
+        new ApiError(
+          500,
+          error.message || "An error occurred while fetching institutes",
+          error
+        )
+      );
+  }
+};
+
 module.exports = {
+  upload1,
   bulkInsertInstitutes,
   bulkInsertInstitutesFromExcel,
-  upload1,
+  getInstitutes,
 };
