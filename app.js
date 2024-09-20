@@ -103,4 +103,17 @@ app.use("/institute", institute);
 const cart = require("./app/route/Cart/Cart.router");
 app.use("/cart", cart);
 
+const forum = require("./app/route/Forum/Forum.router");
+app.use("/forum", forum);
+
+// const mongoose = require("mongoose");
+// mongoose
+//   .connect("mongodb://127.0.0.1:27017/bhoj_soft_solution")
+//   .then(function () {
+//     console.log("connection successful");
+//   })
+//   .catch(function () {
+//     console.log("failed");
+//   });
+
 module.exports = app;

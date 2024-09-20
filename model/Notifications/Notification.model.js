@@ -34,6 +34,8 @@ const notificationSchema = new Schema({
       "CART_ITEM_ADDED",
       "CART_ITEM_REMOVED",
       "NEW_APPOINTMENT",
+      "FORUM_POST_ADDED",
+      "FORUM_REPLY_ADDED",
       "OTHER",
     ],
     required: true,

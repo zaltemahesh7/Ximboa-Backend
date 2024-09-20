@@ -3,6 +3,8 @@ const Registration = require("../../model/registration");
 const Product = require("../../model/product");
 const Event = require("../../model/event");
 const { ApiError } = require("../../utils/ApiError");
+const { ApiResponse } = require("../../utils/ApiResponse");
+const InstituteModel = require("../../model/Institute/Institute.model");
 
 const globalSearch = async (req, res) => {
   const searchTerm = req.query.q;
@@ -26,8 +28,7 @@ const globalSearch = async (req, res) => {
         { description: searchRegex },
         { tags: searchRegex },
       ],
-    };
-
+    };   
     const [
       unFormattedCourses,
       unFormattedTrainers,
