@@ -23,7 +23,7 @@ async function sendEmail(emailType, recipient, data = "") {
       from: `"XIMBOA" <${process.env.EMAIL_USER}>`,
       to: recipient.email,
       subject: subject,
-      html: html(recipient.name, ...data, logoUrl), // Passing dynamic data to template
+      html: html(recipient.name, ...data, logoUrl),
     });
     console.log("Email sent:", info.messageId, data);
   } catch (error) {
