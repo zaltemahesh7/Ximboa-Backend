@@ -9,6 +9,7 @@ const {
   bulkInsertInstitutes,
   bulkInsertInstitutesFromExcel,
   upload1,
+  getInstitutes,
 } = require("../../../controllers/InstituteDummy/InstituteDummy.controller");
 
 // Route to create an institute with photo upload
@@ -31,5 +32,8 @@ router.post(
   upload1.single("file"),
   bulkInsertInstitutesFromExcel
 );
+
+// Route for bulk insert from Excel
+router.get("/", getInstitutes);
 
 module.exports = router;
