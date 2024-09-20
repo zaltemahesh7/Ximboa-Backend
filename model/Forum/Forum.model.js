@@ -17,6 +17,11 @@ const ForumSchema = new Schema(
       ref: "Registration",
       required: true,
     },
+    category: {
+      type: Schema.Types.ObjectId,
+      ref: "Category",
+      required: true,
+    },
     tags: [
       {
         type: String,
@@ -34,6 +39,27 @@ const ForumSchema = new Schema(
       type: Date,
       default: Date.now,
     },
+    replies: [
+      {
+        content: {
+          type: String,
+          required: true,
+        },
+        author: {
+          type: Schema.Types.ObjectId,
+          ref: "Registration",
+          required: true,
+        },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+        updatedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
     participants: [
       {
         type: Schema.Types.ObjectId,

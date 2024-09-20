@@ -73,6 +73,7 @@ const Product = require("../../model/product");
 const Event = require("../../model/event");
 const { ApiError } = require("../../utils/ApiError");
 const { ApiResponse } = require("../../utils/ApiResponse");
+const InstituteModel = require("../../model/Institute/Institute.model");
 
 const globalSearch = async (req, res) => {
   const searchTerm = req.query.q;
@@ -100,8 +101,8 @@ const globalSearch = async (req, res) => {
     };
 
     // Promise to search in all collections
-    const [formattedCourses, categories, trainers, products, events] = await Promise.all(
-      [
+    const [formattedCourses, categories, trainers, products, events] =
+      await Promise.all([
         // Search courses by course_name, description, and tags
         Course.find(searchQuery)
           .populate("category_id", "category_name")
@@ -149,8 +150,18 @@ const globalSearch = async (req, res) => {
         })
           .limit(4)
           .select("event_name event_thumbnail event_description"),
-      ]
-    );
+
+
+        InstituteModel.find({
+          $or: [
+            { institute_name: searchRegex },
+            { event_description: searchRegex }, // Assuming you have an event description field
+          ],
+        })
+          .limit(4)
+          .select("event_name event_thumbnail event_description"),
+      ]);
+
     const Courses = formattedCourses.map((course) => ({
       _id: course._id,
       course_name: course.course_name,
@@ -161,7 +172,7 @@ const globalSearch = async (req, res) => {
         ? course.category_id.category_name
         : null,
     }));
-    
+
     res.status(200).json({
       Courses,
       categories,

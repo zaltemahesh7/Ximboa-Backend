@@ -26,7 +26,10 @@ router.post(
       const trainerid = req.user.id;
 
       // If file is uploaded, get file path from Multer
-      const event_thumbnail = req.file ? req.file.path : null;
+      const event_thumbnail = {
+        data: req.file.buffer,
+        contentType: req.file.mimetype,
+      };
 
       const newEvent = new Event({
         event_name,
