@@ -20,13 +20,6 @@ const RegistrationSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    mobile_number: {
-      type: String,
-      required: true,
-    },
-    whatsapp_no: {
-      type: String,
-    },
     email_id: {
       type: String,
       lowercase: true,
@@ -37,6 +30,34 @@ const RegistrationSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "Password is required"],
+    },
+    mobile_number: {
+      type: String,
+      required: true,
+    },
+    whatsapp_no: {
+      type: String,
+    },
+    date_of_birth: {
+      type: Date,
+    },
+    address1: {
+      type: String,
+    },
+    address2: {
+      type: String,
+    },
+    pincode: {
+      type: String,
+    },
+    city: {
+      type: String,
+    },
+    state: {
+      type: String,
+    },
+    country: {
+      type: String,
     },
     institute: {
       type: mongoose.Schema.Types.ObjectId,
@@ -53,9 +74,6 @@ const RegistrationSchema = new mongoose.Schema(
       enum: [...AvailableUserRoles, ""],
     },
     trainer_image: String,
-    date_of_birth: {
-      type: Date,
-    },
     requests: [
       {
         userid: {
@@ -83,24 +101,6 @@ const RegistrationSchema = new mongoose.Schema(
         ref: "Category",
       },
     ],
-    address1: {
-      type: String,
-    },
-    address2: {
-      type: String,
-    },
-    city: {
-      type: String,
-    },
-    country: {
-      type: String,
-    },
-    state: {
-      type: String,
-    },
-    pincode: {
-      type: String,
-    },
     resetPasswordToken: {
       type: String,
     },

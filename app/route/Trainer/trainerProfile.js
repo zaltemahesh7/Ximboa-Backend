@@ -14,6 +14,7 @@ const SocialMedia = require("../../../model/socialMedia");
 const testemonial = require("../../../model/testemonial");
 const gallary = require("../../../model/gallary");
 const { ApiError } = require("../../../utils/ApiError");
+const InstituteModel = require("../../../model/Institute/Institute.model");
 
 // Get data according to the trainer Email id
 
@@ -21,14 +22,12 @@ const { ApiError } = require("../../../utils/ApiError");
 router.get("/:id", async (req, res) => {
   try {
     const trainerId = req.params.id;
-
-    // Find the trainer
+    const institutes = await InstituteModel.find({ trainers: trainerId });
     const trainer = await Trainer.findById(trainerId).select("-password -role");
     if (!trainer) {
       return res.status(404).send({ message: "Trainer not found" });
     }
 
-    // Find courses by the trainer
     const courses = await Course.find({ trainer_id: trainerId }).sort({
       createdAt: -1,
     });
@@ -89,8 +88,8 @@ router.get("/:id", async (req, res) => {
     const eventsWithThumbnailUrl = events.map((event) => {
       return {
         ...event._doc,
-        event_thumbnail: event.event_thumbnail
-          ? `${baseUrl}/${event.event_thumbnail.replace(/\\/g, "/")}`
+        event_thumbnail: event?.event_thumbnail
+          ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
           : "",
       };
     });
@@ -102,7 +101,7 @@ router.get("/:id", async (req, res) => {
       return {
         ...event._doc,
         event_thumbnail: event.event_thumbnail
-          ? `${baseUrl}/${event.event_thumbnail.replace(/\\/g, "/")}`
+          ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
           : "",
       };
     });
@@ -113,7 +112,7 @@ router.get("/:id", async (req, res) => {
       return {
         ...event._doc,
         event_thumbnail: event.event_thumbnail
-          ? `${baseUrl}/${event.event_thumbnail.replace(/\\/g, "/")}`
+          ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
           : "",
       };
     });
@@ -260,6 +259,7 @@ router.get("/:id", async (req, res) => {
     // }
 
     res.status(200).json({
+      institutes,
       trainer,
       coursesWithFullImageUrl,
       reviews,

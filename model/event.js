@@ -17,8 +17,9 @@ const eventSchema = new Schema(
       required: true,
     },
     event_thumbnail: {
-      data: Buffer,
-      contentType: String,
+      type: String,
+      // data: Buffer,
+      // contentType: String,
     },
     trainerid: {
       type: mongoose.Schema.Types.ObjectId,
