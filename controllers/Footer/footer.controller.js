@@ -1,4 +1,3 @@
-const Registration = require("../../model/registration");
 const Categories = require("../../model/category");
 const Course = require("../../model/course");
 const { asyncHandler } = require("../../utils/asyncHandler");

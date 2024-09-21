@@ -12,13 +12,13 @@ app.use(bodyparser.urlencoded({ extended: false }));
 app.use(bodyparser.json());
 
 const adminRoutes = require("./app/adminRoutes/adminRoutes");
-app.use("/admin", adminRoutes); // Register auth routes
+app.use("/admin", adminRoutes);
 
 // const authRoutes = require("./app/route/student/student");
 // app.use("/student", authRoutes); // Register auth routes
 
 const enrollCourse = require("./app/route/student/enrollments");
-app.use("/enrollcourse", jwtAuthMiddleware, enrollCourse); // Register auth routes
+app.use("/enrollcourse", jwtAuthMiddleware, enrollCourse);
 
 const registerRoute = require("./app/route/registration");
 app.use("/registration", registerRoute);
@@ -102,6 +102,9 @@ app.use("/institute", institute);
 
 const cart = require("./app/route/Cart/Cart.router");
 app.use("/cart", cart);
+
+const forum = require("./app/route/Forum/Forum.router");
+app.use("/forum", forum);
 
 // const mongoose = require("mongoose");
 // mongoose
