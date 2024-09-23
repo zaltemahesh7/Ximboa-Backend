@@ -244,50 +244,6 @@ router.get("/trainers", async (req, res) => {
   }
 });
 
-// router.get("/alltrainers", async (req, res) => {
-//   try {
-//     const baseUrl = req.protocol + "://" + req.get("host");
-//     const trainers = await Trainer.aggregate([
-//       {
-//         $lookup: {
-//           from: "courses",
-//           localField: "_id",
-//           foreignField: "trainer_id",
-//           as: "courses",
-//         },
-//       },
-//       {
-//         $project: {
-//           f_Name: 1,
-//           l_Name: 1,
-//           trainer_image: 1,
-//           course_count: { $size: "$courses" },
-//         },
-//       },
-//     ]);
-
-//     const trainersWithFullImageUrl = trainers.map((trainer) => {
-//       return {
-//         t_id: trainer._id,
-//         f_Name: trainer.f_Name,
-//         l_Name: trainer.l_Name,
-//         course_count: trainer.course_count,
-//         trainer_image: trainer.trainer_image
-//           ? `${baseUrl}/${trainer.trainer_image.replace(/\\/g, "/")}`
-//           : "",
-//       };
-//     });
-//     res.status(200).send({
-//       trainersWithFullImageUrl,
-//     });
-//   } catch (err) {
-//     res
-//       .status(500)
-//       .json(new ApiError(500, err?.message || "Error fetching trainer", err));
-//   }
-// });
-
-// ========================= course/:id ====================================
 router.get("/course/:id", async (req, res, next) => {
   try {
     const course_data = await Course.find({ _id: req.params.id })
