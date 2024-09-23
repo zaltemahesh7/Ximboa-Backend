@@ -52,14 +52,17 @@ const createInstitute = async (req, res) => {
         institute: savedInstitute.id,
       });
 
-      await registration.findByIdAndUpdate("66cd6fcb183630e08a2214f1", {
-        $push: {
-          requests: {
-            userid: userid,
-            requestedRole: "INSTITUTE",
+      await registration.findOneAndUpdate(
+        { role: "SUPER_ADMIN" },
+        {
+          $push: {
+            requests: {
+              userid: userid,
+              requestedRole: "INSTITUTE",
+            },
           },
-        },
-      });
+        }
+      );
       res.status(201).json({
         message:
           "Institute created successfully. Awaiting super admin approval.",

@@ -22,11 +22,11 @@ const InstituteModel = require("../../../model/Institute/Institute.model");
 router.get("/:id", async (req, res) => {
   try {
     const trainerId = req.params.id;
-    const institutes = await InstituteModel.find({ trainers: trainerId });
-    const trainer = await Trainer.findById(trainerId).select("-password -role");
+    const trainer = await Trainer.findById(trainerId).select("-password");
     if (!trainer) {
       return res.status(404).send({ message: "Trainer not found" });
     }
+    const institutes = await InstituteModel.findOne({ trainers: trainerId });
 
     const courses = await Course.find({ trainer_id: trainerId }).sort({
       createdAt: -1,
@@ -117,32 +117,38 @@ router.get("/:id", async (req, res) => {
       };
     });
 
-    // Find About by the trainer
-    const About = await about.find({ trainer: trainerId });
+    const About = await about.findOne({ trainer: trainerId });
 
-    // const courseIds = courses.map((course) => course._id);
-    const reviewsData = await Review.find({ t_id: trainerId })
-      .sort({
-        createdAt: -1,
-      })
-      .populate("user_id", "f_Name l_Name trainer_image");
-    const reviews = reviewsData.map((review) => {
-      return {
-        _id: review?._id,
-        user_id: review?.user_id?._id,
-        f_Name: review?.user_id?.f_Name,
-        l_Name: review?.user_id?.l_Name,
-        user_image: review?.user_id?.trainer_image
-          ? `${baseUrl}/${review?.user_id?.trainer_image.replace(/\\/g, "/")}`
-          : "",
-        review: review?.review,
-        star_count: review?.star_count,
-        createdAt: review?.createdAt,
-      };
-    });
+    const reviewsData = institutes
+      ? await Review.findOne({ institute_id: institutes._id })
+      : await Review.find({ t_id: trainerId })
+          .sort({
+            createdAt: -1,
+          })
+          .populate("user_id", "f_Name l_Name trainer_image");
+
+    const reviews = institutes
+      ? reviewsData
+      : reviewsData.map((review) => {
+          return {
+            _id: review?._id,
+            user_id: review?.user_id?._id,
+            f_Name: review?.user_id?.f_Name,
+            l_Name: review?.user_id?.l_Name,
+            user_image: review?.user_id?.trainer_image
+              ? `${baseUrl}/${review?.user_id?.trainer_image.replace(
+                  /\\/g,
+                  "/"
+                )}`
+              : "",
+            review: review?.review,
+            star_count: review?.star_count,
+            createdAt: review?.createdAt,
+          };
+        });
     const Educations = await Education.find({ trainer_id: { $in: trainerId } });
 
-    const SocialMedias = await SocialMedia.find({
+    const SocialMedias = await SocialMedia.findOne({
       trainer_id: { $in: trainerId },
     });
 
@@ -259,7 +265,10 @@ router.get("/:id", async (req, res) => {
     // }
 
     res.status(200).json({
-      institutes,
+      Business_Name: institutes
+        ? institutes?.institute_name
+        : trainer?.business_Name,
+      // institutes,
       trainer,
       coursesWithFullImageUrl,
       reviews,
@@ -270,9 +279,9 @@ router.get("/:id", async (req, res) => {
       eventsWithThumbnailUrl,
       onlineEventsThumbnailUrl,
       offlienEventsThumbnailUrl,
-      About,
+      About: institutes ? institutes.About : About,
       Educations,
-      SocialMedias,
+      SocialMedias: institutes ? institutes?.SocialMedias : SocialMedias,
       testimonials,
       gallarys,
       // courses: relatedCourses,

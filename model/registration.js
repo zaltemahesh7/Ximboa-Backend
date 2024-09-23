@@ -6,6 +6,9 @@ const InstituteModel = require("./Institute/Institute.model");
 
 const RegistrationSchema = new mongoose.Schema(
   {
+    business_Name: {
+      type: String,
+    },
     f_Name: {
       type: String,
       required: true,

@@ -11,13 +11,17 @@ const ReviewSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Course",
     },
+    institute_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Institute",
+    },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Registration",
       required: true,
     },
     review: { type: String, required: true },
-    star_count:{ type:Number, require:true}
+    star_count: { type: Number, require: true },
   },
   { timestamps: true }
 );

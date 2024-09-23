@@ -12,6 +12,30 @@ const instituteSchema = new Schema(
       type: String,
       required: [true, "Location is required"],
     },
+    SocialMedias: {
+      Email: {
+        type: String,
+      },
+      Website: {
+        type: String,
+      },
+      Facebook: {
+        type: String,
+      },
+      Twitter: {
+        type: String,
+      },
+      Instagram: {
+        type: String,
+      },
+    },
+    Phone_No: {
+      type: Number,
+    },
+    About: {
+      about_us: String,
+      our_services: String,
+    },
     courses: {
       type: [String],
       //   required: [true, "At least one course is required"],
