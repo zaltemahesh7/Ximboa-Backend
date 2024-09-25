@@ -11,6 +11,9 @@ const eventSchema = new Schema(
       type: String,
       required: true,
     },
+    event_description: {
+      type: String,
+    },
     event_category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
@@ -44,6 +47,11 @@ const eventSchema = new Schema(
         ref: "Registration",
       },
     ],
+    event_location: {
+      type: String,
+    },
+    event_languages: [String],
+    estimated_seats: Number,
   },
   { timestamps: true }
 );

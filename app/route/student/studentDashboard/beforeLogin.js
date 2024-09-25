@@ -176,6 +176,7 @@ router.get("/home", async (req, res) => {
       // }
 
       return {
+        _id: product?._id,
         productImage: product?.product_image
           ? `${baseUrl}/${product?.product_image?.replace(/\\/g, "/")}`
           : "",
@@ -207,14 +208,15 @@ router.get("/home", async (req, res) => {
     // Map over each event to structure the data
     const eventDetails = events.map((event) => {
       return {
-        eventImage: event.event_thumbnail
-          ? `${baseUrl}/${event.event_thumbnail?.replace(/\\/g, "/")}`
+        _id: event?._id,
+        eventImage: event?.event_thumbnail
+          ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
           : "",
-        eventDate: event.event_date || "",
-        eventStartTime: event.event_start_time || "",
-        eventEndTime: event.event_end_time || "",
-        eventName: event.event_name || "",
-        mode: event.event_type === "Online" ? "Online" : "Offline", // Convert mode to a human-readable format
+        eventDate: event?.event_date || "",
+        eventStartTime: event?.event_start_time || "",
+        eventEndTime: event?.event_end_time || "",
+        eventName: event?.event_name || "",
+        mode: event?.event_type === "Online" ? "Online" : "Offline", // Convert mode to a human-readable format
         enrollments: "",
       };
     });
@@ -477,10 +479,21 @@ router.get("/event/:id", async (req, res) => {
       .populate("event_category", "category_name");
 
     const event = {
-      ...eventWithFullImageUrls._doc,
       event_thumbnail: `http://${
         req.headers.host
-      }/${eventWithFullImageUrls.event_thumbnail.replace(/\\/g, "/")}`,
+      }/${eventWithFullImageUrls?.event_thumbnail?.replace(/\\/g, "/")}`,
+      event_description: eventWithFullImageUrls?.event_description || "",
+      event_date: eventWithFullImageUrls?.event_date || "",
+      event_start_time: eventWithFullImageUrls?.event_start_time || "",
+      event_end_time: eventWithFullImageUrls?.event_end_time || "",
+      event_name: eventWithFullImageUrls?.event_name || "",
+      event_category:
+        eventWithFullImageUrls?.event_category.category_name || "",
+      event_languages: eventWithFullImageUrls?.event_languages || "",
+      estimated_seats: eventWithFullImageUrls?.estimated_seats || "",
+      event_location: eventWithFullImageUrls?.event_location || "",
+      event_type: eventWithFullImageUrls?.event_type || "",
+      registered_users: eventWithFullImageUrls?.registered_users.length || "",
     };
     if (!event) {
       return res.status(404).json(new ApiError(404, "Event not found"));
@@ -502,7 +515,7 @@ router.get("/event/:id", async (req, res) => {
     else {
       const relatedEvent = result.map((course) => ({
         ...course._doc,
-        thumbnail_image: `${baseUrl}/${eventWithFullImageUrls.event_thumbnail.replace(
+        thumbnail_image: `${baseUrl}/${eventWithFullImageUrls?.event_thumbnail?.replace(
           /\\/g,
           "/"
         )}`,
