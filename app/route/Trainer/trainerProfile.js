@@ -49,7 +49,7 @@ router.get("/:id", async (req, res) => {
     });
 
     // Find question by the trainer
-    const question = await Question.find({ trainerid: trainerId }).sort({
+    const question = await Question.find({ t_id: trainerId }).sort({
       createdAt: -1,
     });
     // Find Appointment by the trainer
@@ -57,7 +57,7 @@ router.get("/:id", async (req, res) => {
       createdAt: -1,
     });
     // Find Enquiry by the trainer
-    const Enquirys = await Enquiry.find({ trainerid: trainerId }).sort({
+    const Enquirys = await Enquiry.find({ t_id: trainerId }).sort({
       createdAt: -1,
     });
     // Find Products by the trainer
@@ -127,6 +127,7 @@ router.get("/:id", async (req, res) => {
           })
           .populate("user_id", "f_Name l_Name trainer_image");
 
+    // console.log(institutes._id);
     const reviews = institutes
       ? reviewsData
       : reviewsData.map((review) => {

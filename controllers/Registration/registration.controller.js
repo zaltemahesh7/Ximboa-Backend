@@ -9,6 +9,7 @@ const { ApiResponse } = require("../../utils/ApiResponse");
 const { asyncHandler } = require("../../utils/asyncHandler");
 const { sendEmail } = require("../../utils/email");
 const NotificationModel = require("../../model/Notifications/Notification.model");
+const { sendMail } = require("../../utils/email"); // Existing sendMail function
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
@@ -87,31 +88,64 @@ const userRegistration = asyncHandler(async (req, res) => {
 });
 
 // POST route to validate user login ----------------------------------------------------------------
-const userLogin = async (req, res) => {
+
+const { generateToken } = require("../../utils/tokenHelper"); // Token generation helper
+
+const loginController = async (req, res) => {
   try {
     const { email_id, password } = req.body;
+
+    // Step 1: Find the user by email
     const user = await Registration.findOne({ email_id });
     if (!user) {
       return res
         .status(400)
         .json(new ApiError(400, "Invalid email or password"));
     }
+
+    // Step 2: Compare the provided password with the hashed password
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res
         .status(400)
         .json(new ApiError(400, "Invalid email or password"));
     }
-    // Generate a token
+
+    // Step 3: Generate a JWT token
     const payload = {
       id: user.id,
+      role: user.role,
       username: user.email_id,
     };
-    const token = generateToken(payload, req);
-    res.status(200).json({ token });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error });
+    const token = generateToken(payload, req); // Utility function for token generation
+
+    // Step 4: Send login success email
+    sendMail("loginSuccess", {
+      name: user.f_Name,
+      email: user.email_id,
+    });
+
+    // Step 5: Create a login success notification
+    const notification = new NotificationModel({
+      recipient: user._id,
+      message: `Welcome back ${user.f_Name} ${user.l_Name}, Login successful.`,
+      activityType: "LOGIN_SUCCESS",
+      relatedId: user._id,
+    });
+    await notification.save();
+
+    // Step 6: Send response with the token and profile image URL (if available)
+    res.status(200).json({
+      token,
+      profile: user.trainer_image
+        ? `http://${req.headers.host}/${user.trainer_image.replace(/\\/g, "/")}`
+        : "",
+    });
+  } catch (err) {
+    console.error(err);
+    return res
+      .status(500)
+      .json(new ApiError(500, err.message || "Server Error while Login", err));
   }
 };
 
@@ -210,7 +244,7 @@ const requestRoleChange = asyncHandler(async (req, res) => {
 
       await Registration.findByIdAndUpdate(userId, {
         requested_Role: requested_Role,
-        business_Name
+        business_Name,
       });
 
       const superAdmin = await Registration.findOneAndUpdate(
@@ -512,7 +546,7 @@ const requestToBecomeTrainer = asyncHandler(async (req, res) => {
     const { instituteId } = req.body; // instituteId is passed in request body
     const userId = req.user.id; // user is authenticated, and userId is available in req.user
     const userName = `${req.user.f_Name} ${req.user.l_Name}`; // User's name
-    const userEmail = req.user.email_id; // User's email
+    const userEmail = req.user.email_id;
 
     // Find the institute by ID
     const institute = await InstituteModel.findById(instituteId);
@@ -642,7 +676,7 @@ const getUserDashboard = asyncHandler(async (req, res) => {
 
 module.exports = {
   userRegistration,
-  userLogin,
+  loginController,
   forgetPassward,
   resetPassword,
   requestRoleChange,
