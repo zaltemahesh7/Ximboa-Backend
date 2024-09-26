@@ -665,6 +665,7 @@ router.get("/product/:id", async function (req, res, next) {
     identityFlag:
       product?.t_id?.role === "TRAINER" ? "Institute" : "Self Expert",
     product_flag: product?.product_flag || "",
+    traienrid: product?.t_id?._id,
   };
   if (!product) {
     return res.status(404).json(new ApiError(404, "Event not found"));
