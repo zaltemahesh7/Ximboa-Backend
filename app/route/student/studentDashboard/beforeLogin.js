@@ -588,10 +588,11 @@ router.get("/product/:id", async function (req, res, next) {
     .populate("categoryid", "category_name")
     .populate("t_id", "f_Name l_Name business_Name role");
   const productDetail = {
+    _id: product?._id,
     product_image: product?.product_image
       ? `http://${req.headers.host}/${product?.product_image}`
       : "",
-    products_info: product?.products_info,
+    products_info: product?.products_info || "",
     products_rating: "Pending...#####",
     products_category: product?.categoryid?.category_name || "",
     products_name: product?.product_name || "",
@@ -602,11 +603,45 @@ router.get("/product/:id", async function (req, res, next) {
       : `${product?.t_id?.f_Name || ""} ${
           product?.t_id?.l_Name || ""
         }`.trim() || "",
-    identityFlag: product?.t_id?.role === "" ? "Institute" : "Self Expert",
+    identityFlag:
+      product?.t_id?.role === "TRAINER" ? "Institute" : "Self Expert",
     product_flag: product?.product_flag || "",
   };
-  // console.log(productsWithFullImageUrls),
-  res.status(200).json({ productDetail });
+  if (!product) {
+    return res.status(404).json(new ApiError(404, "Event not found"));
+  }
+
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 4;
+
+  const startIndex = (page - 1) * limit;
+  const result = await Product.find({
+    categoryid: product?.categoryid?._id,
+  })
+    .sort({ createdAt: -1 })
+    .skip(startIndex)
+    .limit(limit)
+    .populate("t_id", "_id f_Name l_Name")
+    .populate("categoryid", "category_name");
+
+  if (!result)
+    return res.status(404).json({ message: "Related Products not found" });
+  const relatedProducts = result?.map((product) => ({
+    _id: product?._id,
+    product_image: product?.product_image
+      ? `http://${req.headers.host}/${product?.product_image}`
+      : "",
+    products_category: product?.categoryid?.category_name || "",
+    products_rating: "Pending...#####",
+    products_category: product?.categoryid?.category_name || "",
+    products_name: product?.product_name || "",
+    products_price: product?.product_prize || "",
+    products_selling_price: product?.product_selling_prize || "",
+    identityFlag:
+      product?.t_id?.role === "TRAINER" ? "Institute" : "Self Expert",
+    product_flag: product?.product_flag || "",
+  }));
+  res.status(200).json({ productDetail, relatedProducts });
 });
 
 // Get a single product by ID
