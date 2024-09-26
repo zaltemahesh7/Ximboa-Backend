@@ -12,7 +12,7 @@ const instituteSchema = new Schema(
       type: String,
       required: [true, "Location is required"],
     },
-    SocialMedias: {
+    social_Media: {
       Email: {
         type: String,
       },

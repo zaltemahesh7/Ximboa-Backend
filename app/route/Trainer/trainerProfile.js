@@ -51,7 +51,7 @@ router.get("/:id", async (req, res) => {
     });
 
     // Find question by the trainer
-    const question = await Question.find({ trainerid: trainerId }).sort({
+    const question = await Question.find({ t_id: trainerId }).sort({
       createdAt: -1,
     });
     // Find Appointment by the trainer
@@ -59,7 +59,7 @@ router.get("/:id", async (req, res) => {
       createdAt: -1,
     });
     // Find Enquiry by the trainer
-    const Enquirys = await Enquiry.find({ trainerid: trainerId }).sort({
+    const Enquirys = await Enquiry.find({ t_id: trainerId }).sort({
       createdAt: -1,
     });
     // Find Products by the trainer
@@ -122,26 +122,34 @@ router.get("/:id", async (req, res) => {
     // Find About by the trainer
     const About = await about.find({ trainer: trainerId });
 
-    // const courseIds = courses.map((course) => course._id);
-    const reviewsData = await Review.find({ t_id: trainerId })
-      .sort({
-        createdAt: -1,
-      })
-      .populate("user_id", "f_Name l_Name trainer_image");
-    const reviews = reviewsData.map((review) => {
-      return {
-        _id: review?._id,
-        user_id: review?.user_id?._id,
-        f_Name: review?.user_id?.f_Name,
-        l_Name: review?.user_id?.l_Name,
-        user_image: review?.user_id?.trainer_image
-          ? `${baseUrl}/${review?.user_id?.trainer_image.replace(/\\/g, "/")}`
-          : "",
-        review: review?.review,
-        star_count: review?.star_count,
-        createdAt: review?.createdAt,
-      };
-    });
+    const reviewsData = institutes
+      ? await Review.findOne({ institute_id: institutes._id })
+      : await Review.find({ t_id: trainerId })
+          .sort({
+            createdAt: -1,
+          })
+          .populate("user_id", "f_Name l_Name trainer_image");
+
+    // console.log(institutes._id);
+    const reviews = institutes
+      ? reviewsData
+      : reviewsData.map((review) => {
+          return {
+            _id: review?._id,
+            user_id: review?.user_id?._id,
+            f_Name: review?.user_id?.f_Name,
+            l_Name: review?.user_id?.l_Name,
+            user_image: review?.user_id?.trainer_image
+              ? `${baseUrl}/${review?.user_id?.trainer_image.replace(
+                  /\\/g,
+                  "/"
+                )}`
+              : "",
+            review: review?.review,
+            star_count: review?.star_count,
+            createdAt: review?.createdAt,
+          };
+        });
     const Educations = await Education.find({ trainer_id: { $in: trainerId } });
 
     const SocialMedias = await SocialMedia.find({
