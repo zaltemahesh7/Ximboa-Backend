@@ -162,7 +162,7 @@ router.get("/home", async (req, res) => {
       //   model: "Review",
       // })
       .select(
-        "product_image product_name product_selling_prize is_institute is_virtual"
+        "product_image product_name product_selling_prize product_prize is_institute is_virtual"
       );
 
     const productDetails = products.map((product) => {
@@ -342,17 +342,34 @@ router.get("/trainers", async (req, res) => {
 
   try {
     // Find all trainers with the role TRAINER or SELF_TRAINER and populate the categories array
-    const trainers = await registration
-      .find({
-        role: { $in: ["TRAINER", "SELF_TRAINER"] },
-      })
-      .populate({
-        path: "categories", // Populating the categories field
-        select: "category_name", // Selecting only the category_name from the populated categories
-      })
+    const trainers = await Trainer.aggregate([
+      // Add $match to filter users by role
+      {
+        $match: {
+          role: { $in: ["TRAINER", "SELF_EXPERT"] },
+        },
+      },
+      {
+        $lookup: {
+          from: "courses",
+          localField: "_id",
+          foreignField: "trainer_id",
+          as: "courses",
+        },
+      },
+      {
+        $project: {
+          business_Name: 1,
+          f_Name: 1,
+          l_Name: 1,
+          trainer_image: 1,
+          role: 1,
+          course_count: { $size: "$courses" },
+        },
+      },
+    ])
       .skip((page - 1) * limit)
-      .limit(parseInt(limit))
-      .select("_id f_Name l_Name email_id trainer_image role categories");
+      .limit(parseInt(limit));
 
     // Get total count of trainers for pagination
     const totalTrainers = await registration.countDocuments({
@@ -364,14 +381,32 @@ router.get("/trainers", async (req, res) => {
 
     // Send the response
     res.status(200).json({
-      trainers: trainers.map((trainer) => {
-        return {
-          ...trainer._doc,
-          trainer_image: trainer.trainer_image
-            ? `${baseUrl}/${trainer.trainer_image.replace(/\\/g, "/")}`
-            : "",
-        };
-      }),
+      trainers: await Promise.all(
+        trainers.map(async (trainer) => {
+          const institute = await InstituteModel.findOne({
+            trainers: trainer._id,
+          }).select("institute_name social_Media");
+
+          return {
+            _id: trainer?._id,
+            Business_Name: institute
+              ? institute?.institute_name
+              : trainer?.business_Name ||
+                trainer?.f_Name + " " + trainer?.l_Name,
+            f_Name: trainer?.f_Name,
+            l_Name: trainer?.l_Name,
+            role: trainer?.role,
+            course_count: trainer?.course_count,
+            social_Media: institute
+              ? institute?.social_Media
+              : trainer?.social_Media || "",
+            ratings: "",
+            trainer_image: trainer?.trainer_image
+              ? `${baseUrl}/${trainer?.trainer_image?.replace(/\\/g, "/")}`
+              : "",
+          };
+        })
+      ),
       currentPage: parseInt(page),
       totalPages,
       totalTrainers,
@@ -574,7 +609,7 @@ router.get("/allevents", async (req, res) => {
   try {
     const events = await Event.find()
       .populate("event_category", "category_name -_id")
-      .populate("trainerid", "f_Name l_Name -_id");
+      .populate("trainerid", "f_Name l_Name");
     if (!events || events.length === 0) {
       return res.status(404).json(new ApiError(404, "Events not found"));
     }
