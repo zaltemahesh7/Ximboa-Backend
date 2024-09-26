@@ -426,6 +426,7 @@ router.get("/course/:id", async (req, res, next) => {
     if (!result) return res.status(404).json({ message: "Course not found" });
     else {
       const relatedCourses = result.map((course) => ({
+        _id: course?._id,
         category_name: course?.category_id?.category_name || "",
         course_name: course?.course_name || "",
         online_offline: course?.online_offline || "",
@@ -474,14 +475,17 @@ router.get("/course/:id", async (req, res, next) => {
 // ========================= event/:id ====================================
 router.get("/event/:id", async (req, res) => {
   try {
+    const baseUrl = req.protocol + "://" + req.get("host");
     const eventWithFullImageUrls = await Event.findById(req.params.id)
-      .populate("trainerid", "f_Name l_Name")
+      .populate("trainerid", "f_Name l_Name trainer_image business_Name role")
       .populate("event_category", "category_name");
 
     const event = {
-      event_thumbnail: `http://${
-        req.headers.host
-      }/${eventWithFullImageUrls?.event_thumbnail?.replace(/\\/g, "/")}`,
+      event_thumbnail:
+        `${baseUrl}/${eventWithFullImageUrls?.event_thumbnail?.replace(
+          /\\/g,
+          "/"
+        )}` || "",
       event_description: eventWithFullImageUrls?.event_description || "",
       event_date: eventWithFullImageUrls?.event_date || "",
       event_start_time: eventWithFullImageUrls?.event_start_time || "",
@@ -494,31 +498,48 @@ router.get("/event/:id", async (req, res) => {
       event_location: eventWithFullImageUrls?.event_location || "",
       event_type: eventWithFullImageUrls?.event_type || "",
       registered_users: eventWithFullImageUrls?.registered_users.length || "",
+      trainer_image: eventWithFullImageUrls?.trainerid?.trainer_image
+        ? `${baseUrl}/${eventWithFullImageUrls?.trainerid?.trainer_image?.replace(
+            /\\/g,
+            "/"
+          )}`
+        : "",
+      business_Name: eventWithFullImageUrls?.trainerid?.business_Name
+        ? eventWithFullImageUrls?.trainerid?.business_Name
+        : `${eventWithFullImageUrls?.trainerid?.f_Name || ""} ${
+            eventWithFullImageUrls?.trainerid?.l_Name || ""
+          }`.trim() || "",
+      social_media: "Pending..###...",
+      trainier_rating: "Pending..###...",
+      total_course: "Pending...###..",
     };
     if (!event) {
       return res.status(404).json(new ApiError(404, "Event not found"));
     }
-    const baseUrl = req.protocol + "://" + req.get("host");
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 4;
 
     const startIndex = (page - 1) * limit;
     const result = await Event.find({
-      category_id: eventWithFullImageUrls[0]?.event_category?.id,
+      category_id: eventWithFullImageUrls?.event_category?.id,
     })
+      .sort({ createdAt: -1 })
       .skip(startIndex)
       .limit(limit)
       .populate("trainerid", "f_Name l_Name")
       .populate("event_category", "category_name");
 
-    if (!result) return res.status(404).json({ message: "Course not found" });
+    if (!result) return res.status(404).json({ message: "Event not found" });
     else {
-      const relatedEvent = result.map((course) => ({
-        ...course._doc,
-        thumbnail_image: `${baseUrl}/${eventWithFullImageUrls?.event_thumbnail?.replace(
-          /\\/g,
-          "/"
-        )}`,
+      const relatedEvent = result.map((event) => ({
+        // ...event._doc,
+        event_name: event?.event_name || "",
+        event_date: event?.event_date || "",
+        event_type: event?.event_type || "",
+        registered_users: event?.registered_users.length || "",
+        event_thumbnail: event?.event_thumbnail
+          ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
+          : "",
       }));
 
       res.status(200).json({ event, relatedEvent });
@@ -559,28 +580,29 @@ router.get("/allevents", async (req, res) => {
 // ========================= product/:id ====================================
 // Get a single product by ID
 router.get("/product/:id", async function (req, res, next) {
-  Product.find({ _id: req.params.id })
+  const product = await Product.findOne({ _id: req.params.id })
     .populate("categoryid", "category_name")
-    .populate("t_id", "f_Name l_Name")
-    .then((result) => {
-      const productsWithFullImageUrls = result.map((product) => ({
-        ...product._doc,
-        product_image: `http://${req.headers.host}/${product.product_image}`,
-      }));
-      // console.log(productsWithFullImageUrls),
-      res.status(200).json(productsWithFullImageUrls[0]);
-    })
-    .catch((err) => {
-      res
-        .status(500)
-        .json(
-          new ApiError(
-            500,
-            err.message || "Server Error Gretting Product by Id",
-            err
-          )
-        );
-    });
+    .populate("t_id", "f_Name l_Name business_Name role");
+  const productDetail = {
+    product_image: product?.product_image
+      ? `http://${req.headers.host}/${product?.product_image}`
+      : "",
+    products_info: product?.products_info,
+    products_rating: "Pending...#####",
+    products_category: product?.categoryid?.category_name || "",
+    products_name: product?.product_name || "",
+    products_price: product?.product_prize || "",
+    products_selling_price: product?.product_selling_prize || "",
+    business_Name: product?.t_id?.business_Name
+      ? product?.t_id?.business_Name
+      : `${product?.t_id?.f_Name || ""} ${
+          product?.t_id?.l_Name || ""
+        }`.trim() || "",
+    identityFlag: product?.t_id?.role === "" ? "Institute" : "Self Expert",
+    product_flag: product?.product_flag || "",
+  };
+  // console.log(productsWithFullImageUrls),
+  res.status(200).json({ productDetail });
 });
 
 // Get a single product by ID
