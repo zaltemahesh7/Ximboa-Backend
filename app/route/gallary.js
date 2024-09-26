@@ -124,12 +124,12 @@ router.put("/:id", upload.array("photos", 3), function (req, res, next) {
     { _id: req.params.id },
     {
       $set: {
-        photos: req.files.map((file) => file.path), // Update with an array of file paths
-        trainer_id: req.body.trainer_id, // Update the trainer ID if needed
+        photos: req.files.map((file) => file.path),
+        trainer_id: req.body.trainer_id,
       },
     },
     { new: true }
-  ) // Return the updated document
+  )
     .then((result) => {
       res.status(200).json({
         updatedData: result,

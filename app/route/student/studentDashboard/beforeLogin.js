@@ -180,10 +180,10 @@ router.get("/home", async (req, res) => {
         productImage: product?.product_image
           ? `${baseUrl}/${product?.product_image?.replace(/\\/g, "/")}`
           : "",
-        productName: product?.product_name,
-        productPrice: product?.product_prize,
-        productSellingPrice: product?.product_selling_prize,
-        avgRating: avgRating,
+        productName: product?.product_name || "",
+        productPrice: product?.product_prize || "",
+        productSellingPrice: product?.product_selling_prize || "",
+        avgRating: avgRating || "",
         categoryName: product?.categoryid?.category_name || "",
         identityFlag: product?.t_id?.role === "" ? "Institute" : "Self Expert",
         productFlag: product?.product_flag || "",
@@ -407,9 +407,12 @@ router.get("/trainers", async (req, res) => {
           };
         })
       ),
-      currentPage: parseInt(page),
-      totalPages,
-      totalTrainers,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalTrainers / limit),
+        totalItems: totalTrainers,
+        pageSize: limit,
+      },
     });
   } catch (err) {
     console.error(err);
@@ -662,6 +665,7 @@ router.get("/product/:id", async function (req, res, next) {
     identityFlag:
       product?.t_id?.role === "TRAINER" ? "Institute" : "Self Expert",
     product_flag: product?.product_flag || "",
+    traienrid: product?.t_id?._id,
   };
   if (!product) {
     return res.status(404).json(new ApiError(404, "Event not found"));
