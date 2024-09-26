@@ -279,29 +279,42 @@ router.get("/allcourses", async (req, res) => {
       .skip(startIndex)
       .limit(limit)
       .populate("category_id", "category_name")
-      .populate("trainer_id", "f_Name l_Name trainer_image id city");
+      .populate("trainer_id", "f_Name l_Name trainer_image id city role");
 
     // Get base URL for image paths
     const baseUrl = req.protocol + "://" + req.get("host");
 
     // Map courses to include full image URLs
-    const coursesWithFullImageUrl = courses.map((course) => {
-      return {
-        ...course._doc,
-        thumbnail_image: course.thumbnail_image
-          ? `${baseUrl}/${course.thumbnail_image.replace(/\\/g, "/")}`
-          : "",
-        gallary_image: course.gallary_image
-          ? `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`
-          : "",
-        trainer_materialImage: course.trainer_materialImage
-          ? `${baseUrl}/${course.trainer_materialImage.replace(/\\/g, "/")}`
-          : "",
-        trainer_image: course.trainer_id?.trainer_image
-          ? `${baseUrl}/${course.trainer_id.trainer_image.replace(/\\/g, "/")}`
-          : "",
-      };
-    });
+    const coursesWithFullImageUrl = courses.map((course) => ({
+      _id: course?._id,
+      category_name: course?.category_id?.category_name || "",
+      course_name: course?.course_name || "",
+      online_offline: course?.online_offline || "",
+      thumbnail_image: course?.thumbnail_image
+        ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
+        : "",
+      trainer_image: course?.trainer_id?.trainer_image
+        ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(/\\/g, "/")}`
+        : "",
+      trainer_id: course?.trainer_id?._id,
+      business_Name: course?.trainer_id?.business_Name
+        ? course?.trainer_id?.business_Name
+        : `${course?.trainer_id?.f_Name || ""} ${
+            course?.trainer_id?.l_Name || ""
+          }`.trim() || "",
+      course_rating: "",
+      course_duration: Math.floor(
+        Math.round(
+          ((course?.end_date - course?.start_date) /
+            (1000 * 60 * 60 * 24 * 7)) *
+            100
+        ) / 100
+      ),
+      course_price: course?.price || "",
+      course_offer_prize: course?.offer_prize || "",
+      course_flag:
+        course?.trainer_id?.role === "TRAINER" ? "Institute" : "Self Expert",
+    }));
 
     res.status(200).send({
       coursesWithFullImageUrl,
@@ -507,7 +520,7 @@ router.get("/event/:id", async (req, res) => {
             "/"
           )}`
         : "",
-      trainer_id: eventWithFullImageUrls?.trainer_id?._id,
+      trainer_id: eventWithFullImageUrls?.trainerid?._id,
       business_Name: eventWithFullImageUrls?.trainerid?.business_Name
         ? eventWithFullImageUrls?.trainerid?.business_Name
         : `${eventWithFullImageUrls?.trainerid?.f_Name || ""} ${
@@ -567,10 +580,15 @@ router.get("/allevents", async (req, res) => {
     }
 
     const eventsWithThumbnails = events.map((event) => ({
-      ...event._doc,
-      event_thumbnail: event.event_thumbnail
-        ? `${baseUrl}/${event.event_thumbnail.replace(/\\/g, "/")}`
-        : null,
+      _id: event?._id,
+      event_name: event?.event_name || "",
+      event_date: event?.event_date || "",
+      event_type: event?.event_type || "",
+      trainer_id: event?.trainerid?._id || "",
+      registered_users: event?.registered_users.length || "",
+      event_thumbnail: event?.event_thumbnail
+        ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
+        : "",
     }));
 
     res.status(200).json(eventsWithThumbnails);
@@ -590,7 +608,10 @@ router.get("/product/:id", async function (req, res, next) {
   const productDetail = {
     _id: product?._id,
     product_image: product?.product_image
-      ? `http://${req.headers.host}/${product?.product_image}`
+      ? `http://${req.headers.host}/${product?.product_image?.replace(
+          /\\/g,
+          "/"
+        )}`
       : "",
     products_info: product?.products_info || "",
     products_rating: "Pending...#####",
@@ -629,7 +650,10 @@ router.get("/product/:id", async function (req, res, next) {
   const relatedProducts = result?.map((product) => ({
     _id: product?._id,
     product_image: product?.product_image
-      ? `http://${req.headers.host}/${product?.product_image}`
+      ? `http://${req.headers.host}/${product?.product_image?.replace(
+          /\\/g,
+          "/"
+        )}`
       : "",
     products_category: product?.categoryid?.category_name || "",
     products_rating: "Pending...#####",
@@ -651,8 +675,22 @@ router.get("/allproduct", async function (req, res, next) {
     .populate("t_id", "f_Name l_Name")
     .then((result) => {
       const productsWithFullImageUrls = result.map((product) => ({
-        ...product._doc,
-        product_image: `http://${req.headers.host}/${product.product_image}`,
+        _id: product?._id,
+        product_image: product?.product_image
+          ? `http://${req.headers.host}/${product?.product_image?.replace(
+              /\\/g,
+              "/"
+            )}`
+          : "",
+        products_category: product?.categoryid?.category_name || "",
+        products_rating: "Pending...#####",
+        products_category: product?.categoryid?.category_name || "",
+        products_name: product?.product_name || "",
+        products_price: product?.product_prize || "",
+        products_selling_price: product?.product_selling_prize || "",
+        identityFlag:
+          product?.t_id?.role === "TRAINER" ? "Institute" : "Self Expert",
+        product_flag: product?.product_flag || "",
       }));
       // console.log(productsWithFullImageUrls),
       res.status(200).json({ productsWithFullImageUrls });
