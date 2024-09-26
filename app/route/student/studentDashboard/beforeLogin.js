@@ -33,20 +33,17 @@ router.get("/home", async (req, res) => {
       courses.map((course) => {
         return {
           _id: course?._id,
-          course_name: course?.course_name,
-          category_name: course?.category_id?.category_name,
-          online_offline: course?.online_offline,
+          course_name: course?.course_name || "",
+          category_name: course?.category_id?.category_name || "",
+          online_offline: course?.online_offline || "",
           thumbnail_image: course?.thumbnail_image
             ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
-            : "",
-          gallary_image: course?.gallary_image
-            ? `${baseUrl}/${course?.gallary_image?.replace(/\\/g, "/")}`
             : "",
           business_Name: course?.trainer_id?.business_Name
             ? course?.trainer_id?.business_Name
             : `${course?.trainer_id?.f_Name || ""} ${
                 course?.trainer_id?.l_Name || ""
-              }` || "",
+              }`.trim() || "",
           trainer_image: course?.trainer_id?.trainer_image
             ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
                 /\\/g,
@@ -61,9 +58,9 @@ router.get("/home", async (req, res) => {
                 100
             ) / 100
           ),
-          course_price: course?.price,
-          course_offer_prize: course?.offer_prize,
-          course_flag: course?.trainer_id?.role,
+          course_price: course?.price || "",
+          course_offer_prize: course?.offer_prize || "",
+          course_flag: course?.trainer_id?.role || "",
         };
       })
     );
@@ -179,6 +176,7 @@ router.get("/home", async (req, res) => {
       // }
 
       return {
+        _id: product?._id,
         productImage: product?.product_image
           ? `${baseUrl}/${product?.product_image?.replace(/\\/g, "/")}`
           : "",
@@ -210,14 +208,15 @@ router.get("/home", async (req, res) => {
     // Map over each event to structure the data
     const eventDetails = events.map((event) => {
       return {
-        eventImage: event.event_thumbnail
-          ? `${baseUrl}/${event.event_thumbnail?.replace(/\\/g, "/")}`
+        _id: event?._id,
+        eventImage: event?.event_thumbnail
+          ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
           : "",
-        eventDate: event.event_date || "",
-        eventStartTime: event.event_start_time || "",
-        eventEndTime: event.event_end_time || "",
-        eventName: event.event_name || "",
-        mode: event.event_type === "Online" ? "Online" : "Offline", // Convert mode to a human-readable format
+        eventDate: event?.event_date || "",
+        eventStartTime: event?.event_start_time || "",
+        eventEndTime: event?.event_end_time || "",
+        eventName: event?.event_name || "",
+        mode: event?.event_type === "Online" ? "Online" : "Offline", // Convert mode to a human-readable format
         enrollments: "",
       };
     });
@@ -372,57 +371,94 @@ router.get("/trainers", async (req, res) => {
 
 router.get("/course/:id", async (req, res, next) => {
   try {
-    const course_data = await Course.find({ _id: req.params.id })
-      .populate("category_id", "category_name")
-      .populate("trainer_id", "f_Name l_Name");
-
-    const coursesWithFullImageUrls = course_data.map((course) => ({
-      ...course._doc,
-      thumbnail_image: `http://${
-        req.headers.host
-      }/${course.thumbnail_image.replace(/\\/g, "/")}`,
-
-      gallary_image: `http://${req.headers.host}/${course.gallary_image.replace(
-        /\\/g,
-        "/"
-      )}`,
-      trainer_materialImage: `http://${
-        req.headers.host
-      }/${course.trainer_materialImage.replace(/\\/g, "/")}`,
-    }));
-
     const baseUrl = req.protocol + "://" + req.get("host");
+
+    const course = await Course.findOne({ _id: req.params.id })
+      .populate("category_id", "category_name")
+      .populate("trainer_id", "f_Name l_Name trainer_image business_Name role");
+
+    const coursesWithFullImageUrl = {
+      _id: course?._id,
+      course_name: course?.course_name || "",
+      course_information: course?.course_information || "",
+      category_name: course?.category_id?.category_name || "",
+      online_offline: course?.online_offline || "",
+      thumbnail_image: course?.thumbnail_image
+        ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
+        : "",
+      start_date: course?.start_date || "",
+      end_date: course?.end_date || "",
+      start_time: course?.start_time || "",
+      end_time: course?.end_time || "",
+      business_Name: course?.trainer_id?.business_Name
+        ? course?.trainer_id?.business_Name
+        : `${course?.trainer_id?.f_Name || ""} ${
+            course?.trainer_id?.l_Name || ""
+          }`.trim() || "",
+      trainer_image: course?.trainer_id?.trainer_image
+        ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(/\\/g, "/")}`
+        : "",
+      course_rating: "",
+      course_duration: Math.floor(
+        Math.round(
+          ((course?.end_date - course?.start_date) /
+            (1000 * 60 * 60 * 24 * 7)) *
+            100
+        ) / 100
+      ),
+      course_price: course?.price || "",
+      course_offer_prize: course?.offer_prize || "",
+      course_flag: course?.trainer_id?.role || "",
+    };
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 4;
 
     const startIndex = (page - 1) * limit;
     const result = await Course.find({
-      category_id: course_data[0].category_id.id,
+      category_id: course?.category_id?.id,
     })
       .skip(startIndex)
       .limit(limit)
       .populate("category_id", "category_name")
-      .populate("trainer_id", "f_Name l_Name");
+      .populate("trainer_id", "f_Name l_Name trainer_image business_Name role");
 
     if (!result) return res.status(404).json({ message: "Course not found" });
     else {
       const relatedCourses = result.map((course) => ({
-        ...course._doc,
-        thumbnail_image: `${baseUrl}/${course.thumbnail_image.replace(
-          /\\/g,
-          "/"
-        )}`,
-        gallary_image: `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`,
-        trainer_materialImage: `${baseUrl}/${course.trainer_materialImage.replace(
-          /\\/g,
-          "/"
-        )}`,
+        category_name: course?.category_id?.category_name || "",
+        course_name: course?.course_name || "",
+        online_offline: course?.online_offline || "",
+        thumbnail_image: course?.thumbnail_image
+          ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
+          : "",
+        trainer_image: course?.trainer_id?.trainer_image
+          ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
+              /\\/g,
+              "/"
+            )}`
+          : "",
+        business_Name: course?.trainer_id?.business_Name
+          ? course?.trainer_id?.business_Name
+          : `${course?.trainer_id?.f_Name || ""} ${
+              course?.trainer_id?.l_Name || ""
+            }`.trim() || "",
+        course_rating: "",
+        course_duration: Math.floor(
+          Math.round(
+            ((course?.end_date - course?.start_date) /
+              (1000 * 60 * 60 * 24 * 7)) *
+              100
+          ) / 100
+        ),
+        course_price: course?.price || "",
+        course_offer_prize: course?.offer_prize || "",
+        course_flag: course?.trainer_id?.role || "",
       }));
-      res
-        .status(200)
-        .json({ course: coursesWithFullImageUrls[0], relatedCourses });
+      res.status(200).json({ course: coursesWithFullImageUrl, relatedCourses });
     }
-  } catch (error) {
+  } catch (err) {
+    console.log(err);
     res
       .status(500)
       .json(
@@ -443,10 +479,21 @@ router.get("/event/:id", async (req, res) => {
       .populate("event_category", "category_name");
 
     const event = {
-      ...eventWithFullImageUrls._doc,
       event_thumbnail: `http://${
         req.headers.host
-      }/${eventWithFullImageUrls.event_thumbnail.replace(/\\/g, "/")}`,
+      }/${eventWithFullImageUrls?.event_thumbnail?.replace(/\\/g, "/")}`,
+      event_description: eventWithFullImageUrls?.event_description || "",
+      event_date: eventWithFullImageUrls?.event_date || "",
+      event_start_time: eventWithFullImageUrls?.event_start_time || "",
+      event_end_time: eventWithFullImageUrls?.event_end_time || "",
+      event_name: eventWithFullImageUrls?.event_name || "",
+      event_category:
+        eventWithFullImageUrls?.event_category.category_name || "",
+      event_languages: eventWithFullImageUrls?.event_languages || "",
+      estimated_seats: eventWithFullImageUrls?.estimated_seats || "",
+      event_location: eventWithFullImageUrls?.event_location || "",
+      event_type: eventWithFullImageUrls?.event_type || "",
+      registered_users: eventWithFullImageUrls?.registered_users.length || "",
     };
     if (!event) {
       return res.status(404).json(new ApiError(404, "Event not found"));
@@ -468,7 +515,7 @@ router.get("/event/:id", async (req, res) => {
     else {
       const relatedEvent = result.map((course) => ({
         ...course._doc,
-        thumbnail_image: `${baseUrl}/${eventWithFullImageUrls.event_thumbnail.replace(
+        thumbnail_image: `${baseUrl}/${eventWithFullImageUrls?.event_thumbnail?.replace(
           /\\/g,
           "/"
         )}`,
