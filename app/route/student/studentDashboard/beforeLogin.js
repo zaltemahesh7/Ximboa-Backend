@@ -398,6 +398,7 @@ router.get("/course/:id", async (req, res, next) => {
       trainer_image: course?.trainer_id?.trainer_image
         ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(/\\/g, "/")}`
         : "",
+      trainer_id: course?.trainer_id?._id,
       course_rating: "",
       course_duration: Math.floor(
         Math.round(
@@ -439,6 +440,7 @@ router.get("/course/:id", async (req, res, next) => {
               "/"
             )}`
           : "",
+        trainer_id: course?.trainer_id?._id,
         business_Name: course?.trainer_id?.business_Name
           ? course?.trainer_id?.business_Name
           : `${course?.trainer_id?.f_Name || ""} ${
@@ -481,6 +483,7 @@ router.get("/event/:id", async (req, res) => {
       .populate("event_category", "category_name");
 
     const event = {
+      _id: eventWithFullImageUrls?._id,
       event_thumbnail:
         `${baseUrl}/${eventWithFullImageUrls?.event_thumbnail?.replace(
           /\\/g,
@@ -504,6 +507,7 @@ router.get("/event/:id", async (req, res) => {
             "/"
           )}`
         : "",
+      trainer_id: eventWithFullImageUrls?.trainer_id?._id,
       business_Name: eventWithFullImageUrls?.trainerid?.business_Name
         ? eventWithFullImageUrls?.trainerid?.business_Name
         : `${eventWithFullImageUrls?.trainerid?.f_Name || ""} ${
@@ -532,16 +536,16 @@ router.get("/event/:id", async (req, res) => {
     if (!result) return res.status(404).json({ message: "Event not found" });
     else {
       const relatedEvent = result.map((event) => ({
-        // ...event._doc,
+        _id: event?._id,
         event_name: event?.event_name || "",
         event_date: event?.event_date || "",
         event_type: event?.event_type || "",
+        trainer_id: event?.trainerid?._id || "",
         registered_users: event?.registered_users.length || "",
         event_thumbnail: event?.event_thumbnail
           ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
           : "",
       }));
-
       res.status(200).json({ event, relatedEvent });
     }
   } catch (error) {
