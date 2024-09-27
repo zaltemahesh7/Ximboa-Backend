@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const {
   createInstitute,
+  updateInstitute,
 } = require("../../../controllers/Institute/institute.controller");
 const { upload } = require("../../../middleware/multer.middlewares");
 const { jwtAuthMiddleware } = require("../../../middleware/auth");
@@ -18,6 +19,12 @@ router.post(
   jwtAuthMiddleware,
   upload.array("institute_photos", 5),
   createInstitute
+);
+
+router.put(
+  "/update-institute/:instituteId",
+  jwtAuthMiddleware,
+  updateInstitute
 );
 
 router.post(

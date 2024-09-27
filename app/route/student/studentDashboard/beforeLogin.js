@@ -586,7 +586,7 @@ router.get("/event/:id", async (req, res) => {
 
     const startIndex = (page - 1) * limit;
     const result = await Event.find({
-      category_id: eventWithFullImageUrls?.event_category?.id,
+      event_category: eventWithFullImageUrls?.event_category?.id,
     })
       .sort({ createdAt: -1 })
       .skip(startIndex)

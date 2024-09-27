@@ -12,10 +12,10 @@ const instituteSchema = new Schema(
       type: String,
       required: [true, "Location is required"],
     },
+    Email: {
+      type: String,
+    },
     social_Media: {
-      Email: {
-        type: String,
-      },
       Website: {
         type: String,
       },
@@ -37,7 +37,8 @@ const instituteSchema = new Schema(
       our_services: String,
     },
     courses: {
-      type: [String],
+      type: [mongoose.Schema.Types.ObjectId],
+      ref: "Course",
       //   required: [true, "At least one course is required"],
       //   validate: {
       //     validator: (arr) => arr.length > 0,
@@ -46,7 +47,7 @@ const instituteSchema = new Schema(
     },
     establishedYear: {
       type: Number,
-      required: [true, "Established year is required"],
+      // required: [true, "Established year is required"],
       min: [1900, "Established year must be after 1900"],
     },
     createdBy: {

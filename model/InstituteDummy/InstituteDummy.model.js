@@ -15,23 +15,26 @@ const InstituteDummySchema = new Schema(
     Email: {
       type: String,
     },
-    Website: {
-      type: String,
-    },
-    About: {
-      type: String,
-    },
-    Facebook: {
-      type: String,
-    },
-    Twitter: {
-      type: String,
-    },
-    Instagram: {
-      type: String,
+    social_Media: {
+      Website: {
+        type: String,
+      },
+      Facebook: {
+        type: String,
+      },
+      Twitter: {
+        type: String,
+      },
+      Instagram: {
+        type: String,
+      },
     },
     Phone_No: {
       type: Number,
+    },
+    About: {
+      about_us: String,
+      our_services: String,
     },
     courses: {
       type: [mongoose.Schema.Types.ObjectId],
@@ -44,7 +47,7 @@ const InstituteDummySchema = new Schema(
     },
     establishedYear: {
       type: Number,
-      required: [true, "Established year is required"],
+      // required: [true, "Established year is required"],
       min: [1900, "Established year must be after 1900"],
     },
     createdBy: {

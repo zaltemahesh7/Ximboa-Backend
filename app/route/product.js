@@ -41,11 +41,12 @@ router.post(
     try {
       const product = new Product({
         t_id: req.user.id,
-        product_name: req.body.product_name,
         categoryid: req.body.categoryid,
+        product_name: req.body.product_name,
         product_prize: req.body.product_prize,
         product_selling_prize: req.body.product_selling_prize,
         products_info: req.body.products_info,
+        product_flag: req.body.product_flag,
         product_image: req.files["product_image"]
           ? req.files["product_image"][0].path
           : "",
@@ -115,41 +116,16 @@ router.get("/:id", async function (req, res, next) {
     });
 });
 
-// Delete a product
-// router.delete("/:id", async (req, res) => {
-//   try {
-//     const product = await Product.findById(req.param.id);
-//     if (!product) {
-//       return res.status(404).json(new ApiError(404, "product not found"));
-//     }
-//     await Product.deleteOne({ _id: req.params.id });
-//     const notification = new NotificationModel({
-//       recipient: req.user.id, // User ID
-//       message: `Your product "${product.product_name}" has been deleted successfully.`,
-//       activityType: "PRODUCT_DELETED", // Activity type for product deletion
-//       relatedId: product._id, // Reference to the deleted product
-//     });
-
-//     await notification.save();
-//     res.send("deleted");
-//   } catch (error) {
-//     console.log(error);
-//     res.send(error);
-//   }
-// });
-
 router.delete("/:productId", async (req, res) => {
   try {
     const productId = req.params.productId;
 
-    // Find and delete the product
     const deletedProduct = await Product.findByIdAndDelete(productId);
 
     if (!deletedProduct) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Create notification for the deleted product
     const notification = new NotificationModel({
       recipient: req.user.id,
       message: `Your product "${deletedProduct.product_name}" has been deleted successfully.`,
@@ -183,13 +159,14 @@ router.put(
       }
 
       const updateData = {
+        categoryid: req.body.categoryid || existingProduct.categoryid,
         product_name: req.body.product_name || existingProduct.product_name,
         product_prize: req.body.product_prize || existingProduct.product_prize,
         product_selling_prize:
           req.body.product_selling_prize ||
           existingProduct.product_selling_prize,
         products_info: req.body.products_info || existingProduct.products_info,
-        categoryid: req.body.categoryid || existingProduct.categoryid,
+        product_flag: req.body.product_flag || existingProduct.product_flag,
         product_image: req.files["product_image"]
           ? req.files["product_image"][0].path
           : existingProduct.product_image,
