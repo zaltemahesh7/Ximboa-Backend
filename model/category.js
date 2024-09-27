@@ -49,18 +49,18 @@ const categorySchema = new mongoose.Schema(
     },
     category_image: {
       type: String,
-      validate: {
-        validator: function (value) {
-          // Check if the category image is a valid URL or path
-          return (
-            !value ||
-            value.match(
-              /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
-            )
-          );
-        },
-        message: "Invalid category image URL or path",
-      },
+      // validate: {
+      //   validator: function (value) {
+      //     // Check if the category image is a valid URL or path
+      //     return (
+      //       !value ||
+      //       value.match(
+      //         /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/
+      //       )
+      //     );
+      //   },
+      //   message: "Invalid category image URL or path",
+      // },
     },
   },
   {

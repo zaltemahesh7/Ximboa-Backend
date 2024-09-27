@@ -176,14 +176,14 @@
 
 // module.exports = router;
 
-
-
 const express = require("express");
 const router = express.Router();
 const categoryController = require("../../controllers/Category/category.controller");
+const { jwtAuthMiddleware } = require("../../middleware/auth");
+const upload = require("../../middleware/multerConfig");
 
 // Route to add a category
-router.post("/add", categoryController.addCategory);
+router.post("/add", jwtAuthMiddleware, upload.single("category_image"), categoryController.addCategory);
 
 // Route to get all categories
 router.get("/all", categoryController.getAllCategories);
