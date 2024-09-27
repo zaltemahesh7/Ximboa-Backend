@@ -217,7 +217,7 @@ router.get("/home", async (req, res) => {
         eventEndTime: event?.event_end_time || "",
         eventName: event?.event_name || "",
         mode: event?.event_type === "Online" ? "Online" : "Offline", // Convert mode to a human-readable format
-        enrollments: "",
+        enrollments: event?.registered_users.length,
       };
     });
 
@@ -376,9 +376,6 @@ router.get("/trainers", async (req, res) => {
       role: { $in: ["TRAINER", "SELF_TRAINER"] },
     });
 
-    // Calculate total pages
-    const totalPages = Math.ceil(totalTrainers / limit);
-
     // Send the response
     res.status(200).json({
       trainers: await Promise.all(
@@ -530,8 +527,19 @@ router.get("/event/:id", async (req, res) => {
   try {
     const baseUrl = req.protocol + "://" + req.get("host");
     const eventWithFullImageUrls = await Event.findById(req.params.id)
-      .populate("trainerid", "f_Name l_Name trainer_image business_Name role")
+      .populate(
+        "trainerid",
+        "f_Name l_Name trainer_image business_Name social_Media role"
+      )
       .populate("event_category", "category_name");
+
+    const courseCount = await Course.countDocuments({
+      trainer_id: eventWithFullImageUrls?.trainerid,
+    });
+
+    const institute = await InstituteModel.findOne({
+      trainers: eventWithFullImageUrls?.trainerid?._id,
+    }).select("institute_name social_Media");
 
     const event = {
       _id: eventWithFullImageUrls?._id,
@@ -564,9 +572,11 @@ router.get("/event/:id", async (req, res) => {
         : `${eventWithFullImageUrls?.trainerid?.f_Name || ""} ${
             eventWithFullImageUrls?.trainerid?.l_Name || ""
           }`.trim() || "",
-      social_media: "Pending..###...",
+      social_media: institute?.social_Media
+        ? institute?.social_Media
+        : eventWithFullImageUrls?.trainerid?.social_Media || "",
       trainier_rating: "Pending..###...",
-      total_course: "Pending...###..",
+      total_course: courseCount || "",
     };
     if (!event) {
       return res.status(404).json(new ApiError(404, "Event not found"));
@@ -576,7 +586,7 @@ router.get("/event/:id", async (req, res) => {
 
     const startIndex = (page - 1) * limit;
     const result = await Event.find({
-      category_id: eventWithFullImageUrls?.event_category?.id,
+      event_category: eventWithFullImageUrls?.event_category?.id,
     })
       .sort({ createdAt: -1 })
       .skip(startIndex)
@@ -584,21 +594,18 @@ router.get("/event/:id", async (req, res) => {
       .populate("trainerid", "f_Name l_Name")
       .populate("event_category", "category_name");
 
-    if (!result) return res.status(404).json({ message: "Event not found" });
-    else {
-      const relatedEvent = result.map((event) => ({
-        _id: event?._id,
-        event_name: event?.event_name || "",
-        event_date: event?.event_date || "",
-        event_type: event?.event_type || "",
-        trainer_id: event?.trainerid?._id || "",
-        registered_users: event?.registered_users.length || "",
-        event_thumbnail: event?.event_thumbnail
-          ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
-          : "",
-      }));
-      res.status(200).json({ event, relatedEvent });
-    }
+    const relatedEvent = result.map((event) => ({
+      _id: event?._id,
+      event_name: event?.event_name || "",
+      event_date: event?.event_date || "",
+      event_type: event?.event_type || "",
+      trainer_id: event?.trainerid?._id || "",
+      registered_users: event?.registered_users.length || "",
+      event_thumbnail: event?.event_thumbnail
+        ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
+        : "",
+    }));
+    res.status(200).json({ event, relatedEvent });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Error fetching event", error });

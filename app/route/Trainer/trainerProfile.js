@@ -180,7 +180,7 @@ router.get("/:id", async (req, res) => {
     const currentDate = new Date().toISOString();
 
     const ongoingCourses = await Course.find({
-      trainer_id: { $in: trainerId },
+      trainer_id: trainerId,
       start_date: { $lte: currentDate },
       end_date: { $gte: currentDate },
     })

@@ -3,6 +3,7 @@ const registration = require("../../model/registration");
 const { ApiError } = require("../../utils/ApiError");
 const fs = require("fs");
 const { sendEmail } = require("../../utils/email");
+const { asyncHandler } = require("../../utils/asyncHandler");
 
 // Controller to create an institute
 // const createInstitute = async (req, res) => {
@@ -146,4 +147,48 @@ const createInstitute = async (req, res) => {
   }
 };
 
-module.exports = { createInstitute };
+// Controller to update an institute if the user is an admin of that institute
+const updateInstitute = asyncHandler(async (req, res) => {
+  const { instituteId } = req.params;
+  const userId = req.user.id;
+  const updateData = req.body;
+
+  console.log(userId);
+
+  try {
+    const institute = await Institute.findById(instituteId);
+
+    if (!institute) {
+      return res.status(404).json({ message: "Institute not found" });
+    }
+
+    const isAdmin = institute.admins.some(
+      (adminId) => adminId?.toString() === userId?.toString()
+    );
+
+    if (!isAdmin) {
+      return res
+        .status(403)
+        .json({ message: "You are not authorized to update this institute" });
+    }
+
+    institute.set(updateData);
+
+    institute.updatedBy = userId;
+
+    await institute.save();
+
+    res.status(200).json({
+      message: "Institute updated successfully",
+      institute,
+    });
+  } catch (error) {
+    console.error("Error updating institute:", error);
+    res.status(500).json({
+      message: "An error occurred while updating the institute",
+      error: error.message,
+    });
+  }
+});
+
+module.exports = { createInstitute, updateInstitute };

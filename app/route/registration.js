@@ -277,7 +277,6 @@ router.put(
       const {
         user_name,
         email_id,
-        password,
         mobile_number,
         date_of_birth,
         whatsapp_no,

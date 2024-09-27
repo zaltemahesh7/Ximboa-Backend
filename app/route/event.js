@@ -6,6 +6,8 @@ const { jwtAuthMiddleware } = require("../../middleware/auth");
 const registration = require("../../model/registration");
 const NotificationModel = require("../../model/Notifications/Notification.model");
 const { ApiResponse } = require("../../utils/ApiResponse");
+const { asyncHandler } = require("../../utils/asyncHandler");
+const { ApiError } = require("../../utils/ApiError");
 
 // Create a new event
 router.post(
@@ -16,11 +18,14 @@ router.post(
     try {
       const {
         event_name,
+        event_type,
+        event_description,
         event_category,
         event_date,
-        event_type,
         event_start_time,
         event_end_time,
+        event_location,
+        event_languages,
       } = req.body;
 
       const trainerid = req.user.id;
@@ -33,12 +38,15 @@ router.post(
 
       const newEvent = new Event({
         event_name,
-        event_type,
         event_date,
+        event_type,
+        event_description,
         event_category,
         event_thumbnail,
         event_start_time,
         event_end_time,
+        event_location,
+        event_languages,
         trainerid,
       });
 
@@ -84,26 +92,6 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ message: "Error fetching event", error });
   }
 });
-
-// router.get("/:id", async (req, res) => {
-//   try {
-//     const eventWithFullImageUrls = await Event.findById(req.params.id)
-//     .populate("event_category", "category_name")
-//     .select("-trainerid")
-
-//     const event = {
-//       ...eventWithFullImageUrls._doc,
-//       event_thumbnail: `http://${req.headers.host}/${eventWithFullImageUrls.event_thumbnail}`,
-//     };
-//     if (!event) {
-//       return res.status(404).json(new ApiError(404, "Event not found"));
-//     }
-//     res.status(200).json(event);
-//   } catch (error) {
-//     // console.log(error);
-//     res.status(500).json({ message: "Error fetching event", error });
-//   }
-// });
 
 router.get("/events", async (req, res) => {
   try {
@@ -158,51 +146,63 @@ router.get("/bytrainer", async (req, res) => {
 
 // Update an event by ID
 router.put("/:id", async (req, res) => {
-  try {
-    const updatedEvent = await Event.findOneAndUpdate(
-      { _id: req.params.id },
-      {
-        $set: {
-          event_name: req.body.event_name,
-          event_type: req.body.event_type,
-          event_date: req.body.event_date,
-          event_categories: req.body.event_categories,
-          event_start_time: req.body.event_start_time,
-          event_end_time: req.body.event_end_time,
-          trainerid: req.user.id,
-        },
-      },
-      { new: true }
-    );
+  const eventId = req.params.id;
+  const {
+    event_name,
+    event_type,
+    event_description,
+    event_category,
+    event_thumbnail,
+    event_date,
+    event_start_time,
+    event_end_time,
+    event_location,
+    event_languages,
+    estimated_seats,
+  } = req.body;
+  const userId = req.user.id;
 
-    if (!updatedEvent) {
-      return res.status(404).json({ message: "Event not found" });
+  try {
+    // Find the event by ID
+    const event = await Event.findById(eventId);
+
+    if (!event) {
+      return res.status(404).json(new ApiError(404, "Event not found."));
     }
 
-    const attendees = updatedEvent.registered_users;
-    // Create notifications for each attendee
-    const notifications = attendees.map((attendee) => {
-      return {
-        recipient: attendee._id,
-        message: `The event "${updatedEvent.event_name}" has been updated: ${updatedEvent.event_name}`,
-        activityType: "EVENT_UPDATE",
-        relatedId: updatedEvent._id,
-      };
-    });
-    await NotificationModel.insertMany(notifications);
+    // Check if the current user is the trainer who created the event
+    if (event.trainerid.toString() !== userId) {
+      return res
+        .status(403)
+        .json(
+          new ApiError(403, "You are not authorized to update this event.")
+        );
+    }
+
+    // Update event details
+    event.event_name = event_name || event.event_name;
+    event.event_type = event_type || event.event_type;
+    event.event_description = event_description || event.event_description;
+    event.event_category = event_category || event.event_category;
+    event.event_thumbnail = event_thumbnail || event.event_thumbnail;
+    event.event_date = event_date || event.event_date;
+    event.event_start_time = event_start_time || event.event_start_time;
+    event.event_end_time = event_end_time || event.event_end_time;
+    event.event_location = event_location || event.event_location;
+    event.event_languages = event_languages || event.event_languages;
+    event.estimated_seats = estimated_seats || event.estimated_seats;
+
+    // Save the updated event
+    const updatedEvent = await event.save();
 
     res
       .status(200)
-      .json(
-        new ApiResponse(
-          400,
-          "Event updated successfully",
-          updatedEvent.event_name
-        )
-      );
+      .json(new ApiResponse(200, "Event updated successfully", updatedEvent));
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Error updating event", error });
+    console.error("Event update error:", error);
+    res
+      .status(500)
+      .json(new ApiError(500, error.message || "Error updating event", error));
   }
 });
 

@@ -106,6 +106,9 @@ app.use("/cart", cart);
 const forum = require("./app/route/Forum/Forum.router");
 app.use("/forum", forum);
 
+const dummy = require("./app/route/dummy.routes");
+app.use("/dummy", dummy);
+
 // const mongoose = require("mongoose");
 // mongoose
 //   .connect("mongodb://127.0.0.1:27017/bhoj_soft_solution")
