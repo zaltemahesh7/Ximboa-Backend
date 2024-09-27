@@ -217,7 +217,7 @@ router.get("/home", async (req, res) => {
         eventEndTime: event?.event_end_time || "",
         eventName: event?.event_name || "",
         mode: event?.event_type === "Online" ? "Online" : "Offline", // Convert mode to a human-readable format
-        enrollments: event?.registered_users.length,
+        enrollments: event?.registered_users?.length,
       };
     });
 
