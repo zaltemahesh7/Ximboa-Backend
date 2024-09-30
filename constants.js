@@ -130,7 +130,7 @@ const emailTemplates = {
 
   roleChangeRequestToUser: {
     subject: "Your Role Change Request is Pending Approval",
-    html: (userName, requested_Role) => `
+    html: (userName, requested_Role, logoUrl) => `
       <div style="font-family: Arial, sans-serif; color: #333;">
         <div style="text-align: center;">
           <img src="${logoUrl}" alt="Course Logo" style="width: 150px; margin-bottom: 20px;">
@@ -145,7 +145,7 @@ const emailTemplates = {
 
   roleChangeRequestToSuperAdmin: {
     subject: "Role Change Request",
-    html: (requested_Role, userId, userEmail, userName) => `
+    html: (requested_Role, userId, userEmail, userName, logoUrl) => `
       <div>
         <div style="text-align: center;">
           <img src="${logoUrl}" alt="Course Logo" style="width: 150px; margin-bottom: 20px;">
@@ -160,7 +160,7 @@ const emailTemplates = {
 
   roleChangeApproved: {
     subject: "Your Role Change Request Has Been Approved",
-    html: (userName, approvedRole) => `
+    html: (userName, approvedRole, logoUrl) => `
       <div style="font-family: Arial, sans-serif; color: #333;">
         <h2>Hello ${userName},</h2>
         <p>We are pleased to inform you that your request to change your role to <strong>${approvedRole}</strong> has been approved.</p>
@@ -172,7 +172,7 @@ const emailTemplates = {
 
   roleChangeDenied: {
     subject: "Your Role Change Request Has Been Denied",
-    html: (userName, requestedRole) => `
+    html: (userName, requestedRole, logoUrl) => `
       <div style="font-family: Arial, sans-serif; color: #333;">
         <h2>Hello ${userName},</h2>
         <p>Unfortunately, your request to change your role to <strong>${requestedRole}</strong> has been denied.</p>

@@ -276,6 +276,7 @@ router.get("/allcourses", async (req, res) => {
     const totalCourses = await Course.countDocuments();
 
     const courses = await Course.find()
+      .sort({ createdAt: -1 })
       .skip(startIndex)
       .limit(limit)
       .populate("category_id", "category_name")
@@ -368,6 +369,7 @@ router.get("/trainers", async (req, res) => {
         },
       },
     ])
+      .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
@@ -599,6 +601,7 @@ router.get("/event/:id", async (req, res) => {
       event_name: event?.event_name || "",
       event_date: event?.event_date || "",
       event_type: event?.event_type || "",
+      event_category: event?.event_category?.category_name || "",
       trainer_id: event?.trainerid?._id || "",
       registered_users: event?.registered_users.length || "",
       event_thumbnail: event?.event_thumbnail
@@ -618,6 +621,7 @@ router.get("/allevents", async (req, res) => {
 
   try {
     const events = await Event.find()
+      .sort({ createdAt: -1 })
       .populate("event_category", "category_name -_id")
       .populate("trainerid", "f_Name l_Name");
     if (!events || events.length === 0) {
@@ -628,6 +632,7 @@ router.get("/allevents", async (req, res) => {
       _id: event?._id,
       event_name: event?.event_name || "",
       event_date: event?.event_date || "",
+      event_category: event?.event_category?.category_name || "",
       event_type: event?.event_type || "",
       trainer_id: event?.trainerid?._id || "",
       registered_users: event?.registered_users.length || "",
@@ -717,6 +722,7 @@ router.get("/product/:id", async function (req, res, next) {
 // Get a single product by ID
 router.get("/allproduct", async function (req, res, next) {
   Product.find()
+    .sort({ createdAt: -1 })
     .populate("categoryid", "category_name")
     .populate("t_id", "f_Name l_Name")
     .then((result) => {

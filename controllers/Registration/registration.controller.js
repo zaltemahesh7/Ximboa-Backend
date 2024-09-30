@@ -469,6 +469,7 @@ const approveRoleChange = asyncHandler(async (req, res) => {
     } else {
       await Registration.findByIdAndUpdate(userid, {
         requested_Role: "",
+        business_Name: "",
       });
 
       await Registration.updateOne(
@@ -543,33 +544,29 @@ const getAllRequestsByAdminId = async (req, res) => {
 // Controller to send a request to become a trainer
 const requestToBecomeTrainer = asyncHandler(async (req, res) => {
   try {
-    const { instituteId } = req.body; // instituteId is passed in request body
-    const userId = req.user.id; // user is authenticated, and userId is available in req.user
-    const userName = `${req.user.f_Name} ${req.user.l_Name}`; // User's name
+    const { instituteId } = req.body;
+    const userId = req.user.id;
+    const userName = `${req.user.f_Name} ${req.user.l_Name}`;
     const userEmail = req.user.email_id;
 
-    // Find the institute by ID
     const institute = await InstituteModel.findById(instituteId);
     if (!institute) {
       return res.status(404).json(new ApiError(404, "Institute not found"));
     }
 
-    // Ensure user exists
     const user = await Registration.findById(userId);
     if (!user) {
       return res.status(404).json(new ApiError(404, "User not found"));
     }
 
-    // Check if the user has already requested to become a trainer
     if (user.requested_Role === "TRAINER") {
       return res.status(400).json(new ApiError(400, "Request already pending"));
     }
 
-    // Update the user's requested_Role field
     user.requested_Role = "TRAINER";
+    user.business_Name = institute.institute_name;
     await user.save();
 
-    // Get the institute's admins (assuming the institute model has an array of admin IDs)
     const admins = await Registration.find({
       _id: { $in: institute.admins },
       role: "INSTITUTE",
@@ -584,7 +581,6 @@ const requestToBecomeTrainer = asyncHandler(async (req, res) => {
     // Send approval requests to all admins via email
     admins.forEach(async (admin) => {
       const adminEmail = admin.email_id;
-      // Use your email sending utility
       sendEmail(
         "trainerRequest",
         {
