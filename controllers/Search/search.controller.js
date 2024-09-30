@@ -344,15 +344,15 @@ const searchEventByName = async (req, res) => {
 };
 
 const searchTrainerByName = async (req, res) => {
-  const { page = 1, limit = 10, search } = req.query;
+  const { page = 1, limit = 10, trainer_name } = req.query;
   const baseUrl = req.protocol + "://" + req.get("host");
 
   try {
-    const searchQuery = search
+    const searchQuery = trainer_name
       ? {
           $or: [
-            { f_Name: { $regex: search, $options: "i" } },
-            { l_Name: { $regex: search, $options: "i" } },
+            { f_Name: { $regex: trainer_name, $options: "i" } },
+            { l_Name: { $regex: trainer_name, $options: "i" } },
           ],
           role: { $in: ["TRAINER", "SELF_EXPERT"] },
         }
