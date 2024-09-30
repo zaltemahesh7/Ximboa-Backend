@@ -343,110 +343,6 @@ const searchEventByName = async (req, res) => {
 };
 
 const searchTrainerByName = async (req, res) => {
-  const baseUrl = req.protocol + "://" + req.get("host");
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 4;
-  try {
-    const { trainer_name } = req.query;
-
-    if (!trainer_name) {
-      return res
-        .status(400)
-        .json(new ApiError(400, "trainer_name is required"));
-    }
-
-    const totalTrainers = Registration.countDocuments({
-      role: { $in: ["TRAINER", "SELF_EXPERT"] },
-      $or: [
-        { f_Name: trainer_name },
-        { l_Name: trainer_name },
-        // { bio: trainer_name },
-      ],
-    });
-    const trainers = await Registration.find({
-      role: { $in: ["TRAINER", "SELF_EXPERT"] },
-      $or: [
-        { f_Name: trainer_name },
-        { l_Name: trainer_name },
-        {
-          $lookup: {
-            from: "courses",
-            localField: "_id",
-            foreignField: "trainer_id",
-            as: "courses",
-          },
-        },
-        {
-          $project: {
-            business_Name: 1,
-            f_Name: 1,
-            l_Name: 1,
-            trainer_image: 1,
-            role: 1,
-            course_count: { $size: "$courses" },
-          },
-        },
-        // { bio: searchRegex },
-      ],
-    })
-      .sort({ createdAt: -1 })
-      .populate({
-        path: "categories",
-        select: "category_name _id",
-        model: "Category",
-      })
-      .skip((page - 1) * limit)
-      .limit(limit);
-
-    if (!trainers || trainers.length === 0) {
-      return res.status(404).json(new ApiResponse(404, "No trainers found"));
-    }
-
-    res.status(200).json(
-      new ApiResponse(
-        200,
-        "Trainers found",
-        trainers.map(async (trainer) => {
-          const institute = await InstituteModel.findOne({
-            trainers: trainer._id,
-          }).select("institute_name social_Media");
-
-          return {
-            _id: trainer?._id,
-            Business_Name: institute
-              ? institute?.institute_name
-              : trainer?.business_Name ||
-                trainer?.f_Name + " " + trainer?.l_Name,
-            f_Name: trainer?.f_Name,
-            l_Name: trainer?.l_Name,
-            role: trainer?.role,
-            course_count: trainer?.course_count,
-            social_Media: institute
-              ? institute?.social_Media
-              : trainer?.social_Media || "",
-            ratings: "",
-            trainer_image: trainer?.trainer_image
-              ? `${baseUrl}/${trainer?.trainer_image?.replace(/\\/g, "/")}`
-              : "",
-          };
-        }),
-        {
-          currentPage: page,
-          totalPages: Math.ceil(totalTrainers / limit),
-          totalItems: totalTrainers,
-          pageSize: limit,
-        }
-      )
-    );
-  } catch (error) {
-    console.error("Error searching for Trainer:", error);
-    return res
-      .status(500)
-      .json(new ApiError(500, "Error while searching for trainer", error));
-  }
-};
-
-const searchTrainers = async (req, res) => {
   const { page = 1, limit = 10, search } = req.query;
   const baseUrl = req.protocol + "://" + req.get("host");
 
@@ -535,5 +431,4 @@ module.exports = {
   searchCourseByName,
   searchEventByName,
   searchTrainerByName,
-  searchTrainers,
 };
