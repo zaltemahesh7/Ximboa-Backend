@@ -275,11 +275,17 @@ router.put(
       const userId = req.user.id;
       const user = await Registration.findById(userId);
       const {
-        user_name,
+        f_Name,
+        middle_Name,
+        l_Name,
         email_id,
         mobile_number,
         date_of_birth,
         whatsapp_no,
+        facebook,
+        instagram,
+        youtube,
+        linkedin,
         rating_count,
         address1,
         address2,
@@ -319,9 +325,15 @@ router.put(
       }
 
       // Update fields
-      if (user_name) user.user_name = user_name;
+      if (f_Name) user.f_Name = f_Name;
+      if (middle_Name) user.middle_Name = middle_Name;
+      if (l_Name) user.l_Name = l_Name;
       if (date_of_birth) user.date_of_birth = date_of_birth;
       if (whatsapp_no) user.whatsapp_no = whatsapp_no;
+      if (facebook) user.social_Media.facebook = facebook;
+      if (instagram) user.social_Media.instagram = instagram;
+      if (youtube) user.social_Media.youtube = youtube;
+      if (linkedin) user.social_Media.linkedin = linkedin;
       if (rating_count) user.rating_count = rating_count;
       if (address1) user.address1 = address1;
       if (address2) user.address2 = address2;

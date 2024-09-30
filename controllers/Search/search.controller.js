@@ -322,6 +322,7 @@ const searchEventByName = async (req, res) => {
           event_type: event?.event_type || "",
           trainer_id: event?.trainerid?._id || "",
           registered_users: event?.registered_users.length || "",
+          event_category: event?.event_category?.category_name || "",
           event_thumbnail: event?.event_thumbnail
             ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
             : "",

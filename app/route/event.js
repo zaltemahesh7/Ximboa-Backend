@@ -31,10 +31,7 @@ router.post(
       const trainerid = req.user.id;
 
       // If file is uploaded, get file path from Multer
-      const event_thumbnail = {
-        data: req.file.buffer,
-        contentType: req.file.mimetype,
-      };
+      const event_thumbnail = req.files;
 
       const newEvent = new Event({
         event_name,
@@ -53,6 +50,7 @@ router.post(
       const savedEvent = await newEvent.save();
       res.status(201).json(savedEvent);
     } catch (error) {
+      console.log(error);
       res.status(400).json({ message: "Error creating event", error });
     }
   }
@@ -128,15 +126,23 @@ router.get("/events", async (req, res) => {
 
 // trainer/:trainerid
 
-router.get("/bytrainer", async (req, res) => {
+router.get("/trainer/bytrainer", async (req, res) => {
   try {
-    const events = await Event.find({ trainerid: req.user.id });
+    const baseUrl = req.protocol + "://" + req.get("host");
+    const events = await Event.find({ trainerid: req.user.id }).sort({
+      createdAt: -1,
+    });
     if (events.length === 0) {
       return res
         .status(404)
         .json({ message: "No events found for this trainer" });
     }
-    res.status(200).json(events);
+    res
+      .status(200)
+      .json({
+        events,
+        event_thumbnail: `${baseUrl}/${events.event_thumbnail}`,
+      });
   } catch (error) {
     console.log(error);
 

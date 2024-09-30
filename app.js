@@ -106,6 +106,9 @@ app.use("/cart", cart);
 const forum = require("./app/route/Forum/Forum.router");
 app.use("/forum", forum);
 
+const afterLogin = require("./app/route/student/studentDashboard/afterLogin");
+app.use("/", afterLogin);
+
 const dummy = require("./app/route/dummy.routes");
 app.use("/dummy", dummy);
 

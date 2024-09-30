@@ -4,10 +4,12 @@ const Category = require("../../../../model/category"); // Assuming you have a C
 const Trainer = require("../../../../model/registration"); // Assuming you have a Category model
 
 const Course = require("../../../../model/course");
+const { jwtAuthMiddleware } = require("../../../../middleware/auth");
+const {
+  dashboard,
+} = require("../../../../controllers/Dashboard/dashboard.controller");
 
 // Get courses with specific fields, including trainer name populated
-router.get("/", async (req, res) => {
-    
-});
+router.get("/dashboard", jwtAuthMiddleware, dashboard);
 
 module.exports = router;
