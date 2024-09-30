@@ -5,16 +5,15 @@ const { ApiResponse } = require("../../utils/ApiResponse");
 const dashboard = async (req, res) => {
   try {
     const userid = req.user.id;
-    const course_count = await Course.countDocuments({ trainer_id: userid });
+    const role = req.user.role;
+    const course_created = await Course.countDocuments({ trainer_id: userid });
 
-    res
-      .status(200)
-      .json(
-        new ApiResponse(200, "Getting Data success", {
-          course_count,
-          userid,
-        })
-      );
+    res.status(200).json(
+      new ApiResponse(200, "Getting Data success", {
+        course_created: course_created,
+        userid,
+      })
+    );
   } catch (error) {
     console.log(error);
     res
