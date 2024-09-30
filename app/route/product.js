@@ -5,6 +5,7 @@ var Product = require("../../model/product");
 const multer = require("multer");
 const NotificationModel = require("../../model/Notifications/Notification.model");
 const { ApiError } = require("../../utils/ApiError");
+const { ApiResponse } = require("../../utils/ApiResponse");
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -66,12 +67,14 @@ router.post(
 
       await notification.save();
 
-      res.status(200).json({
-        newProduct: result,
-      });
+      res
+        .status(201)
+        .json(
+          new ApiResponse(201, "Product Added Successful", result.product_name)
+        );
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error });
+      res.status(500).json(new ApiError(500, "Error While uploading product", error.message));
     }
   }
 );
@@ -128,7 +131,7 @@ router.delete("/:productId", async (req, res) => {
 
     const notification = new NotificationModel({
       recipient: req.user.id,
-      message: `Your product "${deletedProduct.product_name}" has been deleted successfully.`,
+      message: `Your product has been deleted successfully.`,
       activityType: "PRODUCT_DELETED",
       relatedId: deletedProduct._id,
     });

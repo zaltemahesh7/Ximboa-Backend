@@ -320,7 +320,6 @@ router.put(
 
       // Update fields
       if (user_name) user.user_name = user_name;
-      if (password) user.password = await hashPassword(password); // Hash the password
       if (date_of_birth) user.date_of_birth = date_of_birth;
       if (whatsapp_no) user.whatsapp_no = whatsapp_no;
       if (rating_count) user.rating_count = rating_count;
