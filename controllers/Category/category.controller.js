@@ -3,44 +3,6 @@ const { ApiError } = require("../../utils/ApiError");
 const { ApiResponse } = require("../../utils/ApiResponse");
 
 // Controller to Add a New Category
-// exports.addCategory = async (req, res) => {
-//   try {
-//     const { category_name, sub_title } = req.body;
-//     const category_image = req.files["category_image"] || "";
-//     const trainer_id = req.user.id;
-
-//     // Check if category name already exists
-//     const existingCategory = await Category.findOne({ category_name });
-//     if (existingCategory) {
-//       return res
-//         .status(400)
-//         .json(new ApiError(400, "Category with this name already exists"));
-//     }
-
-//     // Create a new category
-//     const category = new Category({
-//       category_name,
-//       sub_title,
-//       category_image,
-//       trainer_id,
-//     });
-
-//     await category.save();
-
-//     res.status(201).json(
-//       new ApiResponse(201, "Category added successfully", {
-//         category: category.category_name,
-//       })
-//     );
-//   } catch (error) {
-//     console.error("Error adding category:", error);
-//     return res
-//       .status(500)
-//       .json(new ApiError(500, "Error while adding category", error));
-//   }
-// };
-
-// Controller to Add a New Category
 exports.addCategory = async (req, res) => {
   try {
     const { category_name, sub_title } = req.body;

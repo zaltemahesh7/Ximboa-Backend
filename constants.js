@@ -132,6 +132,9 @@ const emailTemplates = {
     subject: "Your Role Change Request is Pending Approval",
     html: (userName, requested_Role) => `
       <div style="font-family: Arial, sans-serif; color: #333;">
+        <div style="text-align: center;">
+          <img src="${logoUrl}" alt="Course Logo" style="width: 150px; margin-bottom: 20px;">
+        </div>
         <h2>Hello ${userName},</h2>
         <p>Your request to change your role to <strong>${requested_Role}</strong> has been successfully submitted. It is currently awaiting approval by the admin.</p>
         <p>We will notify you once your request has been reviewed.</p>
@@ -144,6 +147,9 @@ const emailTemplates = {
     subject: "Role Change Request",
     html: (requested_Role, userId, userEmail, userName) => `
       <div>
+        <div style="text-align: center;">
+          <img src="${logoUrl}" alt="Course Logo" style="width: 150px; margin-bottom: 20px;">
+        </div>
         <h3>New Role Change Request</h3>
         <p>User <strong>${userName}</strong> (${userEmail}) has requested to change their role to <strong>${requested_Role}</strong>.</p>
         <p>User ID: ${userId}</p>
