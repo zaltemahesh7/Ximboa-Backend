@@ -140,9 +140,6 @@ router.post(
         relatedId: savedCourse._id,
       });
       await notification.save();
-
-      // (Optional) Notify users who follow the trainer about the new course (add custom logic to find such users)
-
       res
         .status(200)
         .json(

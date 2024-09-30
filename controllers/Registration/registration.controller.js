@@ -469,6 +469,7 @@ const approveRoleChange = asyncHandler(async (req, res) => {
     } else {
       await Registration.findByIdAndUpdate(userid, {
         requested_Role: "",
+        business_Name: "",
       });
 
       await Registration.updateOne(
