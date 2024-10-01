@@ -125,7 +125,7 @@ router.post(
         ? req.files["trainer_materialImage"][0].path
         : "",
       category_id: req.body.category_id,
-      trainer_id: req.user.id, // Fetch Trainer ID from token payload
+      trainer_id: req.user.id,
     });
 
     try {
@@ -134,7 +134,7 @@ router.post(
 
       // Notify the trainer about the new course
       const notification = new NotificationModel({
-        recipient: req.user.id, // Trainer ID
+        recipient: req.user.id,
         message: `Your course "${savedCourse.course_name}" has been created successfully.`,
         activityType: "COURSE_CREATE",
         relatedId: savedCourse._id,

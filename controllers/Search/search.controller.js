@@ -175,17 +175,21 @@ const searchProductByName = async (req, res) => {
         "Product found",
         products.map((product) => ({
           _id: product?._id,
-          productImage: product?.product_image
-            ? `${baseUrl}/${product?.product_image?.replace(/\\/g, "/")}`
+          product_image: product?.product_image
+            ? `http://${req.headers.host}/${product?.product_image?.replace(
+                /\\/g,
+                "/"
+              )}`
             : "",
-          productName: product?.product_name || "",
-          productPrice: product?.product_prize || "",
-          productSellingPrice: product?.product_selling_prize || "",
-          avgRating: avgRating ? avgRating : "",
-          categoryName: product?.categoryid?.category_name || "",
+          products_category: product?.categoryid?.category_name || "",
+          products_rating: "Pending...#####",
+          products_category: product?.categoryid?.category_name || "",
+          products_name: product?.product_name || "",
+          products_price: product?.product_prize || "",
+          products_selling_price: product?.product_selling_prize || "",
           identityFlag:
             product?.t_id?.role === "TRAINER" ? "Institute" : "Self Expert",
-          productFlag: product?.product_flag || "",
+          product_flag: product?.product_flag || "",
         })),
         {
           currentPage: page,

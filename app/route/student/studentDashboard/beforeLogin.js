@@ -724,7 +724,7 @@ router.get("/allproduct", async function (req, res, next) {
   Product.find()
     .sort({ createdAt: -1 })
     .populate("categoryid", "category_name")
-    .populate("t_id", "f_Name l_Name")
+    .populate("t_id", "f_Name l_Name role")
     .then((result) => {
       const productsWithFullImageUrls = result.map((product) => ({
         _id: product?._id,
