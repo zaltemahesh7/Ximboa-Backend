@@ -21,6 +21,7 @@ router.get("/home", async (req, res) => {
     const startIndex = (page - 1) * limit;
 
     const courses = await Course.find()
+      .sort({ createdAt: -1 })
       .skip(startIndex)
       .limit(limit)
       .populate("category_id", "category_name")
