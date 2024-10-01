@@ -21,6 +21,10 @@ const InstituteModel = require("../../../model/Institute/Institute.model");
 // Get all data according to the trainer
 router.get("/:id", async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 4;
+    const startIndex = (page - 1) * limit;
+
     const trainerId = req.params.id;
     const trainer = await Trainer.findById(trainerId).select("-password");
     if (!trainer) {
@@ -28,23 +32,46 @@ router.get("/:id", async (req, res) => {
     }
     const institutes = await InstituteModel.findOne({ trainers: trainerId });
 
-    const courses = await Course.find({ trainer_id: trainerId }).sort({
-      createdAt: -1,
-    });
+    const courses = await Course.find({ trainer_id: trainerId })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate("category_id", "category_name")
+      .populate("trainer_id", "f_Name l_Name trainer_image business_Name role");
+
     const baseUrl = req.protocol + "://" + req.get("host");
 
     const coursesWithFullImageUrl = courses.map((course) => {
       return {
-        ...course._doc,
-        thumbnail_image: course.thumbnail_image
-          ? `${baseUrl}/${course.thumbnail_image.replace(/\\/g, "/")}`
+        _id: course?._id,
+        course_name: course?.course_name || "",
+        category_name: course?.category_id?.category_name || "",
+        online_offline: course?.online_offline || "",
+        thumbnail_image: course?.thumbnail_image
+          ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
           : "",
-        gallary_image: course.gallary_image
-          ? `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`
+        business_Name: course?.trainer_id?.business_Name
+          ? course?.trainer_id?.business_Name
+          : `${course?.trainer_id?.f_Name || ""} ${
+              course?.trainer_id?.l_Name || ""
+            }`.trim() || "",
+        trainer_image: course?.trainer_id?.trainer_image
+          ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
+              /\\/g,
+              "/"
+            )}`
           : "",
-        trainer_materialImage: course.gallary_image
-          ? `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`
-          : "",
+        course_rating: "",
+        course_duration: Math.floor(
+          Math.round(
+            ((course?.end_date - course?.start_date) /
+              (1000 * 60 * 60 * 24 * 7)) *
+              100
+          ) / 100
+        ),
+        course_price: course?.price || "",
+        course_offer_prize: course?.offer_prize || "",
+        course_flag: course?.trainer_id?.role || "",
       };
     });
 
@@ -61,33 +88,48 @@ router.get("/:id", async (req, res) => {
       createdAt: -1,
     });
     // Find Products by the trainer
-    const Products = await Product.find({ t_id: trainerId }).sort({
-      createdAt: -1,
-    });
+    const Products = await Product.find({ t_id: trainerId })
+      .sort({ createdAt: -1 })
+      .populate("categoryid", "category_name")
+      .populate("t_id", "f_Name l_Name role");
 
     const productsWithFullImageUrl = Products.map((product) => {
       return {
-        ...product._doc,
-        product_image: product.product_image
-          ? `${baseUrl}/${product.product_image.replace(/\\/g, "/")}`
+        _id: product?._id,
+        product_image: product?.product_image
+          ? `http://${req.headers.host}/${product?.product_image?.replace(
+              /\\/g,
+              "/"
+            )}`
           : "",
-        product_gallary: product.gallary_image
-          ? `${baseUrl}/${product.gallary_image.replace(/\\/g, "/")}`
-          : "",
+        products_category: product?.categoryid?.category_name || "",
+        products_rating: "Pending...#####",
+        products_category: product?.categoryid?.category_name || "",
+        products_name: product?.product_name || "",
+        products_price: product?.product_prize || "",
+        products_selling_price: product?.product_selling_prize || "",
+        identityFlag:
+          product?.t_id?.role === "TRAINER" ? "Institute" : "Self Expert",
+        product_flag: product?.product_flag || "",
       };
     });
 
     // Find Events by the trainer
     const events = await Event.find({ trainerid: trainerId })
-      .sort({
-        createdAt: -1,
-      })
-      .populate("event_category", "category_name");
+      .sort({ createdAt: -1 })
+      .populate("event_category", "category_name -_id")
+      .populate("trainerid", "f_Name l_Name");
     // .populate("trainerid", "f_Name l_Name");
 
     const eventsWithThumbnailUrl = events.map((event) => {
       return {
-        ...event._doc,
+        _id: event?._id,
+        event_name: event?.event_name || "",
+        event_date: event?.event_date || "",
+        event_category: event?.event_category?.category_name || "",
+        event_type: event?.event_type || "",
+        trainer_id: event?.trainerid?._id || "",
+        registered_users: event?.registered_users.length || "",
         event_thumbnail: event?.event_thumbnail
           ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
           : "",
@@ -184,23 +226,44 @@ router.get("/:id", async (req, res) => {
       ?.sort({
         createdAt: -1,
       })
-      .populate("trainer_id", "f_Name l_Name")
-      .populate("category_id", "category_name");
+      .sort({ createdAt: -1 })
+      .skip(startIndex)
+      .limit(limit)
+      .populate("category_id", "category_name")
+      .populate("trainer_id", "f_Name l_Name trainer_image business_Name role");
 
     // Map courses to include full image URLs and trainer name
     const OnGoingBatches = ongoingCourses.map((course) => {
       return {
-        ...course._doc,
-        thumbnail_image: course.thumbnail_image
-          ? `${baseUrl}/${course.thumbnail_image.replace(/\\/g, "/")}`
+        _id: course?._id,
+        course_name: course?.course_name || "",
+        category_name: course?.category_id?.category_name || "",
+        online_offline: course?.online_offline || "",
+        thumbnail_image: course?.thumbnail_image
+          ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
           : "",
-        gallary_image: course.gallary_image
-          ? `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`
+        business_Name: course?.trainer_id?.business_Name
+          ? course?.trainer_id?.business_Name
+          : `${course?.trainer_id?.f_Name || ""} ${
+              course?.trainer_id?.l_Name || ""
+            }`.trim() || "",
+        trainer_image: course?.trainer_id?.trainer_image
+          ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
+              /\\/g,
+              "/"
+            )}`
           : "",
-        trainer_materialImage: course.trainer_materialImage
-          ? `${baseUrl}/${course.trainer_materialImage.replace(/\\/g, "/")}`
-          : "",
-        trainer_name: course.trainer_id ? course.trainer_id.user_name : "N/A",
+        course_rating: "",
+        course_duration: Math.floor(
+          Math.round(
+            ((course?.end_date - course?.start_date) /
+              (1000 * 60 * 60 * 24 * 7)) *
+              100
+          ) / 100
+        ),
+        course_price: course?.price || "",
+        course_offer_prize: course?.offer_prize || "",
+        course_flag: course?.trainer_id?.role || "",
       };
     });
 
@@ -208,26 +271,44 @@ router.get("/:id", async (req, res) => {
       trainer_id: { $in: trainerId },
       start_date: { $gt: currentDate },
     })
-      .sort({
-        createdAt: -1,
-      })
-      .populate("trainer_id", "f_Name l_Name")
-      .populate("category_id", "category_name");
+      .sort({ createdAt: -1 })
+      .skip(startIndex)
+      .limit(limit)
+      .populate("category_id", "category_name")
+      .populate("trainer_id", "f_Name l_Name trainer_image business_Name role");
 
     // Map courses to include full image URLs and trainer name
     const UpcomingBatches = upcomingCourses.map((course) => {
       return {
-        ...course._doc,
-        thumbnail_image: course.thumbnail_image
-          ? `${baseUrl}/${course.thumbnail_image.replace(/\\/g, "/")}`
+        _id: course?._id,
+        course_name: course?.course_name || "",
+        category_name: course?.category_id?.category_name || "",
+        online_offline: course?.online_offline || "",
+        thumbnail_image: course?.thumbnail_image
+          ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
           : "",
-        gallary_image: course.gallary_image
-          ? `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`
+        business_Name: course?.trainer_id?.business_Name
+          ? course?.trainer_id?.business_Name
+          : `${course?.trainer_id?.f_Name || ""} ${
+              course?.trainer_id?.l_Name || ""
+            }`.trim() || "",
+        trainer_image: course?.trainer_id?.trainer_image
+          ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
+              /\\/g,
+              "/"
+            )}`
           : "",
-        trainer_materialImage: course.trainer_materialImage
-          ? `${baseUrl}/${course.trainer_materialImage.replace(/\\/g, "/")}`
-          : "",
-        trainer_name: course.trainer_id ? course.trainer_id.user_name : "N/A",
+        course_rating: "",
+        course_duration: Math.floor(
+          Math.round(
+            ((course?.end_date - course?.start_date) /
+              (1000 * 60 * 60 * 24 * 7)) *
+              100
+          ) / 100
+        ),
+        course_price: course?.price || "",
+        course_offer_prize: course?.offer_prize || "",
+        course_flag: course?.trainer_id?.role || "",
       };
     });
 
@@ -266,28 +347,28 @@ router.get("/:id", async (req, res) => {
     // }
 
     res.status(200).json({
-      Business_Name: institutes
-        ? institutes?.institute_name
-        : trainer?.business_Name,
+      gallarys,
+      Business_Name: trainer?.business_Name
+        ? trainer?.business_Name
+        : trainer?.f_Name + " " + trainer?.l_Name,
       // institutes,
       trainer,
-      coursesWithFullImageUrl,
-      reviews,
-      question,
-      Appointments,
-      Enquirys,
-      productsWithFullImageUrl,
-      eventsWithThumbnailUrl,
-      onlineEventsThumbnailUrl,
-      offlienEventsThumbnailUrl,
       About: institutes ? institutes.About : About,
       Educations,
-      SocialMedias: institutes ? institutes?.SocialMedias : SocialMedias,
       testimonials,
-      gallarys,
-      // courses: relatedCourses,
+      SocialMedias: institutes ? institutes?.SocialMedias : SocialMedias,
       OnGoingBatches,
       UpcomingBatches,
+      eventsWithThumbnailUrl,
+      productsWithFullImageUrl,
+      reviews,
+      // coursesWithFullImageUrl,
+      // question,
+      // Appointments,
+      // Enquirys,
+      // onlineEventsThumbnailUrl,
+      // offlienEventsThumbnailUrl,
+      // courses: relatedCourses,
     });
   } catch (error) {
     console.log(error);
