@@ -26,7 +26,9 @@ router.get("/:id", async (req, res) => {
     const startIndex = (page - 1) * limit;
 
     const trainerId = req.params.id;
-    const trainer = await Trainer.findById(trainerId).select("-password");
+    const trainer = await Trainer.findById(trainerId).select(
+      "-password -resetPasswordExpires -resetPasswordToken -requested_Role"
+    );
     if (!trainer) {
       return res.status(404).send({ message: "Trainer not found" });
     }
@@ -136,24 +138,46 @@ router.get("/:id", async (req, res) => {
       };
     });
 
-    const onlineEvents = events.filter(
-      (event) => event.event_type === "Online"
-    );
+    const onlineEvents = await Event.find({
+      trainerid: trainerId,
+      event_type: "Online",
+    })
+      .sort({ createdAt: -1 })
+      .populate("event_category", "category_name -_id")
+      .populate("trainerid", "f_Name l_Name");
+
+    console.log(onlineEvents);
     const onlineEventsThumbnailUrl = onlineEvents.map((event) => {
       return {
-        ...event._doc,
-        event_thumbnail: event.event_thumbnail
+        _id: event?._id,
+        event_name: event?.event_name || "",
+        event_date: event?.event_date || "",
+        event_category: event?.event_category?.category_name || "",
+        event_type: event?.event_type || "",
+        trainer_id: event?.trainerid?._id || "",
+        registered_users: event?.registered_users.length || "",
+        event_thumbnail: event?.event_thumbnail
           ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
           : "",
       };
     });
-    const offlienEvents = events.filter(
-      (event) => event.event_type === "Offline"
-    );
+    const offlienEvents = await Event.find({
+      trainerid: trainerId,
+      event_type: "Offline",
+    })
+      .sort({ createdAt: -1 })
+      .populate("event_category", "category_name -_id")
+      .populate("trainerid", "f_Name l_Name");
     const offlienEventsThumbnailUrl = offlienEvents.map((event) => {
       return {
-        ...event._doc,
-        event_thumbnail: event.event_thumbnail
+        _id: event?._id,
+        event_name: event?.event_name || "",
+        event_date: event?.event_date || "",
+        event_category: event?.event_category?.category_name || "",
+        event_type: event?.event_type || "",
+        trainer_id: event?.trainerid?._id || "",
+        registered_users: event?.registered_users.length || "",
+        event_thumbnail: event?.event_thumbnail
           ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
           : "",
       };
@@ -359,15 +383,15 @@ router.get("/:id", async (req, res) => {
       SocialMedias: institutes ? institutes?.SocialMedias : SocialMedias,
       OnGoingBatches,
       UpcomingBatches,
-      eventsWithThumbnailUrl,
+      // eventsWithThumbnailUrl,
+      onlineEventsThumbnailUrl,
+      offlienEventsThumbnailUrl,
       productsWithFullImageUrl,
       reviews,
       // coursesWithFullImageUrl,
       // question,
       // Appointments,
       // Enquirys,
-      // onlineEventsThumbnailUrl,
-      // offlienEventsThumbnailUrl,
       // courses: relatedCourses,
     });
   } catch (error) {
