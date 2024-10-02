@@ -1,9 +1,10 @@
 const Category = require("../../model/category");
 const { ApiError } = require("../../utils/ApiError");
 const { ApiResponse } = require("../../utils/ApiResponse");
+const { asyncHandler } = require("../../utils/asyncHandler");
 
 // Controller to Add a New Category
-exports.addCategory = async (req, res) => {
+exports.addCategory = asyncHandler(async (req, res) => {
   try {
     const { category_name, sub_title } = req.body;
     const category_image = req.file ? req.file.path : ""; // Access the uploaded file
@@ -39,10 +40,10 @@ exports.addCategory = async (req, res) => {
       .status(500)
       .json(new ApiError(500, "Error while adding category", error));
   }
-};
+});
 
 // Controller to Get All Categories
-exports.getAllCategories = async (req, res) => {
+exports.getAllCategories = asyncHandler(async (req, res) => {
   try {
     // Fetch all categories from the database
     const categories = await Category.find().populate(
@@ -65,9 +66,9 @@ exports.getAllCategories = async (req, res) => {
       .status(500)
       .json(new ApiError(500, "Error while retrieving categories", error));
   }
-};
+});
 
-exports.updatedCategory = async (req, res, next) => {
+exports.updatedCategory = asyncHandler(async (req, res, next) => {
   try {
     const category_id = req.params.id;
     const { category_name, sub_title } = req.body;
@@ -105,4 +106,4 @@ exports.updatedCategory = async (req, res, next) => {
       error: err.message,
     });
   }
-};
+});
