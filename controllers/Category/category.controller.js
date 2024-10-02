@@ -66,3 +66,43 @@ exports.getAllCategories = async (req, res) => {
       .json(new ApiError(500, "Error while retrieving categories", error));
   }
 };
+
+exports.updatedCategory = async (req, res, next) => {
+  try {
+    const category_id = req.params.id;
+    const { category_name, sub_title } = req.body;
+    const category_image = req.file ? req.file.path : "";
+    const trainer_id = req.user.id;
+    const existing_category = await Category.findById(category_id);
+
+    const updateOps = {
+      category_name: category_name
+        ? category_name
+        : existing_category?.category_name,
+      sub_title: sub_title ? sub_title : existing_category?.sub_title,
+      category_image: category_image
+        ? category_image
+        : existing_category?.category_image,
+      trainer_id,
+    };
+
+    const updatedCategory = await Category.findOneAndUpdate(
+      { _id: req.params.id },
+      { $set: updateOps },
+      { new: true }
+    );
+    if (!updatedCategory) res.status(400).json({ msg: "Not found" });
+    else {
+      res
+        .status(201)
+        .json(
+          new ApiResponse(201, "Updated data successfully", updatedCategory)
+        );
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+};
