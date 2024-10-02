@@ -146,7 +146,6 @@ router.get("/:id", async (req, res) => {
       .populate("event_category", "category_name -_id")
       .populate("trainerid", "f_Name l_Name");
 
-    console.log(onlineEvents);
     const onlineEventsThumbnailUrl = onlineEvents.map((event) => {
       return {
         _id: event?._id,

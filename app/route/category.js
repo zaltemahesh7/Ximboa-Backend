@@ -123,35 +123,6 @@
 //   }
 // });
 
-// // PUT route to update a category by ID
-// router.put("/:id", upload.single("category_image"), async (req, res, next) => {
-//   try {
-//     const updateOps = {
-//       category_name: req.body.category_name,
-//       category_image: req.file ? req.file.path : "",
-//       trainer_id: req.user.id, // Assuming trainer_id is passed in the request body
-//     };
-
-//     const updatedCategory = await Category.findOneAndUpdate(
-//       { _id: req.params.id },
-//       { $set: updateOps },
-//       { new: true }
-//     );
-//     if (!updatedCategory) res.status(400).json({ msg: "Not found" });
-//     else {
-//       res.status(200).json({
-//         msg: "Updated data successfully",
-//         updatedCategory: updatedCategory,
-//       });
-//     }
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({
-//       error: err.message,
-//     });
-//   }
-// });
-
 // // GET route to fetch categories by trainer ID
 // router.get("/bytrainer", async (req, res, next) => {
 //   try {
@@ -183,7 +154,19 @@ const { jwtAuthMiddleware } = require("../../middleware/auth");
 const upload = require("../../middleware/multerConfig");
 
 // Route to add a category
-router.post("/add", jwtAuthMiddleware, upload.single("category_image"), categoryController.addCategory);
+router.post(
+  "/add",
+  jwtAuthMiddleware,
+  upload.single("category_image"),
+  categoryController.addCategory
+);
+
+router.put(
+  "/update/:id",
+  jwtAuthMiddleware,
+  upload.single("category_image"),
+  categoryController.updatedCategory
+);
 
 // Route to get all categories
 router.get("/all", categoryController.getAllCategories);
