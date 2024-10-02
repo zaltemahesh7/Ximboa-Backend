@@ -1,8 +1,14 @@
 // const express = require("express");
 // const router = express.Router();
 // const mongoose = require("mongoose");
-// const Category = require("../../model/category");
+const Category = require("../../model/category");
 // const multer = require("multer");
+
+const express = require("express");
+const router = express.Router();
+const categoryController = require("../../controllers/Category/category.controller");
+const { jwtAuthMiddleware } = require("../../middleware/auth");
+const upload = require("../../middleware/multerConfig");
 
 // // Multer configuration for file uploads
 // const storage = multer.diskStorage({
@@ -89,39 +95,39 @@
 //   }
 // });
 
-// // GET route to fetch a category by ID
-// router.get("/:id", async (req, res, next) => {
-//   try {
-//     const category = await Category.findById(req.params.id);
-//     if (!category) {
-//       return res.status(404).json({ error: "Category not found" });
-//     }
-//     res.status(200).json({
-//       category: category,
-//     });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({
-//       error: err.message,
-//     });
-//   }
-// });
+// GET route to fetch a category by ID
+router.get("/:id", async (req, res, next) => {
+  try {
+    const category = await Category.findById(req.params.id);
+    if (!category) {
+      return res.status(404).json({ error: "Category not found" });
+    }
+    res.status(200).json({
+      category: category,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
 
-// // DELETE route to delete a category by ID
-// router.delete("/:id", async (req, res, next) => {
-//   try {
-//     const result = await Category.deleteOne({ _id: req.params.id });
-//     res.status(200).json({
-//       msg: "Category data successfully deleted",
-//       result: result,
-//     });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({
-//       error: err.message,
-//     });
-//   }
-// });
+// DELETE route to delete a category by ID
+router.delete("/:id", async (req, res, next) => {
+  try {
+    const result = await Category.deleteOne({ _id: req.params.id });
+    res.status(200).json({
+      msg: "Category data successfully deleted",
+      result: result,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      error: err.message,
+    });
+  }
+});
 
 // // GET route to fetch categories by trainer ID
 // router.get("/bytrainer", async (req, res, next) => {
@@ -146,12 +152,6 @@
 // });
 
 // module.exports = router;
-
-const express = require("express");
-const router = express.Router();
-const categoryController = require("../../controllers/Category/category.controller");
-const { jwtAuthMiddleware } = require("../../middleware/auth");
-const upload = require("../../middleware/multerConfig");
 
 // Route to add a category
 router.post(
