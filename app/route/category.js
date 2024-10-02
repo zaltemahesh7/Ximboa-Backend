@@ -9,6 +9,7 @@ const router = express.Router();
 const categoryController = require("../../controllers/Category/category.controller");
 const { jwtAuthMiddleware } = require("../../middleware/auth");
 const upload = require("../../middleware/multerConfig");
+const { ApiResponse } = require("../../utils/ApiResponse");
 
 // // Multer configuration for file uploads
 // const storage = multer.diskStorage({
@@ -98,13 +99,23 @@ const upload = require("../../middleware/multerConfig");
 // GET route to fetch a category by ID
 router.get("/:id", async (req, res, next) => {
   try {
+    const baseUrl = req.protocol + "://" + req.get("host");
+
     const category = await Category.findById(req.params.id);
     if (!category) {
       return res.status(404).json({ error: "Category not found" });
     }
-    res.status(200).json({
-      category: category,
-    });
+    const categoryDetails = {
+      _id: category._id,
+      category_name: category.category_name,
+      sub_title: category.sub_title,
+      category_image: `${baseUrl}/${category.category_image.replace(
+        /\\/g,
+        "/"
+      )}}`,
+      trainer_id: category.trainer_id,
+    };
+    res.status(200).json(categoryDetails);
   } catch (err) {
     console.error(err);
     res.status(500).json({
@@ -155,7 +166,7 @@ router.delete("/:id", async (req, res, next) => {
 
 // Route to add a category
 router.post(
-  "/add",
+  "/",
   jwtAuthMiddleware,
   upload.single("category_image"),
   categoryController.addCategory
