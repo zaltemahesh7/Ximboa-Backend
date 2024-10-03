@@ -167,14 +167,30 @@ router.get("/events", async (req, res) => {
 router.get("/trainer/bytrainer", async (req, res) => {
   try {
     const baseUrl = req.protocol + "://" + req.get("host");
-    const events = await Event.find({ trainerid: req.user.id }).sort({
+    const eventsData = await Event.find({ trainerid: req.user.id }).sort({
       createdAt: -1,
     });
-    if (events.length === 0) {
+
+    if (eventsData.length === 0) {
       return res
         .status(404)
         .json({ message: "No events found for this trainer" });
     }
+
+    const events = eventsData.map((event) => ({
+      _id: event?._id,
+      event_name: event?.event_name || "",
+      event_date: event?.event_date || "",
+      event_category: event?.event_category?.category_name || "",
+      event_type: event?.event_type || "",
+      trainer_id: event?.trainerid?._id || "",
+      registered_users: event?.registered_users.length || "",
+      event_thumbnail: event?.event_thumbnail
+        ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
+        : "",
+      estimated_seats: event.estimated_seats,
+    }));
+
     res.status(200).json({
       events,
       event_thumbnail: `${baseUrl}/${events.event_thumbnail}`,
