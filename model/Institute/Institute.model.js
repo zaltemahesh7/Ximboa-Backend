@@ -8,31 +8,35 @@ const instituteSchema = new Schema(
       type: String,
       required: [true, "Institute name is required"],
     },
-    location: {
+    address_1: {
       type: String,
       required: [true, "Location is required"],
+      unique: true,
     },
-    Email: {
+    address_2: {
       type: String,
     },
-    social_Media: {
+    email: {
+      type: String,
+    },
+    social_media: {
       Website: {
         type: String,
       },
-      Facebook: {
+      facebook: {
         type: String,
       },
-      Twitter: {
+      twitter: {
         type: String,
       },
-      Instagram: {
+      instagram: {
         type: String,
       },
     },
-    Phone_No: {
+    phone_no: {
       type: Number,
     },
-    About: {
+    about: {
       about_us: String,
       our_services: String,
     },
@@ -45,7 +49,7 @@ const instituteSchema = new Schema(
       //     message: "Courses cannot be empty",
       //   },
     },
-    establishedYear: {
+    established_year: {
       type: Number,
       // required: [true, "Established year is required"],
       min: [1900, "Established year must be after 1900"],

@@ -26,6 +26,7 @@ router.post(
         event_end_time,
         event_location,
         event_languages,
+        estimated_seats,
       } = req.body;
 
       const trainerid = req.user.id;
@@ -44,6 +45,7 @@ router.post(
         event_end_time,
         event_location,
         event_languages,
+        estimated_seats,
         trainerid,
       });
 
@@ -137,12 +139,10 @@ router.get("/trainer/bytrainer", async (req, res) => {
         .status(404)
         .json({ message: "No events found for this trainer" });
     }
-    res
-      .status(200)
-      .json({
-        events,
-        event_thumbnail: `${baseUrl}/${events.event_thumbnail}`,
-      });
+    res.status(200).json({
+      events,
+      event_thumbnail: `${baseUrl}/${events.event_thumbnail}`,
+    });
   } catch (error) {
     console.log(error);
 
