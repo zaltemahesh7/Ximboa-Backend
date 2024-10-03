@@ -32,6 +32,7 @@ router.get("/:id", async (req, res) => {
     if (!trainer) {
       return res.status(404).send({ message: "Trainer not found" });
     }
+    
     const institutes = await InstituteModel.findOne({ trainers: trainerId });
 
     const courses = await Course.find({ trainer_id: trainerId })
@@ -182,7 +183,8 @@ router.get("/:id", async (req, res) => {
       };
     });
 
-    const About = await about.findOne({ trainer: trainerId });
+    // Find About by the trainer
+    const About = await about.find({ trainer: trainerId });
 
     const reviewsData = institutes
       ? await Review.findOne({ institute_id: institutes._id })
@@ -214,7 +216,7 @@ router.get("/:id", async (req, res) => {
         });
     const Educations = await Education.find({ trainer_id: { $in: trainerId } });
 
-    const SocialMedias = await SocialMedia.findOne({
+    const SocialMedias = await SocialMedia.find({
       trainer_id: { $in: trainerId },
     });
 
