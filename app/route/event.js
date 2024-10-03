@@ -8,6 +8,8 @@ const NotificationModel = require("../../model/Notifications/Notification.model"
 const { ApiResponse } = require("../../utils/ApiResponse");
 const { asyncHandler } = require("../../utils/asyncHandler");
 const { ApiError } = require("../../utils/ApiError");
+const InstituteModel = require("../../model/Institute/Institute.model");
+const course = require("../../model/course");
 
 // Create a new event
 router.post(
@@ -63,26 +65,60 @@ router.get("/:id", async (req, res) => {
     const eventId = req.params.id;
 
     // Find the event by its ID and populate category_id with only category_name
-    const eventWithFullThumbnailUrl = await Event.findById(eventId)
+    const eventWithFullImageUrls = await Event.findById(eventId)
       .populate("event_category", "category_name -_id")
       .lean();
 
-    if (!eventWithFullThumbnailUrl) {
+    if (!eventWithFullImageUrls) {
       return res.status(404).json({ message: "Event not found" });
     }
 
+    const courseCount = await course.countDocuments({
+      trainer_id: eventWithFullImageUrls?.trainerid,
+    });
+
+    const institute = await InstituteModel.findOne({
+      trainers: eventWithFullImageUrls?.trainerid?._id,
+    }).select("institute_name social_Media");
     // Get base URL for image paths
     const baseUrl = req.protocol + "://" + req.get("host");
 
     const event = {
-      ...eventWithFullThumbnailUrl,
-      event_categories: eventWithFullThumbnailUrl.event_category.category_name, // Directly include category_name
-      event_thumbnail: eventWithFullThumbnailUrl.event_thumbnail
-        ? `${baseUrl}/${eventWithFullThumbnailUrl.event_thumbnail.replace(
+      _id: eventWithFullImageUrls?._id,
+      event_thumbnail:
+        `${baseUrl}/${eventWithFullImageUrls?.event_thumbnail?.replace(
+          /\\/g,
+          "/"
+        )}` || "",
+      event_description: eventWithFullImageUrls?.event_description || "",
+      event_date: eventWithFullImageUrls?.event_date || "",
+      event_start_time: eventWithFullImageUrls?.event_start_time || "",
+      event_end_time: eventWithFullImageUrls?.event_end_time || "",
+      event_name: eventWithFullImageUrls?.event_name || "",
+      event_category:
+        eventWithFullImageUrls?.event_category.category_name || "",
+      event_languages: eventWithFullImageUrls?.event_languages || "",
+      estimated_seats: eventWithFullImageUrls?.estimated_seats || "",
+      event_location: eventWithFullImageUrls?.event_location || "",
+      event_type: eventWithFullImageUrls?.event_type || "",
+      registered_users: eventWithFullImageUrls?.registered_users.length || "",
+      trainer_image: eventWithFullImageUrls?.trainerid?.trainer_image
+        ? `${baseUrl}/${eventWithFullImageUrls?.trainerid?.trainer_image?.replace(
             /\\/g,
             "/"
           )}`
         : "",
+      trainer_id: eventWithFullImageUrls?.trainerid?._id,
+      business_Name: eventWithFullImageUrls?.trainerid?.business_Name
+        ? eventWithFullImageUrls?.trainerid?.business_Name
+        : `${eventWithFullImageUrls?.trainerid?.f_Name || ""} ${
+            eventWithFullImageUrls?.trainerid?.l_Name || ""
+          }`.trim() || "",
+      social_media: institute?.social_Media
+        ? institute?.social_Media
+        : eventWithFullImageUrls?.trainerid?.social_Media || "",
+      trainier_rating: "Pending..###...",
+      total_course: courseCount || "",
     };
 
     // Send back the event with the full thumbnail URL and direct category_name
@@ -131,14 +167,30 @@ router.get("/events", async (req, res) => {
 router.get("/trainer/bytrainer", async (req, res) => {
   try {
     const baseUrl = req.protocol + "://" + req.get("host");
-    const events = await Event.find({ trainerid: req.user.id }).sort({
+    const eventsData = await Event.find({ trainerid: req.user.id }).sort({
       createdAt: -1,
     });
-    if (events.length === 0) {
+
+    if (eventsData.length === 0) {
       return res
         .status(404)
         .json({ message: "No events found for this trainer" });
     }
+
+    const events = eventsData.map((event) => ({
+      _id: event?._id,
+      event_name: event?.event_name || "",
+      event_date: event?.event_date || "",
+      event_category: event?.event_category?.category_name || "",
+      event_type: event?.event_type || "",
+      trainer_id: event?.trainerid?._id || "",
+      registered_users: event?.registered_users.length || "",
+      event_thumbnail: event?.event_thumbnail
+        ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
+        : "",
+      estimated_seats: event.estimated_seats,
+    }));
+
     res.status(200).json({
       events,
       event_thumbnail: `${baseUrl}/${events.event_thumbnail}`,
