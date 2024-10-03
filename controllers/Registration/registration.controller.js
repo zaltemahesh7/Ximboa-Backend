@@ -218,248 +218,179 @@ const resetPassword = async (req, res) => {
 };
 
 // controllers For Role Change Request.
-
 // const requestRoleChange = asyncHandler(async (req, res) => {
 //   const { requested_Role, business_Name } = req.body;
 //   const userId = req.user.id;
 
 //   try {
-//     // Valid role requests
-//     const validRoles = ["INSTITUTE", "SELF_EXPERT", "TRAINER"];
-
-//     // Check if the requested role is valid
-//     if (!validRoles.includes(requested_Role)) {
+//     // Validate the requested role
+//     if (!["INSTITUTE", "SELF_EXPERT", "TRAINER"].includes(requested_Role)) {
 //       return res
 //         .status(400)
 //         .json(new ApiResponse(400, "Invalid role request."));
 //     }
 
-//     const user = await Registration.findById(userId);
+//     // SELF_EXPERT
+//     if (requested_Role == "SELF_EXPERT") {
+//       const user = await Registration.findById(userId);
 
-//     if (!user) {
-//       return res.status(404).json(new ApiResponse(404, "User not found."));
-//     }
-
-//     // Check if there is already a pending role change request
-//     const superAdmin = await Registration.findOne({ role: "SUPER_ADMIN" });
-
-//     if (!superAdmin) {
-//       return res
-//         .status(500)
-//         .json(
-//           new ApiError(500, "No SUPER_ADMIN found to approve the request.")
-//         );
-//     }
-
-//     const existingRequest = superAdmin.requests.find(
-//       (request) =>
-//         request.userid.toString() === userId
-//     );
-
-//     if (existingRequest) {
-//       // If there is a pending request, update the requested role
-//       existingRequest.requestedRole = requested_Role;
-//       existingRequest.status = "pending";
-//     } else {
-//       // If no pending request, push a new request
-//       superAdmin.requests.push({
-//         userid: userId,
-//         requestedRole: requested_Role,
-//       });
-//     }
-
-//     // Save the updated Super Admin requests array
-//     await superAdmin.save();
-
-//     // Update the user's requested role and business name if applicable
-//     const updateData = { requested_Role };
-//     if (requested_Role === "SELF_EXPERT" && business_Name) {
-//       updateData.business_Name = business_Name;
-//     }
-//     await Registration.findByIdAndUpdate(userId, updateData);
-
-//     // Notify Super Admin
-//     const userEmail = req.user.username;
-//     const userName = user.f_Name;
-//     sendEmail(
-//       "roleChangeRequestToSuperAdmin",
-//       {
-//         name: superAdmin.f_Name,
-//         email: superAdmin.email_id,
-//       },
-//       [requested_Role, userId, userEmail, userName]
-//     );
-
-//     const notificationToSuperAdmin = new NotificationModel({
-//       recipient: superAdmin._id, // Super Admin ID
-//       message: `User ${user.f_Name} ${user.l_Name} has requested to change their role to ${requested_Role}.`,
-//       activityType: "ROLE_CHANGE_REQUEST",
-//       relatedId: user._id,
-//     });
-//     await notificationToSuperAdmin.save();
-
-//     // Notify User
-//     sendEmail(
-//       "roleChangeRequestToUser",
-//       {
-//         name: user.f_Name,
-//         email: user.email_id,
-//       },
-//       [requested_Role]
-//     );
-//     const notificationToUser = new NotificationModel({
-//       recipient: user._id, // User ID
-//       message: `Hello ${user.f_Name} ${user.l_Name}, your request to change your role to ${requested_Role} has been sent successfully.`,
-//       activityType: "ROLE_CHANGE_REQUEST_SENT",
-//       relatedId: superAdmin._id,
-//     });
-//     await notificationToUser.save();
-
-//     res
-//       .status(200)
-//       .json(
-//         new ApiResponse(200, "Role change request submitted successfully.")
-//       );
-//   } catch (err) {
-//     console.error(err);
-//     res
-//       .status(500)
-//       .json(
-//         new ApiError(
-//           500,
-//           err.message || "Error processing role change request.",
-//           err
-//         )
-//       );
-//   }
-// });
-
-// const requestRoleChange = asyncHandler(async (req, res) => {
-//   const { requested_Role, business_Name, address_1, phone_no } = req.body; // Assume address and contact number are required for institute
-//   const userId = req.user.id;
-
-//   try {
-//     // Valid role requests
-//     const validRoles = ["INSTITUTE", "SELF_EXPERT", "TRAINER"];
-
-//     // Check if the requested role is valid
-//     if (!validRoles.includes(requested_Role)) {
-//       return res
-//         .status(400)
-//         .json(new ApiResponse(400, "Invalid role request."));
-//     }
-
-//     const user = await Registration.findById(userId);
-//     if (!user) {
-//       return res.status(404).json(new ApiResponse(404, "User not found."));
-//     }
-
-//     // Check if there is already a pending role change request
-//     const superAdmin = await Registration.findOne({ role: "SUPER_ADMIN" });
-//     if (!superAdmin) {
-//       return res
-//         .status(500)
-//         .json(
-//           new ApiError(500, "No SUPER_ADMIN found to approve the request.")
-//         );
-//     }
-
-//     const existingRequest = superAdmin.requests.find(
-//       (request) => request.userid.toString() === userId
-//     );
-
-//     if (existingRequest) {
-//       // If there is a pending request, update the requested role
-//       existingRequest.requestedRole = requested_Role;
-//       existingRequest.status = "pending";
-//     } else {
-//       // If no pending request, push a new request
-//       superAdmin.requests.push({
-//         userid: userId,
-//         requestedRole: requested_Role,
-//       });
-//     }
-
-//     // Validation for becoming an institute
-//     if (requested_Role === "INSTITUTE") {
-//       if (!business_Name || !address_1 || !phone_no) {
+//       if (user.requested_Role) {
 //         return res
 //           .status(400)
 //           .json(
-//             new ApiResponse(
-//               400,
-//               "Business name, address, and contact number are required for institutes."
-//             )
+//             new ApiResponse(400, "Role change request is already pending.")
 //           );
 //       }
 
-//       // Store the institute-related data in the InstituteModel
-//       const instituteData = new InstituteModel({
-//         createdBy: userId,
-//         admins: userId,
-//         institute_name: business_Name,
-//         address_1,
-//         phone_no,
-//         status: "pending",
+//       await Registration.findByIdAndUpdate(userId, {
+//         requested_Role: requested_Role,
+//         business_Name,
 //       });
-//       await instituteData.save();
 
-//     }
-
-//     // Save the updated Super Admin requests array
-//     await superAdmin.save();
-
-//     // Update the user's requested role and business name if applicable
-//     const updateData = { requested_Role };
-//     if (requested_Role === "SELF_EXPERT" && business_Name) {
-//       updateData.business_Name = business_Name;
-//     }
-//     await Registration.findByIdAndUpdate(userId, updateData);
-
-//     // Notify Super Admin
-//     const userEmail = req.user.username;
-//     const userName = user.f_Name;
-//     sendEmail(
-//       "roleChangeRequestToSuperAdmin",
-//       {
-//         name: superAdmin.f_Name,
-//         email: superAdmin.email_id,
-//       },
-//       [requested_Role, userId, userEmail, userName]
-//     );
-
-//     const notificationToSuperAdmin = new NotificationModel({
-//       recipient: superAdmin._id,
-//       message: `User ${user.f_Name} ${user.l_Name} has requested to change their role to ${requested_Role}.`,
-//       activityType: "ROLE_CHANGE_REQUEST",
-//       relatedId: user._id,
-//     });
-//     await notificationToSuperAdmin.save();
-
-//     // Notify User
-//     sendEmail(
-//       "roleChangeRequestToUser",
-//       {
-//         name: user.f_Name,
-//         email: user.email_id,
-//       },
-//       [requested_Role]
-//     );
-//     const notificationToUser = new NotificationModel({
-//       recipient: user._id, // User ID
-//       message: `Hello ${user.f_Name} ${user.l_Name}, your request to change your role to ${requested_Role} has been sent successfully.`,
-//       activityType: "ROLE_CHANGE_REQUEST_SENT",
-//       relatedId: superAdmin._id,
-//     });
-//     await notificationToUser.save();
-
-//     res
-//       .status(200)
-//       .json(
-//         new ApiResponse(200, "Role change request submitted successfully.")
+//       const superAdmin = await Registration.findOneAndUpdate(
+//         { role: "SUPER_ADMIN" },
+//         {
+//           $push: {
+//             requests: {
+//               userid: userId,
+//               requestedRole: requested_Role,
+//             },
+//           },
+//         }
 //       );
+//       console.log(superAdmin);
+//       if (requested_Role === "INSTITUTE" || requested_Role === "SELF_TRAINER") {
+//         if (!superAdmin) {
+//           return res
+//             .status(500)
+//             .json(
+//               new ApiError(500, "No SUPER_ADMIN found to approve the request.")
+//             );
+//         }
+
+//         const userEmail = req.user.username;
+//         const userName = user.f_Name;
+
+//         sendEmail(
+//           "roleChangeRequestToSuperAdmin",
+//           {
+//             name: superAdmin.f_Name,
+//             email: superAdmin.email_id,
+//           },
+//           [requested_Role, userId, userEmail, userName]
+//         );
+//       }
+
+//       const notificationToSuperAdmin = new NotificationModel({
+//         recipient: superAdmin._id, // Super Admin ID
+//         message: `User ${user.f_Name} ${user.l_Name} has requested to change their role to ${requested_Role}.`,
+//         activityType: "ROLE_CHANGE_REQUEST",
+//         relatedId: user._id,
+//       });
+//       await notificationToSuperAdmin.save();
+
+//       sendEmail(
+//         "roleChangeRequestToUser",
+//         {
+//           name: user.f_Name,
+//           email: user.email_id,
+//         },
+//         [requested_Role]
+//       );
+//       const notificationToUser = new NotificationModel({
+//         recipient: user._id, // User ID
+//         message: `Hello ${user.f_Name} ${user.l_Name}, your request to change your role to ${requested_Role} has been sent successfully.`,
+//         activityType: "ROLE_CHANGE_REQUEST_SENT",
+//         relatedId: superAdmin._id,
+//       });
+//       await notificationToUser.save();
+//       res
+//         .status(200)
+//         .json(
+//           new ApiResponse(200, "Role change request submitted successfully.")
+//         );
+//     }
+
+//     if (requested_Role == "INSTITUTE") {
+//       const user = await Registration.findById(userId);
+
+//       if (user.requested_Role) {
+//         return res
+//           .status(400)
+//           .json(
+//             new ApiResponse(400, "Role change request is already pending.")
+//           );
+//       }
+
+//       await Registration.findByIdAndUpdate(userId, {
+//         requested_Role: requested_Role,
+//       });
+
+//       const superAdmin = await Registration.findOneAndUpdate(
+//         { role: "SUPER_ADMIN" },
+//         {
+//           $push: {
+//             requests: {
+//               userid: userId,
+//               requestedRole: requested_Role,
+//             },
+//           },
+//         }
+//       );
+//       console.log(superAdmin);
+//       if (requested_Role === "INSTITUTE" || requested_Role === "SELF_TRAINER") {
+//         if (!superAdmin) {
+//           return res
+//             .status(500)
+//             .json(
+//               new ApiError(500, "No SUPER_ADMIN found to approve the request.")
+//             );
+//         }
+
+//         const userEmail = req.user.username;
+//         const userName = user.f_Name;
+
+//         sendEmail(
+//           "roleChangeRequestToSuperAdmin",
+//           {
+//             name: superAdmin.f_Name,
+//             email: superAdmin.email_id,
+//           },
+//           [requested_Role, userId, userEmail, userName]
+//         );
+//       }
+
+//       const notificationToSuperAdmin = new NotificationModel({
+//         recipient: superAdmin._id, // Super Admin ID
+//         message: `User ${user.f_Name} ${user.l_Name} has requested to change their role to ${requested_Role}.`,
+//         activityType: "ROLE_CHANGE_REQUEST",
+//         relatedId: user._id,
+//       });
+//       await notificationToSuperAdmin.save();
+
+//       sendEmail(
+//         "roleChangeRequestToUser",
+//         {
+//           name: user.f_Name,
+//           email: user.email_id,
+//         },
+//         [requested_Role]
+//       );
+//       const notificationToUser = new NotificationModel({
+//         recipient: user._id, // User ID
+//         message: `Hello ${user.f_Name} ${user.l_Name}, your request to change your role to ${requested_Role} has been sent successfully.`,
+//         activityType: "ROLE_CHANGE_REQUEST_SENT",
+//         relatedId: superAdmin._id,
+//       });
+//       await notificationToUser.save();
+//       res
+//         .status(200)
+//         .json(
+//           new ApiResponse(200, "Role change request submitted successfully.")
+//         );
+//     }
 //   } catch (err) {
-//     console.error(err);
+//     console.log(err);
 //     res
 //       .status(500)
 //       .json(
@@ -473,7 +404,7 @@ const resetPassword = async (req, res) => {
 // });
 
 const requestRoleChange = asyncHandler(async (req, res) => {
-  const { requested_Role, address_1, business_Name } = req.body;
+  const { requested_Role, business_Name } = req.body;
   const userId = req.user.id;
 
   try {
@@ -505,7 +436,8 @@ const requestRoleChange = asyncHandler(async (req, res) => {
     }
 
     const existingRequest = superAdmin.requests.find(
-      (request) => request.userid.toString() === userId
+      (request) =>
+        request.userid.toString() === userId
     );
 
     if (existingRequest) {
@@ -525,26 +457,12 @@ const requestRoleChange = asyncHandler(async (req, res) => {
 
     // Update the user's requested role and business name if applicable
     const updateData = { requested_Role };
-    let instituteId;
-
-    if (requested_Role === "INSTITUTE" && business_Name) {
+    if (requested_Role === "SELF_EXPERT" && business_Name) {
       updateData.business_Name = business_Name;
-
-      // Save data to InstituteModel and get the institute ID
-      const newInstitute = new InstituteModel({
-        userId: user._id,
-        createdBy: user._id,
-        institute_name: business_Name,
-        address_1: address_1,
-        isVerifiedBySuperAdmin: false,
-      });
-      await newInstitute.save();
-      instituteId = newInstitute._id;
     }
-
     await Registration.findByIdAndUpdate(userId, updateData);
 
-    // Notify Super Admin with institute ID
+    // Notify Super Admin
     const userEmail = req.user.username;
     const userName = user.f_Name;
     sendEmail(
@@ -553,38 +471,29 @@ const requestRoleChange = asyncHandler(async (req, res) => {
         name: superAdmin.f_Name,
         email: superAdmin.email_id,
       },
-      [requested_Role, userId, userEmail, userName, instituteId] // Include instituteId in the email data
+      [requested_Role, userId, userEmail, userName]
     );
 
     const notificationToSuperAdmin = new NotificationModel({
       recipient: superAdmin._id, // Super Admin ID
-      message: `User ${user.f_Name} ${
-        user.l_Name
-      } has requested to change their role to ${requested_Role}. Institute ID: ${
-        instituteId || "N/A"
-      }.`,
+      message: `User ${user.f_Name} ${user.l_Name} has requested to change their role to ${requested_Role}.`,
       activityType: "ROLE_CHANGE_REQUEST",
       relatedId: user._id,
     });
     await notificationToSuperAdmin.save();
 
-    // Notify User with confirmation and institute ID
+    // Notify User
     sendEmail(
       "roleChangeRequestToUser",
       {
         name: user.f_Name,
         email: user.email_id,
       },
-      [requested_Role, instituteId || "N/A"] // Include instituteId in the email data
+      [requested_Role]
     );
-
     const notificationToUser = new NotificationModel({
       recipient: user._id, // User ID
-      message: `Hello ${user.f_Name} ${
-        user.l_Name
-      }, your request to change your role to ${requested_Role} has been sent successfully. Institute ID: ${
-        instituteId || "N/A"
-      }.`,
+      message: `Hello ${user.f_Name} ${user.l_Name}, your request to change your role to ${requested_Role} has been sent successfully.`,
       activityType: "ROLE_CHANGE_REQUEST_SENT",
       relatedId: superAdmin._id,
     });
@@ -648,20 +557,6 @@ const approveRoleChange = asyncHandler(async (req, res) => {
         role: user.requested_Role, // Set the role to the requested role
         requested_Role: "", // Clear the requested_Role after approval
       });
-
-      if (user.requested_Role === "INSTITUTE") {
-        // Find the corresponding institute entry in the InstituteModel
-        const institute = await InstituteModel.findOne({ userId: userid });
-        if (!institute) {
-          return res
-            .status(404)
-            .json(new ApiError(404, "Institute not found for the user."));
-        }
-
-        // Update the institute entry to mark it as verified
-        institute.isVerifiedBySuperAdmin = true;
-        await institute.save();
-      }
 
       await Registration.updateOne(
         { _id: adminId, "requests.userid": userid },
