@@ -9,6 +9,7 @@ const Product = require("../../../../model/product");
 const { ApiError } = require("../../../../utils/ApiError");
 const registration = require("../../../../model/registration");
 const InstituteModel = require("../../../../model/Institute/Institute.model");
+const Review = require("../../../../model/Review");
 const product = require("../../../../model/product");
 
 // Get courses with specific fields, including trainer name populated
@@ -121,6 +122,10 @@ router.get("/home", async (req, res) => {
           trainers: trainer._id,
         }).select("institute_name social_Media");
 
+        const stcount = await Review.findOne({ t_id: trainer._id }).select(
+          "star_count"
+        );
+
         return {
           t_id: trainer?._id,
           Business_Name: institute
@@ -133,7 +138,7 @@ router.get("/home", async (req, res) => {
           social_Media: institute
             ? institute?.social_Media
             : trainer?.social_Media || "",
-          ratings: "",
+          ratings: stcount?.t_id?.star_count || "",
           trainer_image: trainer?.trainer_image
             ? `${baseUrl}/${trainer?.trainer_image?.replace(/\\/g, "/")}`
             : "",
@@ -251,9 +256,10 @@ router.get("/allcategory", async (req, res) => {
     const categoriesWithFullImageUrl = categories.map((category) => {
       return {
         _id: category._id,
-        category_name: category.category_name,
-        category_image: category.category_image
-          ? `${baseUrl}/${category.category_image.replace(/\\/g, "/")}`
+        category_name: category?.category_name,
+        Sub_title: category?.sub_title,
+        category_image: category?.category_image
+          ? `${baseUrl}/${category?.category_image?.replace(/\\/g, "/")}`
           : "",
         __v: category.__v,
         trainer_id: category.trainer_id,
