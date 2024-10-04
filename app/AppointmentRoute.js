@@ -6,8 +6,8 @@ const NotificationModel = require("../model/Notifications/Notification.model");
 // Create a new appointment
 router.post("/", async (req, res) => {
   try {
-    const t_id = req.user.id; // Trainer ID
-    const { user_id, date, time } = req.body;
+    const user_id = req.user.id; // Trainer ID
+    const { t_id, date, time } = req.body;
 
     // Create a new appointment
     const newAppointment = new Appointment({ t_id, user_id, date, time });
