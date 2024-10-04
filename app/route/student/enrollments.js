@@ -135,14 +135,23 @@ router.get("/student", jwtAuthMiddleware, async (req, res) => {
         .status(404)
         .json({ message: "No enrollments found for this student" });
     }
-    const enrollments = enrollment.map((course) => {
-      return {
-        ...course._doc,
-        course_thumbnail: course.course_id?.thumbnail_image
-          ? `${baseUrl}/${course.course_id.thumbnail_image.replace(/\\/g, "/")}`
-          : "",
-      };
-    });
+    const enrollments = Promise.all(
+      enrollment.map(async (course1) => {
+        const course = await Course.findById(course1.course_id._id)
+          .populate("category_id", "category_name")
+          .populate("trainer_id", "f_Name l_Name trainer_image id city role");
+        console.log(course);
+        return {course
+          // course_name: course?.course_name || "",
+          // course_thumbnail: course.course_id?.thumbnail_image
+          //   ? `${baseUrl}/${course.course_id.thumbnail_image.replace(
+          //       /\\/g,
+          //       "/"
+          //     )}`
+          //   : "",
+        };
+      })
+    );
 
     res.status(200).json(enrollments);
   } catch (error) {
