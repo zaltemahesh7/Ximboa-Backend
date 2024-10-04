@@ -98,4 +98,13 @@ router.get("/reviews/trainer/:trainerId", async (req, res) => {
   }
 });
 
+const {
+  courseReviews,
+  getReviewsByCourseId,
+} = require("../../controllers/Reviews/couresReviews.controller");
+
+router.post("/course/:courseid", jwtAuthMiddleware, courseReviews);
+
+router.post("/course/:courseid", jwtAuthMiddleware, getReviewsByCourseId);
+
 module.exports = router;

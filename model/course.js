@@ -31,9 +31,12 @@ const courseShema = new mongoose.Schema(
       type: String,
       required: [true, "Course End Time is Required"],
     },
+    course_brief_info: {
+      type: String,
+      required: [true, "Course Course course_brief_info is Required"],
+    },
     course_information: {
       type: String,
-      required: [true, "Course Course Information is Required"],
     },
     thumbnail_image: {
       type: String,
@@ -52,6 +55,18 @@ const courseShema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Registration",
     },
+    reviews: [
+      {
+        user_id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Registration",
+          required: true,
+        },
+        review: { type: String, required: true },
+        star_count: { type: Number, require: true },
+        addedAt: { type: Date, default: Date.now() },
+      },
+    ],
   },
   { timestamps: true }
 );
