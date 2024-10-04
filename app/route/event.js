@@ -35,7 +35,7 @@ router.post(
 
       // If file is uploaded, get file path from Multer
       const event_thumbnail = req.file ? req.file.path : "";
-      console.log(event_thumbnail)
+      console.log(event_thumbnail);
 
       const newEvent = new Event({
         event_name,
@@ -279,14 +279,15 @@ router.delete("/:id", async (req, res) => {
 });
 
 // Route to register a user for an event
-router.post("/registerevent/:eventId", async (req, res) => {
+router.post("/registerevent", async (req, res) => {
   try {
-    const { eventId } = req.params;
+    const evnet_id = req.body.event_id;
     const userId = req.user.id;
 
     // Find the event by ID
-    const event = await Event.findById(eventId);
+    const event = await Event.findById(evnet_id);
     if (!event) {
+      console.log(event);
       return res.status(404).json({ message: "Event not found" });
     }
 

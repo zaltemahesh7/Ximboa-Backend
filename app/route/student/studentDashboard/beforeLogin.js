@@ -173,13 +173,13 @@ router.get("/home", async (req, res) => {
 
     const productDetails = products.map((product) => {
       let avgRating = 0;
-      // if (product.reviews && product.reviews.length > 0) {
-      //   const totalRating = product.reviews.reduce(
-      //     (sum, review) => sum + review.star_count,
-      //     0
-      //   );
-      //   avgRating = (totalRating / product.reviews.length).toFixed(1); // Optional: round to 1 decimal
-      // }
+      if (product.reviews && product.reviews.length > 0) {
+        const totalRating = product.reviews.reduce(
+          (sum, review) => sum + review.star_count,
+          0
+        );
+        avgRating = (totalRating / product.reviews.length).toFixed(1); // Optional: round to 1 decimal
+      }
 
       return {
         _id: product?._id,
@@ -345,7 +345,7 @@ router.get("/allcourses", async (req, res) => {
 
 // ========================= All Trainers with pagination ====================================
 router.get("/trainers", async (req, res) => {
-  const { page = 1, limit = 10 } = req.query; // Default page = 1, limit = 10
+  const { page = 1, limit = 10 } = req.query;
   const baseUrl = req.protocol + "://" + req.get("host");
 
   try {
@@ -437,6 +437,7 @@ router.get("/course/:id", async (req, res, next) => {
     const coursesWithFullImageUrl = {
       _id: course?._id,
       course_name: course?.course_name || "",
+      course_brief_info: course?.course_brief_info || "",
       course_information: course?.course_information || "",
       category_name: course?.category_id?.category_name || "",
       online_offline: course?.online_offline || "",

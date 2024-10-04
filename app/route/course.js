@@ -114,6 +114,8 @@ router.post(
       end_date: req.body.end_date,
       start_time: req.body.start_time,
       end_time: req.body.end_time,
+      course_brief_info: req.body.course_brief_info,
+      course_brief_info: req.body.course_brief_info,
       course_information: req.body.course_information,
       thumbnail_image: req.files["thumbnail_image"]
         ? req.files["thumbnail_image"][0].path
@@ -179,6 +181,7 @@ router.get("/:id", async (req, res, next) => {
     const courseWithFullImageUrls = {
       _id: courseData?._id,
       course_name: courseData?.course_name || "",
+      course_brief_info: courseData?.course_brief_info || "",
       course_information: courseData?.course_information || "",
       category_name: courseData?.category_id?.category_name || "",
       online_offline: courseData?.online_offline || "",
@@ -240,6 +243,7 @@ router.put(
       end_date: req.body.end_date,
       start_time: req.body.start_time,
       end_time: req.body.end_time,
+      course_brief_info: req.body.course_brief_info,
       course_information: req.body.course_information,
       thumbnail_image: req.files["thumbnail_image"]
         ? req.files["thumbnail_image"][0].path
