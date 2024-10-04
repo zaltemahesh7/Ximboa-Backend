@@ -124,43 +124,105 @@ router.get("/", async (req, res) => {
   }
 });
 
+// router.get("/student", jwtAuthMiddleware, async (req, res) => {
+//   try {
+//     const baseUrl = req.protocol + "://" + req.get("host");
+//     const enrollment = await Enrollment.find({
+//       userid: req.user.id,
+//     }).populate("course_id", "course_name thumbnail_image");
+//     if (enrollment.length === 0) {
+//       return res
+//         .status(404)
+//         .json({ message: "No enrollments found for this student" });
+//     }
+//     const enrollments = enrollment.map((course) => {
+//       return {
+//         ...course._doc,
+//         course_thumbnail: course.course_id?.thumbnail_image
+//           ? `${baseUrl}/${course.course_id.thumbnail_image.replace(/\\/g, "/")}`
+//           : "",
+//       };
+//     });
+
+//     res.status(200).json(enrollments);
+//   } catch (error) {
+//     console.log(error);
+//     res
+//       .status(500)
+//       .json(
+//         new ApiError(500, error.message || "Error fetching enrollments", error)
+//       );
+//   }
+// });
+
 router.get("/student", jwtAuthMiddleware, async (req, res) => {
   try {
     const baseUrl = req.protocol + "://" + req.get("host");
+
+    // Find all enrollments for the logged-in student
     const enrollment = await Enrollment.find({
       userid: req.user.id,
     }).populate("course_id", "course_name thumbnail_image");
+
     if (enrollment.length === 0) {
       return res
         .status(404)
         .json({ message: "No enrollments found for this student" });
     }
-    const enrollments = Promise.all(
+
+    // Process all enrollments in parallel using Promise.all
+    const enrollments = await Promise.all(
       enrollment.map(async (course1) => {
         const course = await Course.findById(course1.course_id._id)
           .populate("category_id", "category_name")
           .populate("trainer_id", "f_Name l_Name trainer_image id city role");
-        console.log(course);
-        return {course
-          // course_name: course?.course_name || "",
-          // course_thumbnail: course.course_id?.thumbnail_image
-          //   ? `${baseUrl}/${course.course_id.thumbnail_image.replace(
-          //       /\\/g,
-          //       "/"
-          //     )}`
-          //   : "",
+
+        return {
+          _id: course?._id,
+          category_name: course?.category_id?.category_name || "",
+          course_name: course?.course_name || "",
+          online_offline: course?.online_offline || "",
+          thumbnail_image: course?.thumbnail_image
+            ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
+            : "",
+          trainer_image: course?.trainer_id?.trainer_image
+            ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
+                /\\/g,
+                "/"
+              )}`
+            : "",
+          trainer_id: course?.trainer_id?._id,
+          business_Name: course?.trainer_id?.business_Name
+            ? course?.trainer_id?.business_Name
+            : `${course?.trainer_id?.f_Name || ""} ${
+                course?.trainer_id?.l_Name || ""
+              }`.trim() || "",
+          course_rating: "",
+          course_duration: Math.floor(
+            Math.round(
+              ((course?.end_date - course?.start_date) /
+                (1000 * 60 * 60 * 24 * 7)) *
+                100
+            ) / 100
+          ),
+          course_price: course?.price || "",
+          course_offer_prize: course?.offer_prize || "",
+          course_flag:
+            course?.trainer_id?.role === "TRAINER"
+              ? "Institute"
+              : "Self Expert",
         };
       })
     );
 
+    // Send the processed enrollment data
     res.status(200).json(enrollments);
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .json(
-        new ApiError(500, error.message || "Error fetching enrollments", error)
-      );
+    res.status(500).json({
+      message: error.message || "Error fetching enrollments",
+      error,
+    });
   }
 });
 
