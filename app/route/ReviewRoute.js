@@ -105,11 +105,13 @@ const {
 } = require("../../controllers/Reviews/couresReviews.controller");
 const {
   productReview,
+  getReviewsByProductId,
 } = require("../../controllers/Reviews/productReview.controller");
 
 router.post("/course", jwtAuthMiddleware, courseReviews);
 router.post("/product", jwtAuthMiddleware, productReview);
 
 router.get("/course/:courseid", getReviewsByCourseId);
+router.get("/product/:productid", getReviewsByProductId);
 
 module.exports = router;

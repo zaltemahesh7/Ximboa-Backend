@@ -1,6 +1,6 @@
 const { findById } = require("../../model/category");
-const Course = require("../../model/course");
 const product = require("../../model/product");
+const registration = require("../../model/registration");
 const { ApiError } = require("../../utils/ApiError");
 const { ApiResponse } = require("../../utils/ApiResponse");
 const { asyncHandler } = require("../../utils/asyncHandler");
@@ -9,7 +9,8 @@ const productReview = asyncHandler(async (req, res) => {
   try {
     const userid = req.user.id;
     const { productid, review, star_count } = req.body;
-    const product = await product.findByIdAndUpdate(productid, {
+
+    const productData = await product.findByIdAndUpdate(productid, {
       $push: {
         reviews: {
           user_id: userid,
@@ -19,9 +20,15 @@ const productReview = asyncHandler(async (req, res) => {
       },
     });
 
-    res
-      .status(200)
-      .json(new ApiResponse(200, "Review Add success,", product.product_name));
+    if (!productData) {
+      res.status(404).json(new ApiError(404, "Product not found"));
+    } else {
+      res
+        .status(200)
+        .json(
+          new ApiResponse(200, "Review Add success,", productData?.product_name)
+        );
+    }
   } catch (error) {
     console.log(error);
     res
@@ -30,38 +37,66 @@ const productReview = asyncHandler(async (req, res) => {
   }
 });
 
-const getReviewsByCourseId = asyncHandler(async (req, res) => {
-  const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 2;
-  const courseid = req.params.courseid;
+const getReviewsByProductId = asyncHandler(async (req, res) => {
+  const baseUrl = req.protocol + "://" + req.get("host");
+  const page = parseInt(req.query.page) || 1; // current page number, defaults to 1
+  const limit = parseInt(req.query.limit) || 2; // number of reviews per page, defaults to 2
+  const productid = req.params.productid;
 
   try {
-    const courseReview = await Course.findById(courseid).select("reviews");
+    // Fetch the course by ID but only select the reviews field
+    const productReview = await product.findById(productid).select("reviews");
 
-    if (!courseReview) {
+    if (!productReview) {
       return res.status(404).json(new ApiResponse(404, "Course not found"));
     }
 
-    const totalReviews = productReview.reviews.length;
+    const totalReviews = productReview.reviews.length; // Total number of reviews
     const totalPages = Math.ceil(totalReviews / limit);
 
+    // Check if the requested page is within valid range
     if (page > totalPages) {
       return res
         .status(400)
         .json(new ApiResponse(400, `Page ${page} exceeds total pages.`));
     }
 
-    const startIndex = (page - 1) * limit;
-    const paginatedReviews = courseReview.reviews
-      .reverse()
-      .slice(startIndex, startIndex + limit);
+    // Pagination logic (skip and limit)
+    const startIndex = (page - 1) * limit; // Calculate the starting index
+    let paginatedReviews = productReview.reviews
+      .reverse() // Reverse to show latest reviews first
+      .slice(startIndex, startIndex + limit); // Slice reviews for pagination
 
+    // Populate user_id with user details
+    paginatedReviews = await Promise.all(
+      paginatedReviews.map(async (review) => {
+        const populatedReview = await registration.findById(
+          review.user_id,
+          "f_Name l_Name trainer_image"
+        ); // Assuming User model has 'name' and 'email' fields
+        return {
+          userid: populatedReview?._id,
+          user_name: `${populatedReview?.f_Name} ${populatedReview?.l_Name}`,
+          trainer_image: populatedReview?.trainer_image
+            ? `${baseUrl}/${populatedReview?.trainer_image?.replace(
+                /\\/g,
+                "/"
+              )}`
+            : "",
+          reviewid: review?._id,
+          star_count: review?.star_count,
+          review: review?.review,
+        };
+      })
+    );
+
+    // Send the paginated reviews along with metadata
     res.status(200).json(
       new ApiResponse(
         200,
         "Course Reviews",
         {
-          courseId: courseReview._id,
+          productId: productReview?._id,
           reviews: paginatedReviews,
         },
         {
@@ -86,20 +121,54 @@ const getReviewsByCourseId = asyncHandler(async (req, res) => {
   }
 });
 
-// const getReviewsByCourseId = asyncHandler(async (req, res) => {
-//   const page = req.query.page || 1;
-//   const limit = req.query.limit || 2;
-//   const courseid = req.params.courseid;
+// const getReviewsByProductId = asyncHandler(async (req, res) => {
+//   const page = parseInt(req.query.page) || 1;
+//   const limit = parseInt(req.query.limit) || 2;
+//   const productid = req.params.productid;
 
-//   const courseReview = await Course.findById(courseid)
-//     .select("reviews")
-//     .limit(limit)
-//   res.status(200).json(
-//     new ApiResponse(200, "Course Reviews", {
-//       _id: courseReview._id,
-//       reviews: courseReview.reviews.reverse(),
-//     })
-//   );
+//   try {
+//     const productReview = await product.findById(productid).select("reviews");
+
+//     if (!productReview) {
+//       return res.status(404).json(new ApiResponse(404, "Product not found"));
+//     }
+
+//     const totalReviews = productReview.reviews.length;
+//     const totalPages = Math.ceil(totalReviews / limit);
+
+//     const startIndex = (page - 1) * limit;
+//     const paginatedReviews = productReview.reviews
+//       .reverse()
+//       .slice(startIndex, startIndex + limit);
+
+//     res.status(200).json(
+//       new ApiResponse(
+//         200,
+//         "Product Reviews",
+//         {
+//           productid: productReview._id,
+//           reviews: paginatedReviews,
+//         },
+//         {
+//           currentPage: page,
+//           totalPages: totalPages,
+//           totalReviews: totalReviews,
+//           pageSize: limit,
+//         }
+//       )
+//     );
+//   } catch (error) {
+//     console.log(error);
+//     res
+//       .status(500)
+//       .json(
+//         new ApiError(
+//           500,
+//           error.message || "Error fetching Product reviews.",
+//           error
+//         )
+//       );
+//   }
 // });
 
-module.exports = { productReview, getReviewsByCourseId };
+module.exports = { productReview, getReviewsByProductId };
