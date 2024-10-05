@@ -129,8 +129,7 @@ const getReviewsByCourseId = asyncHandler(async (req, res) => {
         ); // Assuming User model has 'name' and 'email' fields
         return {
           userid: populatedReview?._id,
-          f_Name: populatedReview?.f_Name,
-          l_Name: populatedReview?.l_Name,
+          user_name: `${populatedReview?.f_Name} ${populatedReview?.l_Name}`,
           trainer_image: populatedReview?.trainer_image
             ? `${baseUrl}/${populatedReview?.trainer_image?.replace(
                 /\\/g,

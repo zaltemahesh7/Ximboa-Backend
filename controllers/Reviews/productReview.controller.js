@@ -1,14 +1,15 @@
 const { findById } = require("../../model/category");
 const Course = require("../../model/course");
+const product = require("../../model/product");
 const { ApiError } = require("../../utils/ApiError");
 const { ApiResponse } = require("../../utils/ApiResponse");
 const { asyncHandler } = require("../../utils/asyncHandler");
 
-const courseReviews = asyncHandler(async (req, res) => {
+const productReview = asyncHandler(async (req, res) => {
   try {
     const userid = req.user.id;
-    const { courseid, review, star_count } = req.body;
-    const course = await Course.findByIdAndUpdate(courseid, {
+    const { productid, review, star_count } = req.body;
+    const product = await product.findByIdAndUpdate(productid, {
       $push: {
         reviews: {
           user_id: userid,
@@ -20,7 +21,7 @@ const courseReviews = asyncHandler(async (req, res) => {
 
     res
       .status(200)
-      .json(new ApiResponse(200, "Review Add success,", course.course_name));
+      .json(new ApiResponse(200, "Review Add success,", product.product_name));
   } catch (error) {
     console.log(error);
     res
@@ -41,7 +42,7 @@ const getReviewsByCourseId = asyncHandler(async (req, res) => {
       return res.status(404).json(new ApiResponse(404, "Course not found"));
     }
 
-    const totalReviews = courseReview.reviews.length;
+    const totalReviews = productReview.reviews.length;
     const totalPages = Math.ceil(totalReviews / limit);
 
     if (page > totalPages) {
@@ -101,4 +102,4 @@ const getReviewsByCourseId = asyncHandler(async (req, res) => {
 //   );
 // });
 
-module.exports = { courseReviews, getReviewsByCourseId };
+module.exports = { productReview, getReviewsByCourseId };
