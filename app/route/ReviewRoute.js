@@ -32,6 +32,7 @@ router.get("/", async (req, res) => {
     const reviews = await Review.find();
     res.status(200).send(reviews);
   } catch (error) {
+    console.log(error);
     res.status(500).send(error);
   }
 });
@@ -105,6 +106,6 @@ const {
 
 router.post("/course", jwtAuthMiddleware, courseReviews);
 
-router.get("/course/:courseid", getReviewsByCourseId);
+router.get("/course/getreview", getReviewsByCourseId);
 
 module.exports = router;
