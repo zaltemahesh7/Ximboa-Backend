@@ -30,9 +30,79 @@ const courseReviews = asyncHandler(async (req, res) => {
 });
 
 const getReviewsByCourseId = asyncHandler(async (req, res) => {
-  const courseid = req.params.course_id;
-  const course = await Course.findById(courseid).select("reviews");
-  res.send(course);
+  const page = parseInt(req.query.page) || 1; // current page number, defaults to 1
+  const limit = parseInt(req.query.limit) || 2; // number of reviews per page, defaults to 2
+  const courseid = req.params.courseid;
+
+  try {
+    // Fetch the course by ID but only select the reviews field
+    const courseReview = await Course.findById(courseid).select("reviews");
+
+    if (!courseReview) {
+      return res.status(404).json(new ApiResponse(404, "Course not found"));
+    }
+
+    const totalReviews = courseReview.reviews.length; // Total number of reviews
+    const totalPages = Math.ceil(totalReviews / limit);
+
+    // Check if the requested page is within valid range
+    if (page > totalPages) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, `Page ${page} exceeds total pages.`));
+    }
+
+    // Pagination logic (skip and limit)
+    const startIndex = (page - 1) * limit; // Calculate the starting index
+    const paginatedReviews = courseReview.reviews
+      .reverse()
+      .slice(startIndex, startIndex + limit); // Slice reviews for pagination
+
+    // Send the paginated reviews along with metadata
+    res.status(200).json(
+      new ApiResponse(
+        200,
+        "Course Reviews",
+        {
+          courseId: courseReview._id,
+          reviews: paginatedReviews,
+        },
+        {
+          currentPage: page,
+          totalPages: totalPages,
+          totalReviews: totalReviews,
+          pageSize: limit,
+        }
+      )
+    );
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json(
+        new ApiError(
+          500,
+          error.message || "Error fetching course reviews.",
+          error
+        )
+      );
+  }
 });
+
+// const getReviewsByCourseId = asyncHandler(async (req, res) => {
+//   const page = req.query.page || 1;
+//   const limit = req.query.limit || 2;
+//   const courseid = req.params.courseid;
+
+//   const courseReview = await Course.findById(courseid)
+//     .select("reviews")
+//     .limit(limit)
+//   res.status(200).json(
+//     new ApiResponse(200, "Course Reviews", {
+//       _id: courseReview._id,
+//       reviews: courseReview.reviews.reverse(),
+//     })
+//   );
+// });
 
 module.exports = { courseReviews, getReviewsByCourseId };
