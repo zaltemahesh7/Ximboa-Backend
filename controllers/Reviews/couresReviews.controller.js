@@ -128,7 +128,7 @@ const getReviewsByCourseId = asyncHandler(async (req, res) => {
           "f_Name l_Name trainer_image"
         ); // Assuming User model has 'name' and 'email' fields
         return {
-          _id: populatedReview?._id,
+          userid: populatedReview?._id,
           f_Name: populatedReview?.f_Name,
           l_Name: populatedReview?.l_Name,
           trainer_image: populatedReview?.trainer_image
@@ -137,6 +137,7 @@ const getReviewsByCourseId = asyncHandler(async (req, res) => {
                 "/"
               )}`
             : "",
+          reviewid: review?._id,
           star_count: review?.star_count,
           review: review?.review,
         };
