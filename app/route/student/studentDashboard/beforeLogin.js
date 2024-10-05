@@ -510,38 +510,47 @@ router.get("/course/:id", async (req, res, next) => {
 
     if (!result) return res.status(404).json({ message: "Course not found" });
     else {
-      const relatedCourses = result.map((course) => ({
-        _id: course?._id,
-        category_name: course?.category_id?.category_name || "",
-        course_name: course?.course_name || "",
-        online_offline: course?.online_offline || "",
-        thumbnail_image: course?.thumbnail_image
-          ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
-          : "",
-        trainer_image: course?.trainer_id?.trainer_image
-          ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
-              /\\/g,
-              "/"
-            )}`
-          : "",
-        trainer_id: course?.trainer_id?._id,
-        business_Name: course?.trainer_id?.business_Name
-          ? course?.trainer_id?.business_Name
-          : `${course?.trainer_id?.f_Name || ""} ${
-              course?.trainer_id?.l_Name || ""
-            }`.trim() || "",
-        course_rating: "",
-        course_duration: Math.floor(
-          Math.round(
-            ((course?.end_date - course?.start_date) /
-              (1000 * 60 * 60 * 24 * 7)) *
-              100
-          ) / 100
-        ),
-        course_price: course?.price || "",
-        course_offer_prize: course?.offer_prize || "",
-        course_flag: course?.trainer_id?.role || "",
-      }));
+      const relatedCourses = result.map((course) => {
+        const reviews = course.reviews;
+        const totalStars = reviews.reduce(
+          (sum, review) => sum + review.star_count,
+          0
+        );
+        const averageRating = totalStars / reviews.length;
+        const result = {
+          _id: course?._id,
+          category_name: course?.category_id?.category_name || "",
+          course_name: course?.course_name || "",
+          online_offline: course?.online_offline || "",
+          thumbnail_image: course?.thumbnail_image
+            ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
+            : "",
+          trainer_image: course?.trainer_id?.trainer_image
+            ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
+                /\\/g,
+                "/"
+              )}`
+            : "",
+          trainer_id: course?.trainer_id?._id,
+          business_Name: course?.trainer_id?.business_Name
+            ? course?.trainer_id?.business_Name
+            : `${course?.trainer_id?.f_Name || ""} ${
+                course?.trainer_id?.l_Name || ""
+              }`.trim() || "",
+          course_rating: averageRating || "",
+          course_duration: Math.floor(
+            Math.round(
+              ((course?.end_date - course?.start_date) /
+                (1000 * 60 * 60 * 24 * 7)) *
+                100
+            ) / 100
+          ),
+          course_price: course?.price || "",
+          course_offer_prize: course?.offer_prize || "",
+          course_flag: course?.trainer_id?.role || "",
+        };
+        return result;
+      });
       res.status(200).json({ course: coursesWithFullImageUrl, relatedCourses });
     }
   } catch (err) {
