@@ -33,6 +33,13 @@ router.get("/home", async (req, res) => {
 
     const coursesWithFullImageUrl = await Promise.all(
       courses.map((course) => {
+        const reviews = course.reviews;
+        const totalStars = reviews.reduce(
+          (sum, review) => sum + review.star_count,
+          0
+        );
+        const averageRating = totalStars / reviews.length;
+
         return {
           _id: course?._id,
           course_name: course?.course_name || "",
@@ -52,7 +59,7 @@ router.get("/home", async (req, res) => {
                 "/"
               )}`
             : "",
-          course_rating: "",
+          course_rating: averageRating || "",
           course_duration: Math.floor(
             Math.round(
               ((course?.end_date - course?.start_date) /
@@ -293,36 +300,48 @@ router.get("/allcourses", async (req, res) => {
     const baseUrl = req.protocol + "://" + req.get("host");
 
     // Map courses to include full image URLs
-    const coursesWithFullImageUrl = courses.map((course) => ({
-      _id: course?._id,
-      category_name: course?.category_id?.category_name || "",
-      course_name: course?.course_name || "",
-      online_offline: course?.online_offline || "",
-      thumbnail_image: course?.thumbnail_image
-        ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
-        : "",
-      trainer_image: course?.trainer_id?.trainer_image
-        ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(/\\/g, "/")}`
-        : "",
-      trainer_id: course?.trainer_id?._id,
-      business_Name: course?.trainer_id?.business_Name
-        ? course?.trainer_id?.business_Name
-        : `${course?.trainer_id?.f_Name || ""} ${
-            course?.trainer_id?.l_Name || ""
-          }`.trim() || "",
-      course_rating: "",
-      course_duration: Math.floor(
-        Math.round(
-          ((course?.end_date - course?.start_date) /
-            (1000 * 60 * 60 * 24 * 7)) *
-            100
-        ) / 100
-      ),
-      course_price: course?.price || "",
-      course_offer_prize: course?.offer_prize || "",
-      course_flag:
-        course?.trainer_id?.role === "TRAINER" ? "Institute" : "Self Expert",
-    }));
+    const coursesWithFullImageUrl = courses.map((course) => {
+      const reviews = course.reviews;
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating = totalStars / reviews.length;
+      const result = {
+        _id: course?._id,
+        category_name: course?.category_id?.category_name || "",
+        course_name: course?.course_name || "",
+        online_offline: course?.online_offline || "",
+        thumbnail_image: course?.thumbnail_image
+          ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
+          : "",
+        trainer_image: course?.trainer_id?.trainer_image
+          ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
+              /\\/g,
+              "/"
+            )}`
+          : "",
+        trainer_id: course?.trainer_id?._id,
+        business_Name: course?.trainer_id?.business_Name
+          ? course?.trainer_id?.business_Name
+          : `${course?.trainer_id?.f_Name || ""} ${
+              course?.trainer_id?.l_Name || ""
+            }`.trim() || "",
+        course_rating: averageRating || "",
+        course_duration: Math.floor(
+          Math.round(
+            ((course?.end_date - course?.start_date) /
+              (1000 * 60 * 60 * 24 * 7)) *
+              100
+          ) / 100
+        ),
+        course_price: course?.price || "",
+        course_offer_prize: course?.offer_prize || "",
+        course_flag:
+          course?.trainer_id?.role === "TRAINER" ? "Institute" : "Self Expert",
+      };
+      return result;
+    });
 
     res.status(200).send({
       coursesWithFullImageUrl,
@@ -434,6 +453,13 @@ router.get("/course/:id", async (req, res, next) => {
       .populate("category_id", "category_name")
       .populate("trainer_id", "f_Name l_Name trainer_image business_Name role");
 
+    const reviews = course.reviews;
+    const totalStars = reviews.reduce(
+      (sum, review) => sum + review.star_count,
+      0
+    );
+    const averageRating = totalStars / reviews.length;
+
     const coursesWithFullImageUrl = {
       _id: course?._id,
       course_name: course?.course_name || "",
@@ -457,7 +483,7 @@ router.get("/course/:id", async (req, res, next) => {
         ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(/\\/g, "/")}`
         : "",
       trainer_id: course?.trainer_id?._id,
-      course_rating: "",
+      course_rating: averageRating || "",
       course_duration: Math.floor(
         Math.round(
           ((course?.end_date - course?.start_date) /
@@ -558,6 +584,7 @@ router.get("/event/:id", async (req, res) => {
           /\\/g,
           "/"
         )}` || "",
+      event_info: eventWithFullImageUrls?.event_info || "",
       event_description: eventWithFullImageUrls?.event_description || "",
       event_date: eventWithFullImageUrls?.event_date || "",
       event_start_time: eventWithFullImageUrls?.event_start_time || "",

@@ -1,4 +1,3 @@
-const { findById } = require("../../model/category");
 const product = require("../../model/product");
 const registration = require("../../model/registration");
 const { ApiError } = require("../../utils/ApiError");
@@ -39,41 +38,37 @@ const productReview = asyncHandler(async (req, res) => {
 
 const getReviewsByProductId = asyncHandler(async (req, res) => {
   const baseUrl = req.protocol + "://" + req.get("host");
-  const page = parseInt(req.query.page) || 1; // current page number, defaults to 1
-  const limit = parseInt(req.query.limit) || 2; // number of reviews per page, defaults to 2
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 2;
   const productid = req.params.productid;
 
   try {
-    // Fetch the course by ID but only select the reviews field
     const productReview = await product.findById(productid).select("reviews");
 
     if (!productReview) {
       return res.status(404).json(new ApiResponse(404, "Course not found"));
     }
 
-    const totalReviews = productReview.reviews.length; // Total number of reviews
+    const totalReviews = productReview.reviews.length;
     const totalPages = Math.ceil(totalReviews / limit);
 
-    // Check if the requested page is within valid range
     if (page > totalPages) {
       return res
         .status(400)
         .json(new ApiResponse(400, `Page ${page} exceeds total pages.`));
     }
 
-    // Pagination logic (skip and limit)
-    const startIndex = (page - 1) * limit; // Calculate the starting index
+    const startIndex = (page - 1) * limit;
     let paginatedReviews = productReview.reviews
-      .reverse() // Reverse to show latest reviews first
-      .slice(startIndex, startIndex + limit); // Slice reviews for pagination
+      .reverse()
+      .slice(startIndex, startIndex + limit);
 
-    // Populate user_id with user details
     paginatedReviews = await Promise.all(
       paginatedReviews.map(async (review) => {
         const populatedReview = await registration.findById(
           review.user_id,
           "f_Name l_Name trainer_image"
-        ); // Assuming User model has 'name' and 'email' fields
+        );
         return {
           userid: populatedReview?._id,
           user_name: `${populatedReview?.f_Name} ${populatedReview?.l_Name}`,
@@ -90,7 +85,6 @@ const getReviewsByProductId = asyncHandler(async (req, res) => {
       })
     );
 
-    // Send the paginated reviews along with metadata
     res.status(200).json(
       new ApiResponse(
         200,

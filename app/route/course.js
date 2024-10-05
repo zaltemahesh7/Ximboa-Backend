@@ -177,6 +177,13 @@ router.get("/:id", async (req, res, next) => {
         .json(new ApiError(404, "Course not found", "Invalid course ID"));
     }
 
+    const reviews = courseData.reviews;
+    const totalStars = reviews.reduce(
+      (sum, review) => sum + review.star_count,
+      0
+    );
+    const averageRating = totalStars / reviews.length;
+
     // Prepare the course object with image URLs
     const courseWithFullImageUrls = {
       _id: courseData?._id,
@@ -205,7 +212,7 @@ router.get("/:id", async (req, res, next) => {
           )}`
         : "",
       trainer_id: courseData?.trainer_id?._id,
-      course_rating: "", // Placeholder for ratings if available
+      course_rating: averageRating || "", // Placeholder for ratings if available
       course_duration: Math.floor(
         Math.round(
           ((courseData?.end_date - courseData?.start_date) /

@@ -11,6 +11,9 @@ const eventSchema = new Schema(
       type: String,
       required: true,
     },
+    event_info: {
+      type: String,
+    },
     event_description: {
       type: String,
     },

@@ -21,6 +21,7 @@ router.post(
       const {
         event_name,
         event_type,
+        event_info,
         event_description,
         event_category,
         event_date,
@@ -41,6 +42,7 @@ router.post(
         event_name,
         event_date,
         event_type,
+        event_info,
         event_description,
         event_category,
         event_thumbnail,
@@ -91,6 +93,7 @@ router.get("/:id", async (req, res) => {
           /\\/g,
           "/"
         )}` || "",
+      event_info: eventWithFullImageUrls?.event_info || "",
       event_description: eventWithFullImageUrls?.event_description || "",
       event_date: eventWithFullImageUrls?.event_date || "",
       event_start_time: eventWithFullImageUrls?.event_start_time || "",
@@ -209,6 +212,7 @@ router.put("/:id", async (req, res) => {
   const {
     event_name,
     event_type,
+    event_info,
     event_description,
     event_category,
     event_thumbnail,
@@ -230,17 +234,18 @@ router.put("/:id", async (req, res) => {
     }
 
     // Check if the current user is the trainer who created the event
-    if (event.trainerid.toString() !== userId) {
-      return res
-        .status(403)
-        .json(
-          new ApiError(403, "You are not authorized to update this event.")
-        );
-    }
+    // if (event.trainerid.toString() !== userId) {
+    //   return res
+    //     .status(403)
+    //     .json(
+    //       new ApiError(403, "You are not authorized to update this event.")
+    //     );
+    // }
 
     // Update event details
     event.event_name = event_name || event.event_name;
     event.event_type = event_type || event.event_type;
+    event.event_info = event_info || event.event_info;
     event.event_description = event_description || event.event_description;
     event.event_category = event_category || event.event_category;
     event.event_thumbnail = event_thumbnail || event.event_thumbnail;
@@ -251,7 +256,6 @@ router.put("/:id", async (req, res) => {
     event.event_languages = event_languages || event.event_languages;
     event.estimated_seats = estimated_seats || event.estimated_seats;
 
-    // Save the updated event
     const updatedEvent = await event.save();
 
     res
@@ -284,31 +288,26 @@ router.post("/registerevent", async (req, res) => {
     const evnet_id = req.body.event_id;
     const userId = req.user.id;
 
-    // Find the event by ID
     const event = await Event.findById(evnet_id);
     if (!event) {
       console.log(event);
       return res.status(404).json({ message: "Event not found" });
     }
 
-    // Find the user by ID
     const user = await registration.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Check if the user is already registered for the event
     if (event.registered_users.includes(userId)) {
       return res
         .status(400)
         .json({ message: "User is already registered for this event" });
     }
 
-    // Add the user to the registered users array
     event.registered_users.push(userId);
     await event.save();
 
-    // Create a notification for the student
     const notification = new NotificationModel({
       recipient: userId,
       message: `You have successfully registered for the event: ${event.event_name}`,
@@ -317,7 +316,6 @@ router.post("/registerevent", async (req, res) => {
     });
     await notification.save();
 
-    // Create a notification for the trainer
     const notificationToTrainer = new NotificationModel({
       recipient: event.trainerid,
       message: `A ${user.f_Name} ${user.l_Name} has register for event: ${event.event_name}`,
