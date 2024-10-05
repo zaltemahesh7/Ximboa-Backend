@@ -2,7 +2,11 @@ const mongoose = require("mongoose");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { UserRolesEnum, AvailableUserRoles, USER_TEMPORARY_TOKEN_EXPIRY } = require("../constants");
+const {
+  UserRolesEnum,
+  AvailableUserRoles,
+  USER_TEMPORARY_TOKEN_EXPIRY,
+} = require("../constants");
 const InstituteModel = require("./Institute/Institute.model");
 
 const RegistrationSchema = new mongoose.Schema(
@@ -111,6 +115,18 @@ const RegistrationSchema = new mongoose.Schema(
         ref: "Category",
       },
     ],
+    reviews: [
+      {
+        user_id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Registration",
+          required: true,
+        },
+        review: { type: String, required: true },
+        star_count: { type: Number, require: true },
+        addedAt: { type: Date, default: Date.now() },
+      },
+    ],
     resetPasswordToken: String,
     resetPasswordExpires: Number,
   },
@@ -139,7 +155,9 @@ RegistrationSchema.methods.generateAuthToken = async function () {
 };
 
 // Method to compare candidate password with stored password
-RegistrationSchema.methods.comparePassword = async function (candidatePassword) {
+RegistrationSchema.methods.comparePassword = async function (
+  candidatePassword
+) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
@@ -147,7 +165,10 @@ RegistrationSchema.methods.comparePassword = async function (candidatePassword) 
 RegistrationSchema.methods.generateTemporaryToken = function () {
   const unHashedToken = crypto.randomBytes(20).toString("hex");
 
-  const hashedToken = crypto.createHash("sha256").update(unHashedToken).digest("hex");
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(unHashedToken)
+    .digest("hex");
   const tokenExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
 
   return { unHashedToken, hashedToken, tokenExpiry };
