@@ -32,6 +32,18 @@ const productSchema = new mongoose.Schema(
     product_gallary: {
       type: String,
     },
+    reviews: [
+      {
+        user_id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Registration",
+          required: true,
+        },
+        review: { type: String, required: true },
+        star_count: { type: Number, require: true },
+        addedAt: { type: Date, default: Date.now() },
+      },
+    ],
   },
   { timestamps: true }
 );

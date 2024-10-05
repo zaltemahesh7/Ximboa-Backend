@@ -115,18 +115,6 @@ const RegistrationSchema = new mongoose.Schema(
         ref: "Category",
       },
     ],
-    reviews: [
-      {
-        user_id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Registration",
-          required: true,
-        },
-        review: { type: String, required: true },
-        star_count: { type: Number, require: true },
-        addedAt: { type: Date, default: Date.now() },
-      },
-    ],
     resetPasswordToken: String,
     resetPasswordExpires: Number,
   },
