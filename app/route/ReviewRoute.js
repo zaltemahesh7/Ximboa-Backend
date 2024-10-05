@@ -106,6 +106,6 @@ const {
 
 router.post("/course", jwtAuthMiddleware, courseReviews);
 
-router.get("/course/getreview", getReviewsByCourseId);
+router.get("/course/:courseid", getReviewsByCourseId);
 
 module.exports = router;
