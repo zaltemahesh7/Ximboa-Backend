@@ -7,8 +7,7 @@ const { asyncHandler } = require("../../utils/asyncHandler");
 const courseReviews = asyncHandler(async (req, res) => {
   try {
     const userid = req.user.id;
-    const courseid = req.params.courseid;
-    const { review, star_count } = req.body;
+    const { courseid, review, star_count } = req.body;
     const course = await Course.findByIdAndUpdate(courseid, {
       $push: {
         reviews: {

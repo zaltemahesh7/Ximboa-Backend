@@ -357,13 +357,13 @@ router.delete("/:id", async (req, res) => {
 });
 
 router.get("/trainer", async (req, res) => {
-  const { trainerId } = req.user.id;
+  const trainerId = req.user.id;
   console.log(trainerId);
 
   if (!trainerId) res.send("No courses");
   try {
     // Fetch courses by trainer_id
-    const courses = await Course.find({ trainer_id: trainerId })
+    const courses = await Course.find({ trainerid: trainerId })
       .populate("category_id", "category_name -_id")
       .populate("trainer_id", "f_Name l_Name -_id");
 

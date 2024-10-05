@@ -103,7 +103,7 @@ const {
   getReviewsByCourseId,
 } = require("../../controllers/Reviews/couresReviews.controller");
 
-router.post("/course/:courseid", jwtAuthMiddleware, courseReviews);
+router.post("/course", jwtAuthMiddleware, courseReviews);
 
 router.post("/course/:courseid", jwtAuthMiddleware, getReviewsByCourseId);
 
