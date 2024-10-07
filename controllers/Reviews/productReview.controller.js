@@ -40,10 +40,10 @@ const getReviewsByProductId = asyncHandler(async (req, res) => {
   const baseUrl = req.protocol + "://" + req.get("host");
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 2;
-  const productid = req.params.productid;
+  const eventid = req.params.eventid;
 
   try {
-    const productReview = await product.findById(productid).select("reviews");
+    const productReview = await product.findById(eventid).select("reviews");
 
     if (!productReview) {
       return res.status(404).json(new ApiResponse(404, "Course not found"));
@@ -90,7 +90,7 @@ const getReviewsByProductId = asyncHandler(async (req, res) => {
         200,
         "Course Reviews",
         {
-          productId: productReview?._id,
+          eventid: productReview?._id,
           reviews: paginatedReviews,
         },
         {

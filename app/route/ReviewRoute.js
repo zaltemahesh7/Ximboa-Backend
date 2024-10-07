@@ -107,11 +107,17 @@ const {
   productReview,
   getReviewsByProductId,
 } = require("../../controllers/Reviews/productReview.controller");
+const {
+  eventReview,
+  getReviewsByEventId,
+} = require("../../controllers/Reviews/eventReview.controller");
 
 router.post("/course", jwtAuthMiddleware, courseReviews);
 router.post("/product", jwtAuthMiddleware, productReview);
+router.post("/event", jwtAuthMiddleware, eventReview);
 
 router.get("/course/:courseid", getReviewsByCourseId);
 router.get("/product/:productid", getReviewsByProductId);
+router.get("/event/:eventid", getReviewsByEventId);
 
 module.exports = router;

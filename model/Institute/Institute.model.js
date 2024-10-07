@@ -10,7 +10,7 @@ const instituteSchema = new Schema(
     },
     address_1: {
       type: String,
-      required: [true, "Location is required"],
+      required: [true, "Address_1 is required"],
       unique: true,
     },
     address_2: {
@@ -57,7 +57,7 @@ const instituteSchema = new Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Registration",
-      required: [true, "Created by admin is required"],
+      required: [true, "Created by is required"],
     },
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,

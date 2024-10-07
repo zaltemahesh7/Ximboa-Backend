@@ -89,7 +89,9 @@ const createInstitute = async (req, res) => {
   try {
     const {
       institute_name,
-      location,
+      address_1,
+      address_2,
+      email,
       social_Media,
       Phone_No,
       About,
@@ -98,10 +100,9 @@ const createInstitute = async (req, res) => {
       admins,
       trainers,
       institute_photos,
-      createdBy,
     } = req.body;
 
-    if (!institute_name || !location || !establishedYear || !createdBy) {
+    if (!institute_name || !location || !establishedYear) {
       return res
         .status(400)
         .json(
@@ -114,14 +115,16 @@ const createInstitute = async (req, res) => {
 
     const newInstitute = new Institute({
       institute_name,
-      location,
+      address_1,
+      address_2,
+      email,
       social_Media: social_Media || {},
       Phone_No,
       About: About || {},
       courses: courses || [],
       establishedYear,
-      createdBy,
-      admins: admins || [],
+      createdBy: req.user.id,
+      admins: admins?.push(req.user.id) || req.user.id,
       trainers: trainers || [],
       institute_photos: institute_photos || [],
     });
