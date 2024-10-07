@@ -29,7 +29,9 @@ router.get("/", async (req, res) => {
     }
 
     // Find courses by the trainer
-    const courses = await Course.find({ trainer_id: trainerId });
+    const courses = await Course.find({ trainer_id: trainerId })
+      .populate("category_id", "category_name")
+      .populate("trainer_id", "f_Name l_Name trainer_image id city role");
     const baseUrl = req.protocol + "://" + req.get("host");
 
     const coursesWithFullImageUrl = courses.map((course) => {
@@ -82,7 +84,9 @@ router.get("/", async (req, res) => {
     // Find Enquiry by the trainer
     const Enquirys = await Enquiry.find({ trainerid: trainerId });
     // Find Products by the trainer
-    const Products = await Product.find({ t_id: trainerId });
+    const Products = await Product.find({ t_id: trainerId })
+      .populate("categoryid", "category_name")
+      .populate("t_id", "f_Name l_Name role");
 
     const productsWithFullImageUrl = Products.map((product) => {
       const reviews = product.reviews;
@@ -112,7 +116,7 @@ router.get("/", async (req, res) => {
 
     // Find Events by the trainer
     const events = await Event.find({ trainerid: trainerId })
-      .populate("event_category", "category_name")
+      .populate("event_category", "category_name -_id")
       .populate("trainerid", "f_Name l_Name");
 
     const eventsWithThumbnailUrl = events.map((event) => {
@@ -224,8 +228,8 @@ router.get("/", async (req, res) => {
       start_date: { $lte: currentDate },
       end_date: { $gte: currentDate },
     })
-      .populate("trainer_id", "f_Name l_Name")
-      .populate("category_id", "category_name");
+      .populate("category_id", "category_name")
+      .populate("trainer_id", "f_Name l_Name trainer_image id city role");
 
     // Map courses to include full image URLs and trainer name
     const OnGoingBatches = ongoingCourses.map((course) => {
@@ -274,8 +278,8 @@ router.get("/", async (req, res) => {
     const upcomingCourses = await Course.find({
       start_date: { $gt: currentDate },
     })
-      .populate("trainer_id", "f_Name l_Name")
-      .populate("category_id", "category_name");
+      .populate("category_id", "category_name")
+      .populate("trainer_id", "f_Name l_Name trainer_image id city role");
 
     // Map courses to include full image URLs and trainer name
     const UpcomingBatches = upcomingCourses.map((course) => {
