@@ -661,18 +661,29 @@ router.get("/allevents", async (req, res) => {
       return res.status(404).json(new ApiError(404, "Events not found"));
     }
 
-    const eventsWithThumbnails = events.map((event) => ({
-      _id: event?._id,
-      event_name: event?.event_name || "",
-      event_date: event?.event_date || "",
-      event_category: event?.event_category?.category_name || "",
-      event_type: event?.event_type || "",
-      trainer_id: event?.trainerid?._id || "",
-      registered_users: event?.registered_users.length || "",
-      event_thumbnail: event?.event_thumbnail
-        ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
-        : "",
-    }));
+    const eventsWithThumbnails = events.map((event) => {
+      const reviews = event.reviews;
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating = totalStars / reviews.length;
+
+      const result = {
+        _id: event?._id,
+        event_name: event?.event_name || "",
+        event_date: event?.event_date || "",
+        event_category: event?.event_category?.category_name || "",
+        event_type: event?.event_type || "",
+        trainer_id: event?.trainerid?._id || "",
+        event_rating: averageRating || "",
+        registered_users: event?.registered_users.length || "",
+        event_thumbnail: event?.event_thumbnail
+          ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
+          : "",
+      };
+      return result;
+    });
 
     res.status(200).json(eventsWithThumbnails);
   } catch (err) {
