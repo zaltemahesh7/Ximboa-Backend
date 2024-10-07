@@ -63,7 +63,7 @@ const courseReviews = asyncHandler(async (req, res) => {
 //     res.status(200).json(
 //       new ApiResponse(
 //         200,
-//         "Course Reviews", 
+//         "Course Reviews",
 //         {
 //           courseId: courseReview._id,
 //           reviews: paginatedReviews,
@@ -114,19 +114,17 @@ const getReviewsByCourseId = asyncHandler(async (req, res) => {
         .json(new ApiResponse(400, `Page ${page} exceeds total pages.`));
     }
 
-    // Pagination logic (skip and limit)
-    const startIndex = (page - 1) * limit; // Calculate the starting index
+    const startIndex = (page - 1) * limit;
     let paginatedReviews = courseReview.reviews
-      .reverse() // Reverse to show latest reviews first
-      .slice(startIndex, startIndex + limit); // Slice reviews for pagination
+      .reverse()
+      .slice(startIndex, startIndex + limit);
 
-    // Populate user_id with user details
     paginatedReviews = await Promise.all(
       paginatedReviews.map(async (review) => {
         const populatedReview = await registration.findById(
           review.user_id,
           "f_Name l_Name trainer_image"
-        ); // Assuming User model has 'name' and 'email' fields
+        );
         return {
           userid: populatedReview?._id,
           user_name: `${populatedReview?.f_Name} ${populatedReview?.l_Name}`,
@@ -143,7 +141,6 @@ const getReviewsByCourseId = asyncHandler(async (req, res) => {
       })
     );
 
-    // Send the paginated reviews along with metadata
     res.status(200).json(
       new ApiResponse(
         200,

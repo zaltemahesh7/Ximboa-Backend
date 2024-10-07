@@ -11,6 +11,9 @@ const eventSchema = new Schema(
       type: String,
       required: true,
     },
+    event_info: {
+      type: String,
+    },
     event_description: {
       type: String,
     },
@@ -41,17 +44,29 @@ const eventSchema = new Schema(
       type: String,
       required: true,
     },
+    event_location: {
+      type: String,
+    },
+    event_languages: [String],
+    estimated_seats: Number,
     registered_users: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Registration",
       },
     ],
-    event_location: {
-      type: String,
-    },
-    event_languages: [String],
-    estimated_seats: Number,
+    reviews: [
+      {
+        user_id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "Registration",
+          required: true,
+        },
+        review: { type: String, required: true },
+        star_count: { type: Number, require: true },
+        addedAt: { type: Date, default: Date.now() },
+      },
+    ],
   },
   { timestamps: true }
 );

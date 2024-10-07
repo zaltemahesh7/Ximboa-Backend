@@ -47,6 +47,7 @@ router.post(
         product_prize: req.body.product_prize,
         product_selling_prize: req.body.product_selling_prize,
         products_info: req.body.products_info,
+        products_description: req.body.products_description,
         product_flag: req.body.product_flag,
         product_image: req.files["product_image"]
           ? req.files["product_image"][0].path
@@ -74,7 +75,11 @@ router.post(
         );
     } catch (error) {
       console.error(error);
-      res.status(500).json(new ApiError(500, "Error While uploading product", error.message));
+      res
+        .status(500)
+        .json(
+          new ApiError(500, "Error While uploading product", error.message)
+        );
     }
   }
 );
@@ -169,6 +174,8 @@ router.put(
           req.body.product_selling_prize ||
           existingProduct.product_selling_prize,
         products_info: req.body.products_info || existingProduct.products_info,
+        products_description:
+          req.body.products_description || existingProduct.products_description,
         product_flag: req.body.product_flag || existingProduct.product_flag,
         product_image: req.files["product_image"]
           ? req.files["product_image"][0].path

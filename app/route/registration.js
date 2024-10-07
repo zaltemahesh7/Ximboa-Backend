@@ -203,7 +203,7 @@ router.post("/", upload.single("trainer_image"), async function (req, res) {
 
     // Send notification to the trainer about successful registration
     const notification = new NotificationModel({
-      recipient: result._id, // The ID of the newly registered user
+      recipient: result._id,
       message: `Welcome ${f_Name}, you have successfully registered.`,
       activityType: "REGISTRATION_SUCCESS",
       relatedId: result._id,
@@ -297,12 +297,10 @@ router.put(
 
       const trainer_image = req.file ? req.file.path : undefined;
 
-      // Find the user by ID
       if (!user) {
         return res.status(404).json(new ApiError(404, "User not found"));
       }
 
-      // Check for email conflicts if email is updated
       if (email_id && email_id !== user.email_id) {
         const existingUser = await Registration.findOne({ email_id });
         if (existingUser) {
@@ -311,7 +309,6 @@ router.put(
         user.email_id = email_id;
       }
 
-      // Check for mobile number conflicts if mobile number is updated
       if (mobile_number && mobile_number !== user.mobile_number) {
         const existingMobileNumber = await Registration.findOne({
           mobile_number,
@@ -324,7 +321,6 @@ router.put(
         user.mobile_number = mobile_number;
       }
 
-      // Update fields
       if (f_Name) user.f_Name = f_Name;
       if (middle_Name) user.middle_Name = middle_Name;
       if (l_Name) user.l_Name = l_Name;
@@ -343,7 +339,6 @@ router.put(
       if (pincode) user.pincode = pincode;
       if (trainer_image) user.trainer_image = trainer_image;
 
-      // Save updated user
       const updatedUser = await user.save();
 
       const notification = new NotificationModel({
@@ -370,8 +365,6 @@ router.put(
 router.get("/email/:email_id", async (req, res) => {
   try {
     const { email_id } = req.params;
-    // console.log(email_id);
-
     const trainer = await Registration.findOne({ email_id });
     if (!trainer) {
       return res.status(400).json({ message: "Not Exist" });

@@ -23,6 +23,9 @@ const productSchema = new mongoose.Schema(
     products_info: {
       type: String,
     },
+    products_description: {
+      type: String,
+    },
     product_flag: {
       type: String,
     },
