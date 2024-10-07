@@ -33,18 +33,46 @@ router.get("/", async (req, res) => {
     const baseUrl = req.protocol + "://" + req.get("host");
 
     const coursesWithFullImageUrl = courses.map((course) => {
-      return {
-        ...course._doc,
-        thumbnail_image: course.thumbnail_image
-          ? `${baseUrl}/${course.thumbnail_image.replace(/\\/g, "/")}`
+      const reviews = course.reviews;
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating = totalStars / reviews.length;
+      const result = {
+        _id: course?._id,
+        category_name: course?.category_id?.category_name || "",
+        course_name: course?.course_name || "",
+        online_offline: course?.online_offline || "",
+        thumbnail_image: course?.thumbnail_image
+          ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
           : "",
-        gallary_image: course.gallary_image
-          ? `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`
+        trainer_image: course?.trainer_id?.trainer_image
+          ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
+              /\\/g,
+              "/"
+            )}`
           : "",
-        trainer_materialImage: course.gallary_image
-          ? `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`
-          : "",
+        trainer_id: course?.trainer_id?._id,
+        business_Name: course?.trainer_id?.business_Name
+          ? course?.trainer_id?.business_Name
+          : `${course?.trainer_id?.f_Name || ""} ${
+              course?.trainer_id?.l_Name || ""
+            }`.trim() || "",
+        course_rating: averageRating || "",
+        course_duration: Math.floor(
+          Math.round(
+            ((course?.end_date - course?.start_date) /
+              (1000 * 60 * 60 * 24 * 7)) *
+              100
+          ) / 100
+        ),
+        course_price: course?.price || "",
+        course_offer_prize: course?.offer_prize || "",
+        course_flag:
+          course?.trainer_id?.role === "TRAINER" ? "Institute" : "Self Expert",
       };
+      return result;
     });
 
     // Find question by the trainer
@@ -57,15 +85,29 @@ router.get("/", async (req, res) => {
     const Products = await Product.find({ t_id: trainerId });
 
     const productsWithFullImageUrl = Products.map((product) => {
-      return {
-        ...product._doc,
-        product_image: product.product_image
-          ? `${baseUrl}/${product.product_image.replace(/\\/g, "/")}`
+      const reviews = product.reviews;
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating = totalStars / reviews.length;
+
+      const productData = {
+        _id: product?._id,
+        product_image: product?.product_image
+          ? `${baseUrl}/${product?.product_image?.replace(/\\/g, "/")}`
           : "",
-        product_gallary: product.gallary_image
-          ? `${baseUrl}/${product.gallary_image.replace(/\\/g, "/")}`
-          : "",
+        products_category: product?.categoryid?.category_name || "",
+        products_rating: averageRating || "",
+        products_category: product?.categoryid?.category_name || "",
+        products_name: product?.product_name || "",
+        products_price: product?.product_prize || "",
+        products_selling_price: product?.product_selling_prize || "",
+        identityFlag:
+          product?.t_id?.role === "TRAINER" ? "Institute" : "Self Expert",
+        product_flag: product?.product_flag || "",
       };
+      return productData;
     });
 
     // Find Events by the trainer
@@ -74,35 +116,80 @@ router.get("/", async (req, res) => {
       .populate("trainerid", "f_Name l_Name");
 
     const eventsWithThumbnailUrl = events.map((event) => {
-      return {
-        ...event._doc,
-        event_thumbnail: event.event_thumbnail
-          ? `${baseUrl}/${event.event_thumbnail.replace(/\\/g, "/")}`
+      const reviews = event.reviews;
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating = totalStars / reviews.length;
+
+      const result = {
+        _id: event?._id,
+        event_name: event?.event_name || "",
+        event_date: event?.event_date || "",
+        event_category: event?.event_category?.category_name || "",
+        event_type: event?.event_type || "",
+        trainer_id: event?.trainerid?._id || "",
+        event_rating: averageRating || "",
+        registered_users: event?.registered_users.length || "",
+        event_thumbnail: event?.event_thumbnail
+          ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
           : "",
       };
+      return result;
     });
 
     const onlineEvents = events.filter(
       (event) => event.event_type === "Online"
     );
     const onlineEventsThumbnailUrl = onlineEvents.map((event) => {
-      return {
-        ...event._doc,
-        event_thumbnail: event.event_thumbnail
-          ? `${baseUrl}/${event.event_thumbnail.replace(/\\/g, "/")}`
+      const reviews = event.reviews;
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating = totalStars / reviews.length;
+
+      const result = {
+        _id: event?._id,
+        event_name: event?.event_name || "",
+        event_date: event?.event_date || "",
+        event_category: event?.event_category?.category_name || "",
+        event_type: event?.event_type || "",
+        trainer_id: event?.trainerid?._id || "",
+        event_rating: averageRating || "",
+        registered_users: event?.registered_users.length || "",
+        event_thumbnail: event?.event_thumbnail
+          ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
           : "",
       };
+      return result;
     });
     const offlienEvents = events.filter(
       (event) => event.event_type === "Offline"
     );
     const offlienEventsThumbnailUrl = offlienEvents.map((event) => {
-      return {
-        ...event._doc,
-        event_thumbnail: event.event_thumbnail
-          ? `${baseUrl}/${event.event_thumbnail.replace(/\\/g, "/")}`
+      const reviews = event.reviews;
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating = totalStars / reviews.length;
+
+      const result = {
+        _id: event?._id,
+        event_name: event?.event_name || "",
+        event_date: event?.event_date || "",
+        event_category: event?.event_category?.category_name || "",
+        event_type: event?.event_type || "",
+        trainer_id: event?.trainerid?._id || "",
+        event_rating: averageRating || "",
+        registered_users: event?.registered_users.length || "",
+        event_thumbnail: event?.event_thumbnail
+          ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
           : "",
       };
+      return result;
     });
 
     // Find About by the trainer
@@ -142,19 +229,46 @@ router.get("/", async (req, res) => {
 
     // Map courses to include full image URLs and trainer name
     const OnGoingBatches = ongoingCourses.map((course) => {
-      return {
-        ...course._doc,
-        thumbnail_image: course.thumbnail_image
-          ? `${baseUrl}/${course.thumbnail_image.replace(/\\/g, "/")}`
+      const reviews = course.reviews;
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating = totalStars / reviews.length;
+      const result = {
+        _id: course?._id,
+        category_name: course?.category_id?.category_name || "",
+        course_name: course?.course_name || "",
+        online_offline: course?.online_offline || "",
+        thumbnail_image: course?.thumbnail_image
+          ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
           : "",
-        gallary_image: course.gallary_image
-          ? `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`
+        trainer_image: course?.trainer_id?.trainer_image
+          ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
+              /\\/g,
+              "/"
+            )}`
           : "",
-        trainer_materialImage: course.trainer_materialImage
-          ? `${baseUrl}/${course.trainer_materialImage.replace(/\\/g, "/")}`
-          : "",
-        trainer_name: course.trainer_id ? course.trainer_id.user_name : "N/A",
+        trainer_id: course?.trainer_id?._id,
+        business_Name: course?.trainer_id?.business_Name
+          ? course?.trainer_id?.business_Name
+          : `${course?.trainer_id?.f_Name || ""} ${
+              course?.trainer_id?.l_Name || ""
+            }`.trim() || "",
+        course_rating: averageRating || "",
+        course_duration: Math.floor(
+          Math.round(
+            ((course?.end_date - course?.start_date) /
+              (1000 * 60 * 60 * 24 * 7)) *
+              100
+          ) / 100
+        ),
+        course_price: course?.price || "",
+        course_offer_prize: course?.offer_prize || "",
+        course_flag:
+          course?.trainer_id?.role === "TRAINER" ? "Institute" : "Self Expert",
       };
+      return result;
     });
 
     const upcomingCourses = await Course.find({
@@ -165,19 +279,46 @@ router.get("/", async (req, res) => {
 
     // Map courses to include full image URLs and trainer name
     const UpcomingBatches = upcomingCourses.map((course) => {
-      return {
-        ...course._doc,
-        thumbnail_image: course.thumbnail_image
-          ? `${baseUrl}/${course.thumbnail_image.replace(/\\/g, "/")}`
+      const reviews = course.reviews;
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating = totalStars / reviews.length;
+      const result = {
+        _id: course?._id,
+        category_name: course?.category_id?.category_name || "",
+        course_name: course?.course_name || "",
+        online_offline: course?.online_offline || "",
+        thumbnail_image: course?.thumbnail_image
+          ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
           : "",
-        gallary_image: course.gallary_image
-          ? `${baseUrl}/${course.gallary_image.replace(/\\/g, "/")}`
+        trainer_image: course?.trainer_id?.trainer_image
+          ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
+              /\\/g,
+              "/"
+            )}`
           : "",
-        trainer_materialImage: course.trainer_materialImage
-          ? `${baseUrl}/${course.trainer_materialImage.replace(/\\/g, "/")}`
-          : "",
-        trainer_name: course.trainer_id ? course.trainer_id.user_name : "N/A",
+        trainer_id: course?.trainer_id?._id,
+        business_Name: course?.trainer_id?.business_Name
+          ? course?.trainer_id?.business_Name
+          : `${course?.trainer_id?.f_Name || ""} ${
+              course?.trainer_id?.l_Name || ""
+            }`.trim() || "",
+        course_rating: averageRating || "",
+        course_duration: Math.floor(
+          Math.round(
+            ((course?.end_date - course?.start_date) /
+              (1000 * 60 * 60 * 24 * 7)) *
+              100
+          ) / 100
+        ),
+        course_price: course?.price || "",
+        course_offer_prize: course?.offer_prize || "",
+        course_flag:
+          course?.trainer_id?.role === "TRAINER" ? "Institute" : "Self Expert",
       };
+      return result;
     });
 
     res.status(200).json({
