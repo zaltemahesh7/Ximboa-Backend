@@ -392,10 +392,32 @@ router.get("/", function (req, res) {
 
 // Get trainer by Id ----------------------------------------------------------
 router.get("/trainer", jwtAuthMiddleware, function (req, res) {
+  const baseUrl = req.protocol + "://" + req.get("host");
+
   Registration.findById(req.user.id)
     .select("-password -role -requested_Role -requests")
     .then((trainer) => {
-      res.status(200).json(trainer);
+      const result = {
+        _id: trainer?._id,
+        f_Name: trainer?.f_Name,
+        l_Name: trainer?.l_Name,
+        mobile_number: trainer?.mobile_number,
+        whatsapp_no: trainer?.whatsapp_no,
+        email_id: trainer?.email_id,
+        date_of_birth: trainer?.date_of_birth,
+        rating_count: trainer?.rating_count,
+        address1: trainer?.address1,
+        address2: trainer?.address2,
+        city: trainer?.city,
+        country: trainer?.country,
+        state: trainer?.state,
+        pincode: trainer?.pincode,
+        categories: trainer?.categories,
+        trainer_image: trainer?.trainer_image
+          ? `${baseUrl}/${trainer?.trainer_image?.replace(/\\/g, "/")}`
+          : "",
+      };
+      res.status(200).json(result);
     })
     .catch((err) => {
       console.error(err);

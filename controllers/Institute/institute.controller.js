@@ -124,7 +124,7 @@ const createInstitute = async (req, res) => {
       courses: courses || [],
       establishedYear,
       createdBy: req.user.id,
-      admins: admins || [],
+      admins: admins?.push(req.user.id) || req.user.id,
       trainers: trainers || [],
       institute_photos: institute_photos || [],
     });

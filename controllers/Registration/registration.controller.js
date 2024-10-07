@@ -3,7 +3,6 @@ const Registration = require("../../model/registration");
 const Course = require("../../model/course"); // Course model
 const Enrollment = require("../../model/Student/Enrollment"); // Enrollment model
 const Product = require("../../model/product"); // Product model
-const axios = require("axios");
 
 const { ApiError } = require("../../utils/ApiError");
 const { ApiResponse } = require("../../utils/ApiResponse");
@@ -247,7 +246,7 @@ const requestRoleChange = asyncHandler(async (req, res) => {
 
       const superAdmin = await Registration.findOne({ role: "SUPER_ADMIN" });
       const Admin = await Registration.findOneAndUpdate(
-        { role: "SUPER_ADMIN", "requests.userid": userId }, // Check if userId exists in requests
+        { role: "SUPER_ADMIN", "requests.userid": userId },
         {
           $set: {
             "requests.$.requestedRole": requested_Role,
@@ -258,7 +257,6 @@ const requestRoleChange = asyncHandler(async (req, res) => {
       );
 
       if (!Admin) {
-        // If the userId was not found, push a new request
         await Registration.findOneAndUpdate(
           { role: "SUPER_ADMIN" },
           {
@@ -281,20 +279,6 @@ const requestRoleChange = asyncHandler(async (req, res) => {
               new ApiError(500, "No SUPER_ADMIN found to approve the request.")
             );
         }
-
-        if (requested_Role === "INSTITUTE") {
-          const { institute_name } = req.body;
-          const response = await axios.get(
-            "http://localhost:1000/institute/create-institute",
-            {
-              body: {
-                userId: req.user.id,
-              },
-            }
-          );
-          console.log(response)
-        }
-
         const userEmail = req.user.username;
         const userName = user.f_Name;
 
@@ -344,6 +328,10 @@ const requestRoleChange = asyncHandler(async (req, res) => {
       .json(new ApiError(500, error.message || "Server Error", error));
   }
 });
+
+const requestToBeInstitute = asyncHandler(async (req, res) => {
+
+})
 
 // controllers For Role Change Request.
 const roleChange = asyncHandler(async (req, res) => {
@@ -573,7 +561,7 @@ async function sendRoleChangeEmailsAndNotifications({
 
   // Notification to the user
   const notificationToUser = new NotificationModel({
-    recipient: user._id, // User ID
+    recipient: user._id,
     message: `Hello ${user.f_Name} ${user.l_Name}, your request to change your role to ${requested_Role} has been sent successfully.`,
     activityType: "ROLE_CHANGE_REQUEST_SENT",
     relatedId: superAdmin._id,
@@ -583,11 +571,10 @@ async function sendRoleChangeEmailsAndNotifications({
 
 const approveRoleChange = asyncHandler(async (req, res) => {
   try {
-    const { userid, approved } = req.body; // Get user ID and approval status from the request body
-    const adminRole = req.user.role; // Get the role of the logged-in admin (SUPER_ADMIN)
-    const adminId = req.user.id; // Get the ID of the logged-in admin
+    const { userid, approved } = req.body;
+    const adminRole = req.user.role;
+    const adminId = req.user.id;
 
-    // Ensure only SUPER_ADMIN can approve the role change requests
     if (adminRole !== "SUPER_ADMIN") {
       return res
         .status(403)
