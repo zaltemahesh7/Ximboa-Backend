@@ -3,6 +3,7 @@ const Registration = require("../../model/registration");
 const Course = require("../../model/course"); // Course model
 const Enrollment = require("../../model/Student/Enrollment"); // Enrollment model
 const Product = require("../../model/product"); // Product model
+const axios = require("axios");
 
 const { ApiError } = require("../../utils/ApiError");
 const { ApiResponse } = require("../../utils/ApiResponse");
@@ -258,7 +259,6 @@ const requestRoleChange = asyncHandler(async (req, res) => {
 
       if (!Admin) {
         // If the userId was not found, push a new request
-        console.log(".....");
         await Registration.findOneAndUpdate(
           { role: "SUPER_ADMIN" },
           {
@@ -273,7 +273,6 @@ const requestRoleChange = asyncHandler(async (req, res) => {
         );
       }
 
-      console.log("superAdmin: ", superAdmin);
       if (requested_Role === "INSTITUTE" || requested_Role === "SELF_TRAINER") {
         if (!superAdmin) {
           return res
@@ -284,7 +283,16 @@ const requestRoleChange = asyncHandler(async (req, res) => {
         }
 
         if (requested_Role === "INSTITUTE") {
-          
+          const { institute_name } = req.body;
+          const response = await axios.get(
+            "http://localhost:1000/institute/create-institute",
+            {
+              body: {
+                userId: req.user.id,
+              },
+            }
+          );
+          console.log(response)
         }
 
         const userEmail = req.user.username;
