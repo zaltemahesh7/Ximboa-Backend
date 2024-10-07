@@ -217,8 +217,128 @@ const resetPassword = async (req, res) => {
   }
 };
 
-// controllers For Role Change Request.
 const requestRoleChange = asyncHandler(async (req, res) => {
+  const { requested_Role, business_Name, address_1, email } = req.body;
+  const userId = req.user.id;
+
+  try {
+    if (!["INSTITUTE", "SELF_EXPERT", "TRAINER"].includes(requested_Role)) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, "Invalid role request."));
+    }
+
+    if (requested_Role == "SELF_EXPERT") {
+      const user = await Registration.findById(userId);
+
+      if (user.requested_Role) {
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(400, "Role change request is already pending.")
+          );
+      }
+
+      await Registration.findByIdAndUpdate(userId, {
+        requested_Role: requested_Role,
+        business_Name,
+      });
+
+      const superAdmin = await Registration.findOne({ role: "SUPER_ADMIN" });
+      const Admin = await Registration.findOneAndUpdate(
+        { role: "SUPER_ADMIN", "requests.userid": userId }, // Check if userId exists in requests
+        {
+          $set: {
+            "requests.$.requestedRole": requested_Role,
+            "requests.$.status": "pending",
+          },
+        },
+        { new: true }
+      );
+
+      if (!Admin) {
+        // If the userId was not found, push a new request
+        console.log(".....");
+        await Registration.findOneAndUpdate(
+          { role: "SUPER_ADMIN" },
+          {
+            $push: {
+              requests: {
+                userid: userId,
+                requestedRole: requested_Role,
+              },
+            },
+          },
+          { new: true }
+        );
+      }
+
+      console.log("superAdmin: ", superAdmin);
+      if (requested_Role === "INSTITUTE" || requested_Role === "SELF_TRAINER") {
+        if (!superAdmin) {
+          return res
+            .status(500)
+            .json(
+              new ApiError(500, "No SUPER_ADMIN found to approve the request.")
+            );
+        }
+
+        if (requested_Role === "INSTITUTE") {
+          
+        }
+
+        const userEmail = req.user.username;
+        const userName = user.f_Name;
+
+        sendEmail(
+          "roleChangeRequestToSuperAdmin",
+          {
+            name: superAdmin.f_Name,
+            email: superAdmin.email_id,
+          },
+          [requested_Role, userId, userEmail, userName]
+        );
+      }
+
+      const notificationToSuperAdmin = new NotificationModel({
+        recipient: superAdmin._id, // Super Admin ID
+        message: `User ${user.f_Name} ${user.l_Name} has requested to change their role to ${requested_Role}.`,
+        activityType: "ROLE_CHANGE_REQUEST",
+        relatedId: user._id,
+      });
+      await notificationToSuperAdmin.save();
+
+      sendEmail(
+        "roleChangeRequestToUser",
+        {
+          name: user.f_Name,
+          email: user.email_id,
+        },
+        [requested_Role]
+      );
+      const notificationToUser = new NotificationModel({
+        recipient: user._id, // User ID
+        message: `Hello ${user.f_Name} ${user.l_Name}, your request to change your role to ${requested_Role} has been sent successfully.`,
+        activityType: "ROLE_CHANGE_REQUEST_SENT",
+        relatedId: superAdmin._id,
+      });
+      await notificationToUser.save();
+      res
+        .status(200)
+        .json(
+          new ApiResponse(200, "Role change request submitted successfully.")
+        );
+    }
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json(new ApiError(500, error.message || "Server Error", error));
+  }
+});
+
+// controllers For Role Change Request.
+const roleChange = asyncHandler(async (req, res) => {
   const { requested_Role, business_Name } = req.body;
   const userId = req.user.id;
 
@@ -377,7 +497,7 @@ const requestRoleChange = asyncHandler(async (req, res) => {
         [requested_Role]
       );
       const notificationToUser = new NotificationModel({
-        recipient: user._id, // User ID
+        recipient: user._id,
         message: `Hello ${user.f_Name} ${user.l_Name}, your request to change your role to ${requested_Role} has been sent successfully.`,
         activityType: "ROLE_CHANGE_REQUEST_SENT",
         relatedId: superAdmin._id,

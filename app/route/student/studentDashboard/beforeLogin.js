@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Category = require("../../../../model/category"); // Assuming you have a Category model
+const Category = require("../../../../model/category");
 const Trainer = require("../../../../model/registration");
 
 const Course = require("../../../../model/course");
@@ -12,10 +12,8 @@ const InstituteModel = require("../../../../model/Institute/Institute.model");
 const Review = require("../../../../model/Review");
 const product = require("../../../../model/product");
 
-// Get courses with specific fields, including trainer name populated
 router.get("/home", async (req, res) => {
   try {
-    // Get page and limit from query parameters, set defaults if not provided
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 4;
 
@@ -28,7 +26,6 @@ router.get("/home", async (req, res) => {
       .populate("category_id", "category_name")
       .populate("trainer_id", "f_Name l_Name trainer_image business_Name role");
 
-    // Get base URL for image paths
     const baseUrl = req.protocol + "://" + req.get("host");
 
     const coursesWithFullImageUrl = await Promise.all(
@@ -93,7 +90,6 @@ router.get("/home", async (req, res) => {
     });
 
     const trainers = await Trainer.aggregate([
-      // Add $match to filter users by role
       {
         $match: {
           role: { $in: ["TRAINER", "SELF_EXPERT"] },
@@ -122,7 +118,6 @@ router.get("/home", async (req, res) => {
       .skip(startIndex)
       .limit(limit);
 
-    // Update trainer image URL as before
     const trainersWithFullImageUrl = await Promise.all(
       trainers.map(async (trainer) => {
         const institute = await InstituteModel.findOne({
@@ -209,16 +204,10 @@ router.get("/home", async (req, res) => {
       .skip(startIndex)
       .limit(limit)
       .sort({ createdAt: -1 })
-      // .populate({
-      //   path: "userid", // Assuming event has 'enrollments' referencing 'User' model
-      //   select: "f_Name l_Name", // Selecting user's first and last name
-      //   model: "Enrollment",
-      // })
       .select(
         "event_thumbnail event_date event_name event_type event_start_time event_end_time"
-      ); // Select necessary fields from event
+      );
 
-    // Map over each event to structure the data
     const eventDetails = events.map((event) => {
       return {
         _id: event?._id,
@@ -229,7 +218,7 @@ router.get("/home", async (req, res) => {
         eventStartTime: event?.event_start_time || "",
         eventEndTime: event?.event_end_time || "",
         eventName: event?.event_name || "",
-        mode: event?.event_type === "Online" ? "Online" : "Offline", // Convert mode to a human-readable format
+        mode: event?.event_type === "Online" ? "Online" : "Offline",
         enrollments: event?.registered_users?.length,
       };
     });
@@ -696,19 +685,27 @@ router.get("/allevents", async (req, res) => {
 // ========================= product/:id ====================================
 // Get a single product by ID
 router.get("/product/:id", async function (req, res, next) {
+  const baseUrl = req.protocol + "://" + req.get("host");
+
   const product = await Product.findOne({ _id: req.params.id })
     .populate("categoryid", "category_name")
     .populate("t_id", "f_Name l_Name business_Name role");
+
+  const reviews = product.reviews;
+  const totalStars = reviews.reduce(
+    (sum, review) => sum + review.star_count,
+    0
+  );
+  const averageRating = totalStars / reviews.length;
+
   const productDetail = {
     _id: product?._id,
     product_image: product?.product_image
-      ? `http://${req.headers.host}/${product?.product_image?.replace(
-          /\\/g,
-          "/"
-        )}`
+      ? `${baseUrl}/${product?.product_image?.replace(/\\/g, "/")}`
       : "",
     products_info: product?.products_info || "",
-    products_rating: "Pending...#####",
+    products_description: product?.products_description || "",
+    products_rating: averageRating || "",
     products_category: product?.categoryid?.category_name || "",
     products_name: product?.product_name || "",
     products_price: product?.product_prize || "",
@@ -742,58 +739,72 @@ router.get("/product/:id", async function (req, res, next) {
 
   if (!result)
     return res.status(404).json({ message: "Related Products not found" });
-  const relatedProducts = result?.map((product) => ({
-    _id: product?._id,
-    product_image: product?.product_image
-      ? `http://${req.headers.host}/${product?.product_image?.replace(
-          /\\/g,
-          "/"
-        )}`
-      : "",
-    products_category: product?.categoryid?.category_name || "",
-    products_rating: "Pending...#####",
-    products_category: product?.categoryid?.category_name || "",
-    products_name: product?.product_name || "",
-    products_price: product?.product_prize || "",
-    products_selling_price: product?.product_selling_prize || "",
-    identityFlag:
-      product?.t_id?.role === "TRAINER" ? "Institute" : "Self Expert",
-    product_flag: product?.product_flag || "",
-  }));
+  const relatedProducts = result?.map((product) => {
+    const reviews = product.reviews;
+    const totalStars = reviews.reduce(
+      (sum, review) => sum + review.star_count,
+      0
+    );
+    const averageRating = totalStars / reviews.length;
+
+    const result = {
+      _id: product?._id,
+      product_image: product?.product_image
+        ? `${baseUrl}/${product?.product_image?.replace(/\\/g, "/")}`
+        : "",
+      products_category: product?.categoryid?.category_name || "",
+      products_rating: averageRating || "",
+      products_category: product?.categoryid?.category_name || "",
+      products_name: product?.product_name || "",
+      products_price: product?.product_prize || "",
+      products_selling_price: product?.product_selling_prize || "",
+      identityFlag:
+        product?.t_id?.role === "TRAINER" ? "Institute" : "Self Expert",
+      product_flag: product?.product_flag || "",
+    };
+    return result;
+  });
   res.status(200).json({ productDetail, relatedProducts });
 });
 
 // Get a single product by ID
 router.get("/allproduct", async function (req, res, next) {
+  const baseUrl = req.protocol + "://" + req.get("host");
   Product.find()
     .sort({ createdAt: -1 })
     .populate("categoryid", "category_name")
     .populate("t_id", "f_Name l_Name role")
     .then((result) => {
-      const productsWithFullImageUrls = result.map((product) => ({
-        _id: product?._id,
-        product_image: product?.product_image
-          ? `http://${req.headers.host}/${product?.product_image?.replace(
-              /\\/g,
-              "/"
-            )}`
-          : "",
-        products_category: product?.categoryid?.category_name || "",
-        products_rating: "Pending...#####",
-        products_category: product?.categoryid?.category_name || "",
-        products_name: product?.product_name || "",
-        products_price: product?.product_prize || "",
-        products_selling_price: product?.product_selling_prize || "",
-        identityFlag:
-          product?.t_id?.role === "TRAINER" ? "Institute" : "Self Expert",
-        product_flag: product?.product_flag || "",
-      }));
+      const productsWithFullImageUrls = result.map((product) => {
+        const reviews = product.reviews;
+        const totalStars = reviews.reduce(
+          (sum, review) => sum + review.star_count,
+          0
+        );
+        const averageRating = totalStars / reviews.length;
+
+        const productData = {
+          _id: product?._id,
+          product_image: product?.product_image
+            ? `${baseUrl}/${product?.product_image?.replace(/\\/g, "/")}`
+            : "",
+          products_category: product?.categoryid?.category_name || "",
+          products_rating: averageRating || "",
+          products_category: product?.categoryid?.category_name || "",
+          products_name: product?.product_name || "",
+          products_price: product?.product_prize || "",
+          products_selling_price: product?.product_selling_prize || "",
+          identityFlag:
+            product?.t_id?.role === "TRAINER" ? "Institute" : "Self Expert",
+          product_flag: product?.product_flag || "",
+        };
+        return productData;
+      });
       // console.log(productsWithFullImageUrls),
       res.status(200).json({ productsWithFullImageUrls });
     })
     .catch((err) => {
       console.log(err);
-
       res
         .status(500)
         .json(
