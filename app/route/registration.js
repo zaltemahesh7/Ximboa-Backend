@@ -13,7 +13,7 @@ const {
   requestRoleChange,
   approveRoleChange,
   getAllRequestsByAdminId,
-  requestToBecomeTrainer,
+  // requestToBecomeTrainer,
   resetPassword,
 } = require("../../controllers/Registration/registration.controller");
 
@@ -476,7 +476,7 @@ router.post("/request-role-change", jwtAuthMiddleware, requestRoleChange);
 
 router.post("/approve-role-change", jwtAuthMiddleware, approveRoleChange);
 
-router.post("/request-role-trainer", jwtAuthMiddleware, requestToBecomeTrainer);
+// router.post("/request-role-trainer", jwtAuthMiddleware, requestToBecomeTrainer);
 
 // Get all Role_Change_Requests
 router.get(

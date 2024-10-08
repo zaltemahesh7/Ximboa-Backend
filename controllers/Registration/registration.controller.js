@@ -492,7 +492,6 @@ const requestRoleChange = asyncHandler(async (req, res) => {
 
         const admins = await Registration.find({
           _id: { $in: institute.admins },
-          role: "INSTITUTE",
         });
 
         if (admins.length === 0) {
@@ -504,6 +503,30 @@ const requestRoleChange = asyncHandler(async (req, res) => {
         // Send approval requests to all admins via email
         admins.forEach(async (admin) => {
           const adminEmail = admin.email_id;
+          const Admin = await Registration.findOneAndUpdate(
+            { _id: admin._id, "requests.userid": userId },
+            {
+              $set: {
+                "requests.$.requestedRole": requested_Role,
+                "requests.$.status": "pending",
+              },
+            },
+            { new: true }
+          );
+          if (!Admin) {
+            await Registration.findOneAndUpdate(
+              { _id: admin._id },
+              {
+                $push: {
+                  requests: {
+                    userid: userId,
+                    requestedRole: requested_Role,
+                  },
+                },
+              },
+              { new: true }
+            );
+          }
           sendEmail(
             "trainerRequest",
             {
@@ -519,7 +542,7 @@ const requestRoleChange = asyncHandler(async (req, res) => {
           requested_Role: user.requested_Role,
         });
       } catch (error) {
-        console.log(error)
+        console.log(error);
         res
           .status(500)
           .json(
@@ -591,7 +614,7 @@ const approveRoleChange = asyncHandler(async (req, res) => {
     const adminRole = req.user.role;
     const adminId = req.user.id;
 
-    if (adminRole !== "SUPER_ADMIN") {
+    if (adminRole !== "SUPER_ADMIN" && adminRole !== "INSTITUTE") {
       return res
         .status(403)
         .json(
@@ -722,65 +745,65 @@ const getAllRequestsByAdminId = async (req, res) => {
 };
 
 // Controller to send a request to become a trainer
-const requestToBecomeTrainer = asyncHandler(async (req, res) => {
-  try {
-    const { instituteId } = req.body;
-    const userId = req.user.id;
-    const userName = `${req.user.f_Name} ${req.user.l_Name}`;
-    const userEmail = req.user.email_id;
+// const requestToBecomeTrainer = asyncHandler(async (req, res) => {
+//   try {
+//     const { instituteId } = req.body;
+//     const userId = req.user.id;
+//     const userName = `${req.user.f_Name} ${req.user.l_Name}`;
+//     const userEmail = req.user.email_id;
 
-    const institute = await InstituteModel.findById(instituteId);
-    if (!institute) {
-      return res.status(404).json(new ApiError(404, "Institute not found"));
-    }
+//     const institute = await InstituteModel.findById(instituteId);
+//     if (!institute) {
+//       return res.status(404).json(new ApiError(404, "Institute not found"));
+//     }
 
-    const user = await Registration.findById(userId);
-    if (!user) {
-      return res.status(404).json(new ApiError(404, "User not found"));
-    }
+//     const user = await Registration.findById(userId);
+//     if (!user) {
+//       return res.status(404).json(new ApiError(404, "User not found"));
+//     }
 
-    if (user.requested_Role === "TRAINER") {
-      return res.status(400).json(new ApiError(400, "Request already pending"));
-    }
+//     if (user.requested_Role === "TRAINER") {
+//       return res.status(400).json(new ApiError(400, "Request already pending"));
+//     }
 
-    user.requested_Role = "TRAINER";
-    user.business_Name = institute.institute_name;
-    await user.save();
+//     user.requested_Role = "TRAINER";
+//     user.business_Name = institute.institute_name;
+//     await user.save();
 
-    const admins = await Registration.find({
-      _id: { $in: institute.admins },
-      role: "INSTITUTE",
-    });
+//     const admins = await Registration.find({
+//       _id: { $in: institute.admins },
+//       role: "INSTITUTE",
+//     });
 
-    if (admins.length === 0) {
-      return res
-        .status(404)
-        .json(new ApiError(404, "No admins found for the institute"));
-    }
+//     if (admins.length === 0) {
+//       return res
+//         .status(404)
+//         .json(new ApiError(404, "No admins found for the institute"));
+//     }
 
-    // Send approval requests to all admins via email
-    admins.forEach(async (admin) => {
-      const adminEmail = admin.email_id;
-      sendEmail(
-        "trainerRequest",
-        {
-          name: "Admin",
-          email: adminEmail,
-        },
-        [userName, institute.institute_name]
-      );
-    });
+//     // Send approval requests to all admins via email
+//     admins.forEach(async (admin) => {
+//       const adminEmail = admin.email_id;
+//       sendEmail(
+//         "trainerRequest",
+//         {
+//           name: "Admin",
+//           email: adminEmail,
+//         },
+//         [userName, institute.institute_name]
+//       );
+//     });
 
-    res.status(200).json({
-      message: "Request sent to institute admins for approval",
-      requested_Role: user.requested_Role,
-    });
-  } catch (error) {
-    res
-      .status(500)
-      .json(new ApiError(500, error.message || "Error sending request", error));
-  }
-});
+//     res.status(200).json({
+//       message: "Request sent to institute admins for approval",
+//       requested_Role: user.requested_Role,
+//     });
+//   } catch (error) {
+//     res
+//       .status(500)
+//       .json(new ApiError(500, error.message || "Error sending request", error));
+//   }
+// });
 
 const getUserDashboard = asyncHandler(async (req, res) => {
   const userId = req.user.id;
@@ -847,7 +870,7 @@ module.exports = {
   forgetPassward,
   resetPassword,
   requestRoleChange,
-  requestToBecomeTrainer,
+  // requestToBecomeTrainer,
   approveRoleChange,
   getAllRequestsByAdminId,
   getUserDashboard,
