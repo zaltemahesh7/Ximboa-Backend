@@ -77,13 +77,12 @@ router.get("/", async (req, res) => {
       return result;
     });
 
-    // Find question by the trainer
     const question = await Question.find({ trainerid: trainerId });
-    // Find Appointment by the trainer
+
     const Appointments = await Appointment.find({ t_id: trainerId });
-    // Find Enquiry by the trainer
+
     const Enquirys = await Enquiry.find({ trainerid: trainerId });
-    // Find Products by the trainer
+
     const Products = await Product.find({ t_id: trainerId })
       .populate("categoryid", "category_name")
       .populate("t_id", "f_Name l_Name role");
@@ -201,7 +200,27 @@ router.get("/", async (req, res) => {
 
     // Get reviews and groups for each course
     // const courseIds = courses.map((course) => course._id);
-    const reviews = await Review.find({ t_id: trainerId });
+    const reviewData = await Review.find({ t_id: trainerId }).populate(
+      "user_id",
+      "f_Name l_Name trainer_image"
+    );
+    console.log(reviewData);
+    const reviews = reviewData.map((review) => {
+      const result = {
+        _id: review?._id || "",
+        t_id: review?.t_id || "",
+        user_id: review?.user_id?._id || "",
+        user_name: review?.user_id?.f_Name
+          ? `${review?.user_id?.f_Name} ${review?.user_id?.l_Name}`
+          : "",
+        trainer_image: review?.user_id?.trainer_image
+          ? `${baseUrl}/${review?.user_id?.trainer_image?.replace(/\\/g, "/")}`
+          : "",
+        review: review?.review || "",
+        star_count: review?.star_count || "",
+      };
+      return result;
+    });
 
     const Educations = await Education.find({ trainer_id: { $in: trainerId } });
 
@@ -341,8 +360,8 @@ router.get("/", async (req, res) => {
       SocialMedias,
       testimonials,
       gallarys,
-      OnGoingBatches,
-      UpcomingBatches,
+      // OnGoingBatches,
+      // UpcomingBatches,
     });
   } catch (error) {
     // console.log(error);

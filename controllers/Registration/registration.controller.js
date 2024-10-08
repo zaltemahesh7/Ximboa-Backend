@@ -462,6 +462,71 @@ const requestRoleChange = asyncHandler(async (req, res) => {
           .json(new ApiError(500, error.message || "Server Error", error));
       }
     }
+
+    if (requested_Role == "TRAINER") {
+      try {
+        const { instituteId } = req.body;
+        const userId = req.user.id;
+        const user = await Registration.findById(userId);
+        const userName = `${user.f_Name} ${user.l_Name}`;
+        const userEmail = user.email_id;
+
+        const institute = await InstituteModel.findById(instituteId);
+        if (!institute) {
+          return res.status(404).json(new ApiError(404, "Institute not found"));
+        }
+
+        if (!user) {
+          return res.status(404).json(new ApiError(404, "User not found"));
+        }
+
+        if (user.requested_Role === "TRAINER") {
+          return res
+            .status(400)
+            .json(new ApiError(400, "Request already pending"));
+        }
+
+        user.requested_Role = "TRAINER";
+        user.business_Name = institute.institute_name;
+        await user.save();
+
+        const admins = await Registration.find({
+          _id: { $in: institute.admins },
+          role: "INSTITUTE",
+        });
+
+        if (admins.length === 0) {
+          return res
+            .status(404)
+            .json(new ApiError(404, "No admins found for the institute"));
+        }
+
+        // Send approval requests to all admins via email
+        admins.forEach(async (admin) => {
+          const adminEmail = admin.email_id;
+          sendEmail(
+            "trainerRequest",
+            {
+              name: "Admin",
+              email: adminEmail,
+            },
+            [userName, institute.institute_name]
+          );
+        });
+
+        res.status(200).json({
+          message: "Request sent to institute admins for approval",
+          requested_Role: user.requested_Role,
+        });
+      } catch (error) {
+        console.log(error)
+        res
+          .status(500)
+          .json(
+            new ApiError(500, error.message || "Error sending request", error)
+          );
+      }
+    }
   } catch (error) {
     console.log(error);
     res
