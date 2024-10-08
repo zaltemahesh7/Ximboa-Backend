@@ -52,7 +52,7 @@ exports.getDashboardCountsForUser = async (req, res) => {
       const totalEvents = await Event.countDocuments({ trainerid: userId });
 
       // Get total product count associated with the logged-in user (assuming products are linked to the user)
-      const totalProducts = await Product.countDocuments({ owner_id: userId });
+      const totalProducts = await Product.countDocuments({ t_id: userId });
 
       dashboardData = {
         totalCourses,
