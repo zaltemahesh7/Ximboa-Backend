@@ -218,6 +218,8 @@ router.get("/", async (req, res) => {
           : "",
         review: review?.review || "",
         star_count: review?.star_count || "",
+        createdAt: review?.createdAt || "",
+        updatedAt: review?.updatedAt || "",
       };
       return result;
     });
