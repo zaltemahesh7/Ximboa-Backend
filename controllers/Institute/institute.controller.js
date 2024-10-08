@@ -88,8 +88,8 @@ const { ApiResponse } = require("../../utils/ApiResponse");
  * @access Private (only accessible by admins or authorized users)
  */
 
-const getInstitutes = asyncHandler(async (req, res) => {
-  const institutes = await InstituteModel.find().sort({ createdAt: -1 });
+const getAllInstitute = asyncHandler(async (req, res) => {
+  const institutes = await InstituteModel.find().select("_id institute_name");
   res.status(200).json(new ApiResponse(200, "Institutes", institutes));
 });
 
@@ -202,4 +202,4 @@ const updateInstitute = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { createInstitute, updateInstitute, getInstitutes };
+module.exports = { createInstitute, updateInstitute, getAllInstitute };
