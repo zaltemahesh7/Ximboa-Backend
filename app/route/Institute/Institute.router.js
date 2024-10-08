@@ -3,6 +3,7 @@ const router = express.Router();
 const {
   createInstitute,
   updateInstitute,
+  getAllInstitute,
 } = require("../../../controllers/Institute/institute.controller");
 const { upload } = require("../../../middleware/multer.middlewares");
 const { jwtAuthMiddleware } = require("../../../middleware/auth");
@@ -13,7 +14,8 @@ const {
   getInstitutes,
 } = require("../../../controllers/InstituteDummy/InstituteDummy.controller");
 
-// Route to create an institute with photo upload
+router.get("/get-institutes", getAllInstitute);
+
 router.post(
   "/create-institute",
   jwtAuthMiddleware,
