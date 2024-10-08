@@ -4,6 +4,8 @@ const { ApiError } = require("../../utils/ApiError");
 const fs = require("fs");
 const { sendEmail } = require("../../utils/email");
 const { asyncHandler } = require("../../utils/asyncHandler");
+const InstituteModel = require("../../model/Institute/Institute.model");
+const { ApiResponse } = require("../../utils/ApiResponse");
 
 // Controller to create an institute
 // const createInstitute = async (req, res) => {
@@ -85,6 +87,12 @@ const { asyncHandler } = require("../../utils/asyncHandler");
  * @route POST /api/institute
  * @access Private (only accessible by admins or authorized users)
  */
+
+const getInstitutes = asyncHandler(async (req, res) => {
+  const institutes = await InstituteModel.find().sort({ createdAt: -1 });
+  res.status(200).json(new ApiResponse(200, "Institutes", institutes));
+});
+
 const createInstitute = async (req, res) => {
   try {
     const {
@@ -194,4 +202,4 @@ const updateInstitute = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { createInstitute, updateInstitute };
+module.exports = { createInstitute, updateInstitute, getInstitutes };
