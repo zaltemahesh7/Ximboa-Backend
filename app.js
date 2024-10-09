@@ -16,10 +16,7 @@ app.use("/admin", adminRoutes);
 
 // const authRoutes = require("./app/route/student/student");
 // app.use("/student", authRoutes); // Register auth routes
-
-
-
-
+const axios = require("axios");
 
 app.get("/api/linkedin/userinfo", async (req, res) => {
   const accessToken = req.headers["authorization"].split(" ")[1]; // Extract the token from the Authorization header
@@ -64,7 +61,6 @@ app.post("/api/linkedin/access-token", async (req, res) => {
     res.status(500).send("Error retrieving access token");
   }
 });
-
 
 const enrollCourse = require("./app/route/student/enrollments");
 app.use("/enrollcourse", jwtAuthMiddleware, enrollCourse);
