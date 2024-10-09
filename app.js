@@ -14,8 +14,6 @@ app.use(bodyparser.json());
 const adminRoutes = require("./app/adminRoutes/adminRoutes");
 app.use("/admin", adminRoutes);
 
-// const authRoutes = require("./app/route/student/student");
-// app.use("/student", authRoutes); // Register auth routes
 const axios = require("axios");
 
 app.get("/api/linkedin/userinfo", async (req, res) => {
