@@ -14,8 +14,6 @@ app.use(bodyparser.json());
 const adminRoutes = require("./app/adminRoutes/adminRoutes");
 app.use("/admin", adminRoutes);
 
-// const authRoutes = require("./app/route/student/student");
-// app.use("/student", authRoutes); // Register auth routes
 const axios = require("axios");
 
 app.get("/api/linkedin/userinfo", async (req, res) => {
@@ -37,9 +35,11 @@ app.get("/api/linkedin/userinfo", async (req, res) => {
 // Endpoint to get the access token
 app.post("/api/linkedin/access-token", async (req, res) => {
   const { code } = req.body;
-  const clientId = "869x28peobof4y";
-  const clientSecret = "WPL_AP1.5pf51u6Nyeta3Rdb.mTh4Gg==";
-  const redirectUri = "http://localhost:4200/auth/linkedin"; // Change to match your redirect
+  const clientId = process.env.LINKEDIN_CLIENT_ID;
+  const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
+  const redirectUri = `${process.env.FRONTEND_URL}/linkedinlogin/auth/linkedin`; // Change to match your redirect
+
+  console.log("Data", { clientId, clientSecret, redirectUri });
 
   try {
     const response = await axios.post(
