@@ -17,6 +17,58 @@ app.use("/admin", adminRoutes);
 // const authRoutes = require("./app/route/student/student");
 // app.use("/student", authRoutes); // Register auth routes
 
+
+
+
+
+app.get("/api/linkedin/userinfo", async (req, res) => {
+  const accessToken = req.headers["authorization"].split(" ")[1]; // Extract the token from the Authorization header
+
+  try {
+    const response = await axios.get("https://api.linkedin.com/v2/userinfo", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    res.json(response.data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error retrieving user info");
+  }
+});
+
+// Endpoint to get the access token
+app.post("/api/linkedin/access-token", async (req, res) => {
+  const { code } = req.body;
+  const clientId = "869x28peobof4y";
+  const clientSecret = "WPL_AP1.5pf51u6Nyeta3Rdb.mTh4Gg==";
+  const redirectUri = "http://localhost:4200/auth/linkedin"; // Change to match your redirect
+
+  try {
+    const response = await axios.post(
+      "https://www.linkedin.com/oauth/v2/accessToken",
+      null,
+      {
+        params: {
+          grant_type: "authorization_code",
+          code: code,
+          redirect_uri: redirectUri,
+          client_id: clientId,
+          client_secret: clientSecret,
+        },
+      }
+    );
+    res.json(response.data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error retrieving access token");
+  }
+});
+
+
+
+
+
 const enrollCourse = require("./app/route/student/enrollments");
 app.use("/enrollcourse", jwtAuthMiddleware, enrollCourse);
 
