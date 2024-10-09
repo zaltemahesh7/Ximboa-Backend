@@ -42,7 +42,7 @@ app.post("/api/linkedin/access-token", async (req, res) => {
   const { code } = req.body;
   const clientId = "86rx8jhlo7bu1n";
   const clientSecret = "WPL_AP1.3mJlequXwMfEamwA.mTh4Gg==";
-  const redirectUri = "http://localhost:54991/auth/linkedin"; // Change to match your redirect
+  const redirectUri = "http://localhost:56073/auth/linkedin"; // Change to match your redirect
 
   try {
     const response = await axios.post(
