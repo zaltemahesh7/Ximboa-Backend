@@ -37,7 +37,7 @@ app.post("/api/linkedin/access-token", async (req, res) => {
   const { code } = req.body;
   const clientId = process.env.LINKEDIN_CLIENT_ID;
   const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
-  const redirectUri = "http://localhost:4200/auth/linkedin"; // Change to match your redirect
+  const redirectUri = "http://localhost:4200/linkedinlogin/auth/linkedin"; // Change to match your redirect
 
   console.log("Data", { clientId, clientSecret, redirectUri });
 
