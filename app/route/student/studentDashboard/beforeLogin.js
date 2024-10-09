@@ -193,7 +193,7 @@ router.get("/home", async (req, res) => {
         productSellingPrice: product?.product_selling_prize || "",
         avgRating: avgRating || "",
         categoryName: product?.categoryid?.category_name || "",
-        identityFlag: product?.t_id?.role === "" ? "Institute" : "Self Expert",
+        identityFlag: product?.t_id?.role,
         productFlag: product?.product_flag || "",
       };
     });
@@ -805,8 +805,7 @@ router.get("/allproduct", async function (req, res, next) {
           products_name: product?.product_name || "",
           products_price: product?.product_prize || "",
           products_selling_price: product?.product_selling_prize || "",
-          identityFlag:
-            product?.t_id?.role === "TRAINER" ? "Institute" : "Self Expert",
+          identityFlag: product?.t_id?.role,
           product_flag: product?.product_flag || "",
         };
         return productData;
