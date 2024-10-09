@@ -176,7 +176,7 @@ const forgetPassward = async (req, res) => {
       [resetLink]
     );
 
-    res.status(200).json({ message: "Reset link sent to email" });
+    res.status(200).json({ message: "Reset link sent to email", token });
   } catch (err) {
     console.log(err);
     res.status(500).json(new ApiError(500, err.message, err));
