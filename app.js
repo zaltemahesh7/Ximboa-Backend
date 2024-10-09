@@ -40,9 +40,9 @@ app.get("/api/linkedin/userinfo", async (req, res) => {
 // Endpoint to get the access token
 app.post("/api/linkedin/access-token", async (req, res) => {
   const { code } = req.body;
-  const clientId = "869x28peobof4y";
-  const clientSecret = "WPL_AP1.5pf51u6Nyeta3Rdb.mTh4Gg==";
-  const redirectUri = "http://localhost:4200/auth/linkedin"; // Change to match your redirect
+  const clientId = "86rx8jhlo7bu1n";
+  const clientSecret = "WPL_AP1.3mJlequXwMfEamwA.mTh4Gg==";
+  const redirectUri = "http://localhost:54991/auth/linkedin"; // Change to match your redirect
 
   try {
     const response = await axios.post(
@@ -165,6 +165,7 @@ const afterLogin = require("./app/route/student/studentDashboard/afterLogin");
 app.use("/", afterLogin);
 
 const dummy = require("./app/route/dummy.routes");
+const { default: axios } = require("axios");
 app.use("/dummy", dummy);
 
 // const mongoose = require("mongoose");
