@@ -193,7 +193,7 @@ router.get("/home", async (req, res) => {
         productSellingPrice: product?.product_selling_prize || "",
         avgRating: avgRating || "",
         categoryName: product?.categoryid?.category_name || "",
-        identityFlag: product?.t_id?.role === "" ? "Institute" : "Self Expert",
+        identityFlag: product?.t_id?.role,
         productFlag: product?.product_flag || "",
       };
     });
