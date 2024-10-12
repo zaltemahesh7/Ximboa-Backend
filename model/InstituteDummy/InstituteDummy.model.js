@@ -37,8 +37,8 @@ const InstituteDummySchema = new Schema(
       our_services: String,
     },
     courses: {
-      type: [mongoose.Schema.Types.ObjectId],
-      ref: "Course",
+      type: [String],
+      // ref: "Course",
       //   required: [true, "At least one course is required"],
       //   validate: {
       //     validator: (arr) => arr.length > 0,

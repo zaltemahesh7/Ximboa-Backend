@@ -134,6 +134,18 @@ router.post(
       // Save the course
       const savedCourse = await course.save();
 
+      const trainerId = req.user.id;
+
+      await registration.findByIdAndUpdate(
+        trainerId,
+        {
+          $addToSet: {
+            categories: savedCourse?.category_id,
+          },
+        },
+        { new: true }
+      );
+
       // Notify the trainer about the new course
       const notification = new NotificationModel({
         recipient: req.user.id,
@@ -144,13 +156,7 @@ router.post(
       await notification.save();
       res
         .status(200)
-        .json(
-          new ApiResponse(
-            200,
-            "Course Added Successfully",
-            savedCourse.course_name
-          )
-        );
+        .json(new ApiResponse(200, "Course Added Successfully", savedCourse));
     } catch (err) {
       console.error(err);
       res

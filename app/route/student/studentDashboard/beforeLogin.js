@@ -124,9 +124,15 @@ router.get("/home", async (req, res) => {
           trainers: trainer._id,
         }).select("institute_name social_Media");
 
-        const stcount = await Review.findOne({ t_id: trainer._id }).select(
-          "star_count"
-        );
+        const stcount = await Review.aggregate([
+          { $match: { t_id: trainer._id } },
+          {
+            $group: {
+              _id: "$t_id",
+              averageRating: { $avg: "$star_count" },
+            },
+          },
+        ]);
 
         return {
           t_id: trainer?._id,
@@ -137,10 +143,11 @@ router.get("/home", async (req, res) => {
           l_Name: trainer?.l_Name,
           role: trainer?.role,
           course_count: trainer?.course_count,
+          categories: trainer?.categories?.category_name,
           social_Media: institute
             ? institute?.social_Media
             : trainer?.social_Media || "",
-          ratings: stcount?.t_id?.star_count || "",
+          ratings: stcount[0]?.averageRating || "",
           trainer_image: trainer?.trainer_image
             ? `${baseUrl}/${trainer?.trainer_image?.replace(/\\/g, "/")}`
             : "",
@@ -170,17 +177,17 @@ router.get("/home", async (req, res) => {
       //   model: "Review",
       // })
       .select(
-        "product_image product_name product_selling_prize product_prize is_institute is_virtual"
+        "product_image product_name product_selling_prize product_prize product_flag"
       );
 
     const productDetails = products.map((product) => {
-      let avgRating = 0;
+      let productRating = 0;
       if (product.reviews && product.reviews.length > 0) {
         const totalRating = product.reviews.reduce(
           (sum, review) => sum + review.star_count,
           0
         );
-        avgRating = (totalRating / product.reviews.length).toFixed(1); // Optional: round to 1 decimal
+        productRating = (totalRating / product.reviews.length).toFixed(1);
       }
 
       return {
@@ -191,9 +198,9 @@ router.get("/home", async (req, res) => {
         productName: product?.product_name || "",
         productPrice: product?.product_prize || "",
         productSellingPrice: product?.product_selling_prize || "",
-        avgRating: avgRating || "",
+        avgRating: productRating || "",
         categoryName: product?.categoryid?.category_name || "",
-        identityFlag: product?.t_id?.role,
+        identityFlag: product?.t_id?.role || "",
         productFlag: product?.product_flag || "",
       };
     });
@@ -204,8 +211,9 @@ router.get("/home", async (req, res) => {
       .skip(startIndex)
       .limit(limit)
       .sort({ createdAt: -1 })
+      .populate("trainerid")
       .select(
-        "event_thumbnail event_date event_name event_type event_start_time event_end_time"
+        "event_thumbnail event_date event_name event_type event_start_time registered_users event_end_time"
       );
 
     const eventDetails = events.map((event) => {
@@ -218,8 +226,9 @@ router.get("/home", async (req, res) => {
         eventStartTime: event?.event_start_time || "",
         eventEndTime: event?.event_end_time || "",
         eventName: event?.event_name || "",
-        mode: event?.event_type === "Online" ? "Online" : "Offline",
-        enrollments: event?.registered_users?.length,
+        mode: event?.event_type || "",
+        enrollments: event?.registered_users?.length || "",
+        event_falg: event?.trainerid.role || "",
       };
     });
 
@@ -326,8 +335,7 @@ router.get("/allcourses", async (req, res) => {
         ),
         course_price: course?.price || "",
         course_offer_prize: course?.offer_prize || "",
-        course_flag:
-          course?.trainer_id?.role === "TRAINER" ? "Institute" : "Self Expert",
+        course_flag: course?.trainer_id?.role,
       };
       return result;
     });
