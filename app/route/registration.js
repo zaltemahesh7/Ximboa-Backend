@@ -63,6 +63,8 @@ router.post("/", upload.single("trainer_image"), async function (req, res) {
 
   const trainer_image = req.file ? req.file.path : "";
 
+  const baseUrl = req.protocol + "://" + req.get("host");
+
   const newRegistration = new Registration({
     f_Name,
     middle_Name,
@@ -127,7 +129,12 @@ router.post("/", upload.single("trainer_image"), async function (req, res) {
     await notification.save();
 
     // Respond with the token
-    res.status(200).json({ token });
+    res
+      .status(200)
+      .json({
+        token,
+        profile_image: `${baseUrl}/${result.trainer_image.replace(/\\/g, "/")}`,
+      });
   } catch (err) {
     console.log(err);
     res.status(500).json(new ApiError(500, err.message || "Server Error", err));

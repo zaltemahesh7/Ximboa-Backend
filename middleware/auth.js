@@ -39,4 +39,14 @@ const generateToken = (userData, req) => {
   return jwt.sign(payload, "bhojsoft");
 };
 
-module.exports = { jwtAuthMiddleware, generateToken };
+// Middleware to check if the user's role is "USER"
+const checkUserRole = (req, res, next) => {
+  if (req.user && req.user.role === "USER") {
+    return res.status(403).json({
+      message: "Permission denied. Users with role 'USER' are not allowed.",
+    });
+  }
+  next();
+};
+
+module.exports = { jwtAuthMiddleware, generateToken, checkUserRole };

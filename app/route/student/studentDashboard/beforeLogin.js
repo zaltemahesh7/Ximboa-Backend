@@ -57,6 +57,7 @@ router.get("/home", async (req, res) => {
               )}`
             : "",
           course_rating: averageRating || "",
+          tags: course?.tags || "",
           course_duration: Math.floor(
             Math.round(
               ((course?.end_date - course?.start_date) /
@@ -492,6 +493,7 @@ router.get("/course/:id", async (req, res, next) => {
         : "",
       trainer_id: course?.trainer_id?._id,
       course_rating: averageRating || "",
+      tags: course?.tags || "",
       course_duration: Math.floor(
         Math.round(
           ((course?.end_date - course?.start_date) /
