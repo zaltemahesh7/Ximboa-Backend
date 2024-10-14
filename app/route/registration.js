@@ -41,90 +41,6 @@ const upload = multer({
   fileFilter: fileFilter,
 });
 
-// router.post("/", upload.single("trainer_image"), async function (req, res) {
-//   const {
-//     f_Name,
-//     middle_Name,
-//     l_Name,
-//     email_id,
-//     password,
-//     isTrainer,
-//     mobile_number,
-//     date_of_birth,
-//     whatsapp_no,
-//     rating_count,
-//     address1,
-//     address2,
-//     city,
-//     country,
-//     state,
-//     pincode,
-//   } = req.body;
-
-//   const trainer_image = req.file ? req.file.path : "";
-
-//   const newRegistration = new Registration({
-//     f_Name,
-//     middle_Name,
-//     l_Name,
-//     email_id,
-//     password,
-//     isTrainer,
-//     mobile_number,
-//     trainer_image,
-//     date_of_birth,
-//     whatsapp_no,
-//     rating_count,
-//     address1,
-//     address2,
-//     city,
-//     country,
-//     state,
-//     pincode,
-//   });
-
-//   // Check if user already exists
-//   const existingUser = await Registration.findOne({ email_id });
-//   if (existingUser) {
-//     return res.status(409).json(new ApiError(409, "email_id already exists"));
-//   }
-
-//   const existingMobileNumber = await Registration.findOne({
-//     mobile_number: mobile_number,
-//   });
-//   if (existingMobileNumber) {
-//     return res
-//       .status(409)
-//       .json(new ApiError(409, "Mobile number is already registered"));
-//   }
-
-//   newRegistration
-//     .save()
-//     .then((result) => {
-//       sendEmail("registrationSuccess", {
-//         name: f_Name,
-//         email: email_id,
-//       });
-//       // Generate a token
-//       const payload = {
-//         id: newRegistration.id,
-//         role: newRegistration.role,
-//         username: newRegistration.email_id,
-//       };
-//       const token = generateToken(payload, req);
-
-//       res.status(200).json({ token });
-//     })
-//     .catch((err) => {
-//       console.log(err);
-//       res
-//         .status(500)
-//         .json(new ApiError(500, err.message || "Server Error", err));
-//     });
-// });
-
-// GET route to validate user login -----------------------------------------------------------
-
 router.post("/", upload.single("trainer_image"), async function (req, res) {
   const {
     f_Name,
@@ -425,42 +341,6 @@ router.get("/trainer", jwtAuthMiddleware, function (req, res) {
     });
 });
 
-// POST route to reset the password
-// router.post("/reset-password/:token", async (req, res) => {
-//   const { token } = req.params;
-//   const { password } = req.body;
-//   try {
-//     const user = await Registration.findOne({
-//       resetPasswordToken: token,
-//       resetPasswordExpires: { $gt: Date.now() },
-//     });
-//     if (!user) {
-//       return res
-//         .status(400)
-//         .json({ message: "Password reset token is invalid or has expired" });
-//     }
-//     user.password = password;
-//     user.resetPasswordToken = undefined;
-//     user.resetPasswordExpires = undefined;
-
-//     await user.save();
-
-//     const notification = new NotificationModel({
-//       recipient: user._id,
-//       message: `Hello ${user.f_Name} ${user.l_Name}, Your Profile updated successfully :).`,
-//       activityType: "PROFILE_UPDATED",
-//       relatedId: user._id,
-//     });
-//     await notification.save();
-
-//     res.status(200).json({ message: "Password has been reset" });
-//   } catch (err) {
-//     console.log(err);
-//     res.status(500).json({ error: err });
-//   }
-// });
-
-// POST route to logout user
 router.post("/logout", (req, res) => {
   req.session.destroy((err) => {
     if (err) {

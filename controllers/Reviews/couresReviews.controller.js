@@ -21,7 +21,7 @@ const courseReviews = asyncHandler(async (req, res) => {
 
     res
       .status(200)
-      .json(new ApiResponse(200, "Review Add success,", course.course_name));
+      .json(new ApiResponse(200, "Review Add success,", course?.course_name));
   } catch (error) {
     console.log(error);
     res

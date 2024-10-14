@@ -134,6 +134,18 @@ router.post(
       // Save the course
       const savedCourse = await course.save();
 
+      const trainerId = req.user.id;
+
+      await registration.findByIdAndUpdate(
+        trainerId,
+        {
+          $addToSet: {
+            categories: savedCourse?.category_id,
+          },
+        },
+        { new: true }
+      );
+
       // Notify the trainer about the new course
       const notification = new NotificationModel({
         recipient: req.user.id,
@@ -144,13 +156,7 @@ router.post(
       await notification.save();
       res
         .status(200)
-        .json(
-          new ApiResponse(
-            200,
-            "Course Added Successfully",
-            savedCourse.course_name
-          )
-        );
+        .json(new ApiResponse(200, "Course Added Successfully", savedCourse));
     } catch (err) {
       console.error(err);
       res
@@ -212,7 +218,7 @@ router.get("/:id", async (req, res, next) => {
           )}`
         : "",
       trainer_id: courseData?.trainer_id?._id,
-      course_rating: averageRating || "", // Placeholder for ratings if available
+      course_rating: averageRating || "",
       course_duration: Math.floor(
         Math.round(
           ((courseData?.end_date - courseData?.start_date) /
@@ -236,7 +242,7 @@ router.put(
   "/:id",
   upload.fields([
     { name: "thumbnail_image", maxCount: 1 },
-    { name: "gallary_image", maxCount: 1 },
+    { name: "gallary_image", maxCount: 5 },
     { name: "trainer_materialImage", maxCount: 1 },
   ]),
   async (req, res) => {

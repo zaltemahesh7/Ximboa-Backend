@@ -36,7 +36,7 @@ router.post(
 
       // If file is uploaded, get file path from Multer
       const event_thumbnail = req.file ? req.file.path : "";
-      console.log(event_thumbnail);
+      // console.log(event_thumbnail);
 
       const newEvent = new Event({
         event_name,
@@ -207,67 +207,76 @@ router.get("/trainer/bytrainer", async (req, res) => {
 });
 
 // Update an event by ID
-router.put("/:id", async (req, res) => {
-  const eventId = req.params.id;
-  const {
-    event_name,
-    event_type,
-    event_info,
-    event_description,
-    event_category,
-    event_thumbnail,
-    event_date,
-    event_start_time,
-    event_end_time,
-    event_location,
-    event_languages,
-    estimated_seats,
-  } = req.body;
-  const userId = req.user.id;
+router.put(
+  "/:id",
+  jwtAuthMiddleware,
+  upload.single("event_thumbnail"),
+  async (req, res) => {
+    const eventId = req.params.id;
+    const {
+      event_name,
+      event_type,
+      event_info,
+      event_description,
+      event_category,
+      event_thumbnail,
+      event_date,
+      event_start_time,
+      event_end_time,
+      event_location,
+      event_languages,
+      estimated_seats,
+    } = req.body;
+    const userId = req.user.id;
+    const eventImage = req.file ? req.file.path : "";
 
-  try {
-    // Find the event by ID
-    const event = await Event.findById(eventId);
+    try {
+      // Find the event by ID
+      const event = await Event.findById(eventId);
 
-    if (!event) {
-      return res.status(404).json(new ApiError(404, "Event not found."));
+      if (!event) {
+        return res.status(404).json(new ApiError(404, "Event not found."));
+      }
+
+      // Check if the current user is the trainer who created the event
+      // if (event.trainerid.toString() !== userId) {
+      //   return res
+      //     .status(403)
+      //     .json(
+      //       new ApiError(403, "You are not authorized to update this event.")
+      //     );
+      // }
+
+      // Update event details
+      event.event_name = event_name || event.event_name;
+      event.event_type = event_type || event.event_type;
+      event.event_info = event_info || event.event_info;
+      event.event_description = event_description || event.event_description;
+      event.event_category = event_category || event.event_category;
+      event.event_thumbnail = event_thumbnail || event.event_thumbnail;
+      event.event_date = event_date || event.event_date;
+      event.event_start_time = event_start_time || event.event_start_time;
+      event.event_end_time = event_end_time || event.event_end_time;
+      event.event_location = event_location || event.event_location;
+      event.event_languages = event_languages || event.event_languages;
+      event.estimated_seats = estimated_seats || event.estimated_seats;
+      event.event_thumbnail = eventImage || event.event_thumbnail;
+
+      const updatedEvent = await event.save();
+
+      res
+        .status(200)
+        .json(new ApiResponse(200, "Event updated successfully", updatedEvent));
+    } catch (error) {
+      console.error("Event update error:", error);
+      res
+        .status(500)
+        .json(
+          new ApiError(500, error.message || "Error updating event", error)
+        );
     }
-
-    // Check if the current user is the trainer who created the event
-    // if (event.trainerid.toString() !== userId) {
-    //   return res
-    //     .status(403)
-    //     .json(
-    //       new ApiError(403, "You are not authorized to update this event.")
-    //     );
-    // }
-
-    // Update event details
-    event.event_name = event_name || event.event_name;
-    event.event_type = event_type || event.event_type;
-    event.event_info = event_info || event.event_info;
-    event.event_description = event_description || event.event_description;
-    event.event_category = event_category || event.event_category;
-    event.event_thumbnail = event_thumbnail || event.event_thumbnail;
-    event.event_date = event_date || event.event_date;
-    event.event_start_time = event_start_time || event.event_start_time;
-    event.event_end_time = event_end_time || event.event_end_time;
-    event.event_location = event_location || event.event_location;
-    event.event_languages = event_languages || event.event_languages;
-    event.estimated_seats = estimated_seats || event.estimated_seats;
-
-    const updatedEvent = await event.save();
-
-    res
-      .status(200)
-      .json(new ApiResponse(200, "Event updated successfully", updatedEvent));
-  } catch (error) {
-    console.error("Event update error:", error);
-    res
-      .status(500)
-      .json(new ApiError(500, error.message || "Error updating event", error));
   }
-});
+);
 
 // Delete an event by ID
 router.delete("/:id", async (req, res) => {
