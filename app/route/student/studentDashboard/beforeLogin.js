@@ -135,8 +135,6 @@ router.get("/home", async (req, res) => {
           },
         ]);
 
-        console.log(trainer?.date_of_birth.getDay());
-
         return {
           t_id: trainer?._id,
           Business_Name: institute
@@ -145,7 +143,6 @@ router.get("/home", async (req, res) => {
           f_Name: trainer?.f_Name,
           l_Name: trainer?.l_Name,
           role: trainer?.role,
-          bday: trainer?.date_of_birth?.getDate() || "",
           course_count: trainer?.course_count,
           categories: trainer?.categories?.category_name,
           social_Media: institute
