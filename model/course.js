@@ -47,6 +47,9 @@ const courseShema = new mongoose.Schema(
     trainer_materialImage: {
       type: String,
     },
+    tags: {
+      type: String,
+    },
     category_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",

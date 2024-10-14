@@ -6,6 +6,7 @@ const { ApiResponse } = require("../../utils/ApiResponse");
 const { ApiError } = require("../../utils/ApiError");
 const registration = require("../../model/registration");
 const NotificationModel = require("../../model/Notifications/Notification.model");
+const { checkUserRole } = require("../../middleware/auth");
 
 // Multer configuration for file uploads
 const storage = multer.diskStorage({
@@ -104,6 +105,7 @@ router.post(
     { name: "gallary_image", maxCount: 1 },
     { name: "trainer_materialImage", maxCount: 1 },
   ]),
+  checkUserRole,
   async (req, res) => {
     const course = new Course({
       course_name: req.body.course_name,
@@ -114,6 +116,7 @@ router.post(
       end_date: req.body.end_date,
       start_time: req.body.start_time,
       end_time: req.body.end_time,
+      tags: req.body.tags,
       course_brief_info: req.body.course_brief_info,
       course_brief_info: req.body.course_brief_info,
       course_information: req.body.course_information,
@@ -172,7 +175,6 @@ router.get("/:id", async (req, res, next) => {
   const baseUrl = req.protocol + "://" + req.get("host");
 
   try {
-    // Fetch course by ID and populate category and trainer details
     const courseData = await Course.findById(req.params.id)
       .populate("category_id", "category_name -_id")
       .populate("trainer_id", "f_Name l_Name business_Name trainer_image role");
@@ -227,6 +229,7 @@ router.get("/:id", async (req, res, next) => {
         ) / 100
       ),
       course_price: courseData?.price || "",
+      tags: courseData?.tags || "",
       course_offer_prize: courseData?.offer_prize || "",
       course_flag: courseData?.trainer_id?.role || "",
     };
@@ -245,6 +248,7 @@ router.put(
     { name: "gallary_image", maxCount: 5 },
     { name: "trainer_materialImage", maxCount: 1 },
   ]),
+  checkUserRole,
   async (req, res) => {
     const courseId = req.params.id;
     const updateData = {
@@ -256,6 +260,7 @@ router.put(
       end_date: req.body.end_date,
       start_time: req.body.start_time,
       end_time: req.body.end_time,
+      tags: req.body.tags,
       course_brief_info: req.body.course_brief_info,
       course_information: req.body.course_information,
       thumbnail_image: req.files["thumbnail_image"]
