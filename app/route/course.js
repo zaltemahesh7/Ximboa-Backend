@@ -218,7 +218,7 @@ router.get("/:id", async (req, res, next) => {
           )}`
         : "",
       trainer_id: courseData?.trainer_id?._id,
-      course_rating: averageRating || "", // Placeholder for ratings if available
+      course_rating: averageRating || "",
       course_duration: Math.floor(
         Math.round(
           ((courseData?.end_date - courseData?.start_date) /
@@ -242,7 +242,7 @@ router.put(
   "/:id",
   upload.fields([
     { name: "thumbnail_image", maxCount: 1 },
-    { name: "gallary_image", maxCount: 1 },
+    { name: "gallary_image", maxCount: 5 },
     { name: "trainer_materialImage", maxCount: 1 },
   ]),
   async (req, res) => {

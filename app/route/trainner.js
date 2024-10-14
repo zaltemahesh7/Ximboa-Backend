@@ -71,8 +71,7 @@ router.get("/", async (req, res) => {
         ),
         course_price: course?.price || "",
         course_offer_prize: course?.offer_prize || "",
-        course_flag:
-          course?.trainer_id?.role === "TRAINER" ? "Institute" : "Self Expert",
+        course_flag: course?.trainer_id?.role || "",
       };
       return result;
     });

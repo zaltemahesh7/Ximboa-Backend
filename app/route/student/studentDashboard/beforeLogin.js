@@ -111,6 +111,7 @@ router.get("/home", async (req, res) => {
           trainer_image: 1,
           role: 1,
           course_count: { $size: "$courses" },
+          date_of_birth: 1,
         },
       },
     ])
@@ -134,6 +135,8 @@ router.get("/home", async (req, res) => {
           },
         ]);
 
+        console.log(trainer?.date_of_birth.getDay());
+
         return {
           t_id: trainer?._id,
           Business_Name: institute
@@ -142,6 +145,7 @@ router.get("/home", async (req, res) => {
           f_Name: trainer?.f_Name,
           l_Name: trainer?.l_Name,
           role: trainer?.role,
+          bday: trainer?.date_of_birth?.getDate() || "",
           course_count: trainer?.course_count,
           categories: trainer?.categories?.category_name,
           social_Media: institute
@@ -409,6 +413,16 @@ router.get("/trainers", async (req, res) => {
             trainers: trainer._id,
           }).select("institute_name social_Media");
 
+          const stcount = await Review.aggregate([
+            { $match: { t_id: trainer._id } },
+            {
+              $group: {
+                _id: "$t_id",
+                averageRating: { $avg: "$star_count" },
+              },
+            },
+          ]);
+
           return {
             _id: trainer?._id,
             Business_Name: institute
@@ -422,7 +436,7 @@ router.get("/trainers", async (req, res) => {
             social_Media: institute
               ? institute?.social_Media
               : trainer?.social_Media || "",
-            ratings: "",
+            ratings: stcount[0]?.averageRating || "",
             trainer_image: trainer?.trainer_image
               ? `${baseUrl}/${trainer?.trainer_image?.replace(/\\/g, "/")}`
               : "",
@@ -579,6 +593,16 @@ router.get("/event/:id", async (req, res) => {
       trainer_id: eventWithFullImageUrls?.trainerid,
     });
 
+    const stcount = await Review.aggregate([
+      { $match: { t_id: eventWithFullImageUrls?.trainerid } },
+      {
+        $group: {
+          _id: "$t_id",
+          averageRating: { $avg: "$star_count" },
+        },
+      },
+    ]);
+
     const institute = await InstituteModel.findOne({
       trainers: eventWithFullImageUrls?.trainerid?._id,
     }).select("institute_name social_Media");
@@ -602,6 +626,7 @@ router.get("/event/:id", async (req, res) => {
       estimated_seats: eventWithFullImageUrls?.estimated_seats || "",
       event_location: eventWithFullImageUrls?.event_location || "",
       event_type: eventWithFullImageUrls?.event_type || "",
+      event_flag: eventWithFullImageUrls?.trainerid?.role || "",
       registered_users: eventWithFullImageUrls?.registered_users.length || "",
       trainer_image: eventWithFullImageUrls?.trainerid?.trainer_image
         ? `${baseUrl}/${eventWithFullImageUrls?.trainerid?.trainer_image?.replace(
@@ -618,7 +643,7 @@ router.get("/event/:id", async (req, res) => {
       social_media: institute?.social_Media
         ? institute?.social_Media
         : eventWithFullImageUrls?.trainerid?.social_Media || "",
-      trainier_rating: "Pending..###...",
+      trainier_rating: stcount[0]?.averageRating || "",
       total_course: courseCount || "",
     };
     if (!event) {
@@ -634,7 +659,7 @@ router.get("/event/:id", async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(startIndex)
       .limit(limit)
-      .populate("trainerid", "f_Name l_Name")
+      .populate("trainerid", "f_Name l_Name role business_Name")
       .populate("event_category", "category_name");
 
     const relatedEvent = result.map((event) => ({
@@ -643,6 +668,7 @@ router.get("/event/:id", async (req, res) => {
       event_date: event?.event_date || "",
       event_type: event?.event_type || "",
       event_category: event?.event_category?.category_name || "",
+      event_flag: eventWithFullImageUrls?.trainerid?.role || "",
       trainer_id: event?.trainerid?._id || "",
       registered_users: event?.registered_users.length || "",
       event_thumbnail: event?.event_thumbnail
@@ -664,7 +690,7 @@ router.get("/allevents", async (req, res) => {
     const events = await Event.find()
       .sort({ createdAt: -1 })
       .populate("event_category", "category_name -_id")
-      .populate("trainerid", "f_Name l_Name");
+      .populate("trainerid", "f_Name l_Name role business_Name");
     if (!events || events.length === 0) {
       return res.status(404).json(new ApiError(404, "Events not found"));
     }
@@ -683,6 +709,7 @@ router.get("/allevents", async (req, res) => {
         event_date: event?.event_date || "",
         event_category: event?.event_category?.category_name || "",
         event_type: event?.event_type || "",
+        event_flag: event?.trainerid?.role || "",
         trainer_id: event?.trainerid?._id || "",
         event_rating: averageRating || "",
         registered_users: event?.registered_users.length || "",
@@ -695,6 +722,7 @@ router.get("/allevents", async (req, res) => {
 
     res.status(200).json(eventsWithThumbnails);
   } catch (err) {
+    console.log(err);
     res
       .status(500)
       .json(new ApiError(500, err.message || "Error fetching Events", err));
