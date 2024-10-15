@@ -493,7 +493,7 @@ router.get("/course/:id", async (req, res, next) => {
         : "",
       trainer_id: course?.trainer_id?._id,
       course_rating: averageRating || "",
-      tags: course?.tags || "",
+      tags: course?.tags?.split(" ").map((tag) => tag.trim()) || "",
       course_duration: Math.floor(
         Math.round(
           ((course?.end_date - course?.start_date) /

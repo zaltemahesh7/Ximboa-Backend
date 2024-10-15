@@ -47,7 +47,7 @@ const RegistrationSchema = new mongoose.Schema(
     },
     mobile_number: {
       type: String,
-      required: true,
+      // required: true,
     },
     whatsapp_no: {
       type: String,

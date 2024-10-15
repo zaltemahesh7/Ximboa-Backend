@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 const path = require("path");
-const { jwtAuthMiddleware } = require("./middleware/auth");
+const { jwtAuthMiddleware, generateToken } = require("./middleware/auth");
 
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use(cors());
@@ -25,7 +25,31 @@ app.get("/api/linkedin/userinfo", async (req, res) => {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    res.json(response.data);
+
+    const { id, localizedFirstName, localizedLastName, emailAddress } =
+      response.data;
+    let user = await registration.findOne({ linkedinId: id });
+
+    if (!user) {
+      // If user doesn't exist, create a new user
+      user = new registration({
+        f_Name: localizedFirstName,
+        l_Name: localizedLastName,
+        email_id: emailAddress,
+        password: localizedFirstName,
+      });
+
+      await user.save();
+    }
+
+    const payload = {
+      id: user.id,
+      role: user.role,
+      username: user.email_id,
+    };
+    const token = generateToken(payload, req);
+
+    res.json({ data: response.data, token });
   } catch (error) {
     console.error(error);
     res.status(500).send("Error retrieving user info");
@@ -37,7 +61,7 @@ app.post("/api/linkedin/access-token", async (req, res) => {
   const { code } = req.body;
   const clientId = process.env.LINKEDIN_CLIENT_ID;
   const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
-  const redirectUri = `${process.env.FRONTEND_URL}/auth/linkedin`; // Change to match your redirect
+  const redirectUri = `${process.env.FRONTEND_URL}/auth/linkedin`;
 
   console.log("Data", { clientId, clientSecret, redirectUri });
 
@@ -158,16 +182,7 @@ const afterLogin = require("./app/route/student/studentDashboard/afterLogin");
 app.use("/", afterLogin);
 
 const dummy = require("./app/route/dummy.routes");
+const registration = require("./model/registration");
 app.use("/dummy", dummy);
-
-// const mongoose = require("mongoose");
-// mongoose
-//   .connect("mongodb://127.0.0.1:27017/bhoj_soft_solution")
-//   .then(function () {
-//     console.log("connection successful");
-//   })
-//   .catch(function () {
-//     console.log("failed");
-//   });
 
 module.exports = app;

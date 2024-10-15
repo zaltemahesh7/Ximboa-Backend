@@ -14,6 +14,7 @@ const AvailableUserRoles = Object.values(UserRolesEnum);
  * @Email_Templates { registrationSuccess }
  */
 
+const banner = "https://ximboatest.s3.amazonaws.com/Innner+banner.jpg";
 const emailTemplates = {
   instituteRequest: {
     subject: "New Institute Approval Request",
@@ -44,9 +45,9 @@ const emailTemplates = {
     subject: "Login Successful",
     html: (name, logoUrl) => `
     <html>
-    <head>
-      <style>
-        * {
+  <head>
+    <style>
+      * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -58,35 +59,33 @@ body {
 
 .container {
     width: 100%;
-    /* max-width: 1200px; */
     margin: 0 auto;
-    /* padding: 20px; */
     box-shadow: 0 10px 30px rgba(17, 12, 46, 0.1);
     border-radius: 10px;
 }
 
-/* Header Section */
+
 .header {
     display: flex;
- justify-content: space-between;
-    align-items: center; /* Center items */
+    justify-content: space-around !important;
+    align-items: center; 
     background-color: #E9EEF8;
     padding: 20px;
     border-radius: 10px 10px 0 0;
 }
 
 .header-text {
-    text-align: center; /* Center align text */
+    text-align: center; 
 }
 
 .logo {
     width: 150px;
-    height: auto; /* Maintain aspect ratio */
+    height: auto; 
 }
 
 .subject {
     font-size: 20px;
-    /* font-weight: bold; */
+    
 }
 
 .email a {
@@ -94,13 +93,12 @@ body {
     text-decoration: none;
 }
 
-/* Banner Image */
 .banner {
     width: 100%;
-    height: auto; /* Maintain aspect ratio */
+    height: auto; 
 }
 
-/* Content Section */
+
 .content {
     padding: 0px 30px;
     margin: 20px;
@@ -129,19 +127,17 @@ body {
     cursor: pointer;
 }
 
-/* Message Section */
 .message-section {
     margin-bottom: 20px;
 }
 
-/* Table Section */
 .table-container {
-    overflow-x: auto;
+   
     margin-bottom: 20px;
 }
 
 .info-table {
-    width: 60%; /* Take full width */
+    width: 60%; 
     border-collapse: collapse;
 }
 
@@ -151,14 +147,13 @@ body {
     text-align: left;
 }
 
-/* Footer Section */
 .footer {
     background-color: #265BBD;
     color: white;
     padding: 10px  26px;
     display: flex;
     justify-content: space-between;
-    align-items: center; /* Center items */
+    align-items: center;
     border-radius: 0 0 10px 10px;
     gap: 10px;
 }
@@ -170,7 +165,7 @@ body {
 
 .social-icons {
     display: flex;
-    justify-content: center; /* Center items */
+    justify-content: center; 
     font-size: 12px;
     flex-direction: row;
 }
@@ -178,7 +173,6 @@ body {
 .icon-border {
     border: 1px solid white;
     border-radius: 50%;
-    /* margin: 0 3px; */
     color: white;
     text-align: center;
     
@@ -193,29 +187,31 @@ body {
 /* Responsive Styles */
 @media (max-width: 768px) {
     .header {
-        flex-direction: column; /* Stack header items on smaller screens */
-        align-items: center; /* Center align header items */
+        flex-direction: column; 
+        align-items: center; 
     }
-
+    .logo{
+        margin-bottom: 10px;
+    }
     .congrats-row {
-        flex-direction: column; /* Stack items vertically */
-        align-items: center; /* Center items */
+        flex-direction: column; 
+        align-items: center; 
+        margin-bottom: 10px;
     }
     .congrats-text {
-        margin: 15px 0;
+        margin: 25px 0;
+        padding-top: 2%;
     }
     .info-table {
-        width: 100%; /* Full width for smaller screens */
+        width: 100%; 
     }
-
     .btn-primary {
-        width: 100%; /* Full width buttons */
-        padding: 15px; /* Larger padding for easier touch */
+        width: 100%; 
+        padding: 15px; 
     }
-
     .footer {
-        flex-direction: column; /* Stack footer items */
-        align-items: center; /* Center align footer items */
+        flex-direction: column; 
+        align-items: center; 
     }
     .message-section{
         width: 100%;
@@ -224,78 +220,87 @@ body {
     .social-icons{
         font-size: 12px;
     }
+    .content{
+        padding: 0px 10px;
+    }
+    .btn-primary{
+        width: 70%;
+        padding: 10px 17px;
+    }
 }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-    <!-- Header Section -->
-    <div class="header">
-        <img src=${logoUrl} alt="Ximboa Logo" class="logo">
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header Section -->
+      <div class="header" style="display:flex;justify-content:space-between">
+        <img src=${logoUrl} alt="Ximboa Logo" style="margin-right:30px;" class="logo">
         <div class="header-text">
-            <p class="subject">Subject: Course Inquiry</p>
-            <p class="email">Received from: <a href="mailto:test@test.com">test@test.com</a></p>
+          <p class="subject">Subject: Course Inquiry</p>
+          <p class="email">Received from: <a href="mailto:test@test.com">test@test.com</a></p>
         </div>
-    </div>
+      </div>
 
-    <img src=${logoUrl} alt="Banner Image" class="banner">
+      <img src=${banner} alt="Banner Image" class="banner">
 
-    <!-- Content Section -->
-    <div class="content">
+      <!-- Content Section -->
+      <div class="content">
         <div class="congrats-row">
-            <p class="congrats-text">Congratulations!</p>
-            <button class="btn-primary">Sign Up for It’s Free</button>
-        </div>
+          <p class="congrats-text">Congratulations!</p>
+          </div>
+          <button class="btn-primary" style="padding-bottum: 8px">Sign Up for It’s Free</button>
 
         <div class="message-section">
-            <p>Hi [Instructor/Institute Name]</p>
-            <p>You have received a new inquiry regarding [Course Name].</p>
+          <p>Hi [Instructor/Institute Name]</p>
+          <p>You have received a new inquiry regarding [Course Name].</p>
         </div>
 
         <!-- Table Section -->
         <div class="table-container">
-            <table class="info-table">
-                <tbody>
-                    <tr>
-                        <td>Name</td>
-                        <td>Amit Bhoj</td>
-                    </tr>
-                    <tr>
-                        <td>Email</td>
-                        <td>test@test.com</td>
-                    </tr>
-                    <tr>
-                        <td>Subject</td>
-                        <td>Course Inquiry</td>
-                    </tr>
-                    <tr>
-                        <td>Message</td>
-                        <td>When will the batch start?</td>
-                    </tr>
-                </tbody>
-            </table>
+          <table class="info-table">
+            <tbody>
+              <tr>
+                <td>Name</td>
+                <td>Amit Bhoj</td>
+              </tr>
+              <tr>
+                <td>Email</td>
+                <td><a href="">test@test.com</a></td>
+              </tr>
+              <tr>
+                <td>Subject</td>
+                <td>Course Inquiry</td>
+              </tr>
+              <tr>
+                <td>Message</td>
+                <td>When will the batch start?</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
         <!-- Dashboard Section -->
-        <p >To see your inquiries from one single place, visit your dashboard.</p>
+        <p>To see your inquiries from one single place, visit your dashboard.</p>
         <button class="btn-primary dashboard-btn" style="margin: 30px 0;">Go to Dashboard</button>
-    </div>
+      </div>
 
-    <!-- Footer Section -->
-    <div class="footer">
-        <a href="#" class="footer-link">www.ximboa.io</a>
+      <!-- Footer Section -->
+      <div class="footer" style="color: white;">
+        <a href="#" class="footer-link" style="color: white;">www.ximboa.io</a>
         <div class="social-icons">
-            <a href="#" class="icon-border"><i class="fab fa-facebook-f"></i></a>
-            <a href="#" class="icon-border"><i class="fab fa-twitter"></i></a>
-            <a href="#" class="icon-border"><i class="fab fa-instagram"></i></a>
-            <a href="#" class="icon-border"><i class="fab fa-linkedin-in"></i></a>
-            <a href="#" class="icon-border"><i class="fab fa-youtube"></i></a>
+          <a href="#" style="color: white;" class="icon-border"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" style="color: white;" class="icon-border"><i class="fab fa-twitter"></i></a>
+          <a href="#" style="color: white;" class="icon-border"><i class="fab fa-instagram"></i></a>
+          <a href="#" style="color: white;" class="icon-border"><i class="fab fa-linkedin-in"></i></a>
+          <a href="#" style="color: white;" class="icon-border"><i class="fab fa-youtube"></i></a>
         </div>
         <a href="mailto:contact@ximboa.io" class="footer-link">contact@ximboa.io</a>
+      </div>
     </div>
-</div>
-    </body>
-    </html>`,
+  </body>
+</html>
+
+    `,
   },
   resetPassword: {
     subject: "Password Reset Request",
