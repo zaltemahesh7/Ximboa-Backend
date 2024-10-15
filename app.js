@@ -28,7 +28,7 @@ app.get("/api/linkedin/userinfo", async (req, res) => {
 
     const { id, localizedFirstName, localizedLastName, emailAddress } =
       response.data;
-    let user = await registration.findOne({ linkedinId: id });
+    let user = await registration.findOne({ email_id: emailAddress });
 
     if (!user) {
       // If user doesn't exist, create a new user
