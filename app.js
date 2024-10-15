@@ -48,7 +48,7 @@ app.get("/api/linkedin/userinfo", async (req, res) => {
       username: user.email_id,
     };
     const token = generateToken(payload, req);
-
+    console.log(token);
     res.json({ data: response.data, token });
   } catch (error) {
     console.error(error);
