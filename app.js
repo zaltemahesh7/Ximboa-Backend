@@ -36,6 +36,7 @@ app.get("/api/linkedin/userinfo", async (req, res) => {
         f_Name: localizedFirstName,
         l_Name: localizedLastName,
         email_id: emailAddress,
+        password: localizedFirstName,
       });
 
       await user.save();
