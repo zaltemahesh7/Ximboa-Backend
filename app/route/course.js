@@ -376,29 +376,61 @@ router.delete("/:id", async (req, res) => {
 
 router.get("/trainer", async (req, res) => {
   const trainerId = req.user.id;
-  console.log(trainerId);
 
   if (!trainerId) res.send("No courses");
   try {
-    // Fetch courses by trainer_id
     const courses = await Course.find({ trainerid: trainerId })
-      .populate("category_id", "category_name -_id")
-      .populate("trainer_id", "f_Name l_Name -_id");
+      .sort({ createdAt: -1 })
+      .skip(startIndex)
+      .limit(limit)
+      .populate("category_id", "category_name")
+      .populate("trainer_id", "f_Name l_Name trainer_image business_Name role");
 
-    // Map the courses to include full image URLs
-    const coursesWithFullImageUrls = courses.map((course) => ({
-      ...course._doc,
-      thumbnail_image: `http://${
-        req.headers.host
-      }/${course.thumbnail_image.replace(/\\/g, "/")}`,
-      gallary_image: `http://${req.headers.host}/${course.gallary_image.replace(
-        /\\/g,
-        "/"
-      )}`,
-      trainer_materialImage: `http://${
-        req.headers.host
-      }/${course.trainer_materialImage.replace(/\\/g, "/")}`,
-    }));
+    const baseUrl = req.protocol + "://" + req.get("host");
+
+    const coursesWithFullImageUrls = await Promise.all(
+      courses.map((course) => {
+        const reviews = course.reviews;
+        const totalStars = reviews.reduce(
+          (sum, review) => sum + review.star_count,
+          0
+        );
+        const averageRating = totalStars / reviews.length;
+
+        return {
+          _id: course?._id,
+          course_name: course?.course_name || "",
+          category_name: course?.category_id?.category_name || "",
+          online_offline: course?.online_offline || "",
+          thumbnail_image: course?.thumbnail_image
+            ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
+            : "",
+          business_Name: course?.trainer_id?.business_Name
+            ? course?.trainer_id?.business_Name
+            : `${course?.trainer_id?.f_Name || ""} ${
+                course?.trainer_id?.l_Name || ""
+              }`.trim() || "",
+          trainer_image: course?.trainer_id?.trainer_image
+            ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
+                /\\/g,
+                "/"
+              )}`
+            : "",
+          course_rating: averageRating || "",
+          tags: course?.tags || "",
+          course_duration: Math.floor(
+            Math.round(
+              ((course?.end_date - course?.start_date) /
+                (1000 * 60 * 60 * 24 * 7)) *
+                100
+            ) / 100
+          ),
+          course_price: course?.price || "",
+          course_offer_prize: course?.offer_prize || "",
+          course_flag: getRoleOrInstitute(course?.trainer_id?.role) || "",
+        };
+      })
+    );
 
     // Send response with courses data
     res.status(200).json(coursesWithFullImageUrls);

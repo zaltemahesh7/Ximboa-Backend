@@ -4,6 +4,8 @@ const Product = require("../../model/product");
 const Event = require("../../model/event");
 const { ApiError } = require("../../utils/ApiError");
 const { ApiResponse } = require("../../utils/ApiResponse");
+const InstituteModel = require("../../model/Institute/Institute.model");
+const { getRoleOrInstitute } = require("../../utils/helper");
 
 const globalSearch = async (req, res) => {
   const searchTerm = req.query.q;
@@ -181,38 +183,41 @@ const searchProductByName = async (req, res) => {
     const products = await Product.find({
       product_name: { $regex: product_name, $options: "i" },
     })
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .populate("t_id", "f_Name l_Name role")
-      .populate("categoryid", "category_name");
+    .sort({ createdAt: -1 })
+    // .skip(skip)
+    // .limit(limit)
+    .lean()
+    .populate("categoryid", "category_name")
+    .populate("t_id", "f_Name l_Name role")
+    .select(
+      "product_image categoryid product_name product_prize product_selling_prize reviews product_flag"
+    );
 
     if (!products || products.length === 0) {
       return res.status(404).json(new ApiResponse(404, "No products found"));
     }
 
     const productDetails = products.map((product) => {
-      let productRating = 0;
-      if (product.reviews && product.reviews.length > 0) {
-        const totalRating = product.reviews.reduce(
-          (sum, review) => sum + review.star_count,
-          0
-        );
-        productRating = (totalRating / product.reviews.length).toFixed(1);
-      }
+      const reviews = product.reviews || [];
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating =
+        reviews.length > 0 ? totalStars / reviews.length : null;
 
       return {
-        _id: product?._id,
-        productImage: product?.product_image
-          ? `${baseUrl}/${product?.product_image?.replace(/\\/g, "/")}`
+        _id: product._id,
+        product_image: product.product_image
+          ? `${baseUrl}/${product.product_image.replace(/\\/g, "/")}`
           : "",
-        productName: product?.product_name || "",
-        productPrice: product?.product_prize || "",
-        productSellingPrice: product?.product_selling_prize || "",
-        avgRating: productRating || "",
-        categoryName: product?.categoryid?.category_name || "",
-        identityFlag: product?.t_id?.role || "",
-        productFlag: product?.product_flag || "",
+        products_category: product.categoryid?.category_name || "",
+        products_rating: averageRating || "No reviews",
+        products_name: product.product_name || "",
+        products_price: product.product_prize || "",
+        products_selling_price: product.product_selling_prize || "",
+        identityFlag: getRoleOrInstitute(product.t_id?.role) || "",
+        product_flag: product.product_flag || "",
       };
     });
 
