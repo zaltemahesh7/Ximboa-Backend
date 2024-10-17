@@ -167,7 +167,8 @@ const globalSearch = async (req, res) => {
 const searchProductByName = async (req, res) => {
   const baseUrl = req.protocol + "://" + req.get("host");
   const page = parseInt(req.query.page) || 1;
-  const limit = parseInt(req.query.limit) || 4;
+  const limit = parseInt(req.query.limit) || 8;
+  const skip = (page - 1) * limit;
   try {
     const { product_name } = req.query;
 
@@ -183,15 +184,15 @@ const searchProductByName = async (req, res) => {
     const products = await Product.find({
       product_name: { $regex: product_name, $options: "i" },
     })
-    .sort({ createdAt: -1 })
-    // .skip(skip)
-    // .limit(limit)
-    .lean()
-    .populate("categoryid", "category_name")
-    .populate("t_id", "f_Name l_Name role")
-    .select(
-      "product_image categoryid product_name product_prize product_selling_prize reviews product_flag"
-    );
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean()
+      .populate("categoryid", "category_name")
+      .populate("t_id", "f_Name l_Name role")
+      .select(
+        "product_image categoryid product_name product_prize product_selling_prize reviews product_flag"
+      );
 
     if (!products || products.length === 0) {
       return res.status(404).json(new ApiResponse(404, "No products found"));
@@ -396,6 +397,7 @@ const searchTrainerByName = async (req, res) => {
           $or: [
             { f_Name: { $regex: trainer_name, $options: "i" } },
             { l_Name: { $regex: trainer_name, $options: "i" } },
+            { business_Name: { $regex: trainer_name, $options: "i" } },
           ],
           role: { $in: ["TRAINER", "SELF_EXPERT"] },
         }
