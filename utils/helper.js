@@ -4,4 +4,14 @@ function getDayOfWeek(dateString) {
   return date.toLocaleDateString("en-US", options);
 }
 
-module.exports = { getDayOfWeek };
+function getRoleOrInstitute(data) {
+  return data === "TRAINER" ? "INSTITUTE" : data;
+}
+
+const constructImageUrl = (req, res, imagePath) => {
+  return imagePath
+    ? `${req.protocol}://${req.get("host")}/${imagePath.replace(/\\/g, "/")}`
+    : "";
+};
+
+module.exports = { getDayOfWeek, getRoleOrInstitute, constructImageUrl };

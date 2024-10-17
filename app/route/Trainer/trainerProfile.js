@@ -32,7 +32,7 @@ router.get("/:id", async (req, res) => {
     if (!trainer) {
       return res.status(404).send({ message: "Trainer not found" });
     }
-    
+
     const institutes = await InstituteModel.findOne({ trainers: trainerId });
 
     const courses = await Course.find({ trainer_id: trainerId })
@@ -45,6 +45,12 @@ router.get("/:id", async (req, res) => {
     const baseUrl = req.protocol + "://" + req.get("host");
 
     const coursesWithFullImageUrl = courses.map((course) => {
+      const reviews = course.reviews;
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating = totalStars / reviews.length;
       return {
         _id: course?._id,
         course_name: course?.course_name || "",
@@ -64,7 +70,7 @@ router.get("/:id", async (req, res) => {
               "/"
             )}`
           : "",
-        course_rating: "",
+        course_rating: averageRating || "",
         course_duration: Math.floor(
           Math.round(
             ((course?.end_date - course?.start_date) /
@@ -97,6 +103,12 @@ router.get("/:id", async (req, res) => {
       .populate("t_id", "f_Name l_Name role");
 
     const productsWithFullImageUrl = Products.map((product) => {
+      const reviews = product.reviews;
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating = totalStars / reviews.length;
       return {
         _id: product?._id,
         product_image: product?.product_image
@@ -106,7 +118,7 @@ router.get("/:id", async (req, res) => {
             )}`
           : "",
         products_category: product?.categoryid?.category_name || "",
-        products_rating: "Pending...#####",
+        products_rating: averageRating || "",
         products_category: product?.categoryid?.category_name || "",
         products_name: product?.product_name || "",
         products_price: product?.product_prize || "",
@@ -148,6 +160,12 @@ router.get("/:id", async (req, res) => {
       .populate("trainerid", "f_Name l_Name");
 
     const onlineEventsThumbnailUrl = onlineEvents.map((event) => {
+      const reviews = event.reviews;
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating = totalStars / reviews.length;
       return {
         _id: event?._id,
         event_name: event?.event_name || "",
@@ -155,6 +173,7 @@ router.get("/:id", async (req, res) => {
         event_category: event?.event_category?.category_name || "",
         event_type: event?.event_type || "",
         trainer_id: event?.trainerid?._id || "",
+        event_rating: averageRating || "",
         registered_users: event?.registered_users.length || "",
         event_thumbnail: event?.event_thumbnail
           ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
@@ -169,6 +188,12 @@ router.get("/:id", async (req, res) => {
       .populate("event_category", "category_name -_id")
       .populate("trainerid", "f_Name l_Name");
     const offlienEventsThumbnailUrl = offlienEvents.map((event) => {
+      const reviews = event?.reviews;
+      const totalStars = reviews?.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating = totalStars / reviews.length;
       return {
         _id: event?._id,
         event_name: event?.event_name || "",
@@ -176,6 +201,7 @@ router.get("/:id", async (req, res) => {
         event_category: event?.event_category?.category_name || "",
         event_type: event?.event_type || "",
         trainer_id: event?.trainerid?._id || "",
+        event_rating: averageRating || "",
         registered_users: event?.registered_users.length || "",
         event_thumbnail: event?.event_thumbnail
           ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
@@ -259,6 +285,12 @@ router.get("/:id", async (req, res) => {
 
     // Map courses to include full image URLs and trainer name
     const OnGoingBatches = ongoingCourses.map((course) => {
+      const reviews = course.reviews;
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating = totalStars / reviews.length;
       return {
         _id: course?._id,
         course_name: course?.course_name || "",
@@ -278,7 +310,7 @@ router.get("/:id", async (req, res) => {
               "/"
             )}`
           : "",
-        course_rating: "",
+        course_rating: averageRating || "",
         course_duration: Math.floor(
           Math.round(
             ((course?.end_date - course?.start_date) /
@@ -304,6 +336,12 @@ router.get("/:id", async (req, res) => {
 
     // Map courses to include full image URLs and trainer name
     const UpcomingBatches = upcomingCourses.map((course) => {
+      const reviews = course.reviews;
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating = totalStars / reviews.length;
       return {
         _id: course?._id,
         course_name: course?.course_name || "",
@@ -323,7 +361,7 @@ router.get("/:id", async (req, res) => {
               "/"
             )}`
           : "",
-        course_rating: "",
+        course_rating: averageRating || "",
         course_duration: Math.floor(
           Math.round(
             ((course?.end_date - course?.start_date) /
@@ -397,9 +435,11 @@ router.get("/:id", async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res
-      .status(500)
-      .json(new ApiError(500, error.message || "Server error", error));
+    if (error instanceof mongoose.Error.ValidationError) {
+      res.status(400).json(new ApiError(400, "Validation Error", error.errors));
+    } else {
+      res.status(500).json(new ApiError(500, "Server Error", error));
+    }
   }
 });
 

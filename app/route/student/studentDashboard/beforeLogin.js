@@ -11,6 +11,7 @@ const registration = require("../../../../model/registration");
 const InstituteModel = require("../../../../model/Institute/Institute.model");
 const Review = require("../../../../model/Review");
 const product = require("../../../../model/product");
+const { getRoleOrInstitute } = require("../../../../utils/helper");
 
 router.get("/home", async (req, res) => {
   try {
@@ -67,7 +68,7 @@ router.get("/home", async (req, res) => {
           ),
           course_price: course?.price || "",
           course_offer_prize: course?.offer_prize || "",
-          course_flag: course?.trainer_id?.role || "",
+          course_flag: getRoleOrInstitute(course?.trainer_id?.role) || "",
         };
       })
     );
@@ -202,7 +203,7 @@ router.get("/home", async (req, res) => {
         productSellingPrice: product?.product_selling_prize || "",
         avgRating: productRating || "",
         categoryName: product?.categoryid?.category_name || "",
-        identityFlag: product?.t_id?.role || "",
+        identityFlag: getRoleOrInstitute(product?.t_id?.role) || "",
         productFlag: product?.product_flag || "",
       };
     });
@@ -337,7 +338,7 @@ router.get("/allcourses", async (req, res) => {
         ),
         course_price: course?.price || "",
         course_offer_prize: course?.offer_prize || "",
-        course_flag: course?.trainer_id?.role,
+        course_flag: getRoleOrInstitute(course?.trainer_id?.role) || "",
       };
       return result;
     });
@@ -355,63 +356,68 @@ router.get("/allcourses", async (req, res) => {
     console.log(error);
     res
       .status(500)
-      .send(
+      .json(
         new ApiError(500, error.message || "Error fetching courses", error)
       );
   }
 });
 
 // ========================= All Trainers with pagination ====================================
+
 router.get("/trainers", async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
   const baseUrl = req.protocol + "://" + req.get("host");
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
 
   try {
-    // Find all trainers with the role TRAINER or SELF_TRAINER and populate the categories array
-    const trainers = await Trainer.aggregate([
-      // Add $match to filter users by role
-      {
-        $match: {
-          role: { $in: ["TRAINER", "SELF_EXPERT"] },
+    // Parallelize trainer fetching with total count
+    const [trainers, totalTrainers] = await Promise.all([
+      Trainer.aggregate([
+        {
+          $match: {
+            role: { $in: ["TRAINER", "SELF_EXPERT"] },
+          },
         },
-      },
-      {
-        $lookup: {
-          from: "courses",
-          localField: "_id",
-          foreignField: "trainer_id",
-          as: "courses",
+        {
+          $lookup: {
+            from: "courses",
+            localField: "_id",
+            foreignField: "trainer_id",
+            as: "courses",
+          },
         },
-      },
-      {
-        $project: {
-          business_Name: 1,
-          f_Name: 1,
-          l_Name: 1,
-          trainer_image: 1,
-          role: 1,
-          course_count: { $size: "$courses" },
+        {
+          $project: {
+            business_Name: 1,
+            f_Name: 1,
+            l_Name: 1,
+            trainer_image: 1,
+            role: 1,
+            course_count: { $size: "$courses" },
+          },
         },
-      },
-    ])
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit));
+        {
+          $sort: { createdAt: -1 },
+        },
+        { $skip: (pageNum - 1) * limitNum },
+        { $limit: limitNum },
+      ]).exec(),
+      Trainer.countDocuments({
+        role: { $in: ["TRAINER", "SELF_EXPERT"] },
+      }).exec(),
+    ]);
 
-    // Get total count of trainers for pagination
-    const totalTrainers = await registration.countDocuments({
-      role: { $in: ["TRAINER", "SELF_TRAINER"] },
-    });
-
-    // Send the response
-    res.status(200).json({
-      trainers: await Promise.all(
-        trainers.map(async (trainer) => {
-          const institute = await InstituteModel.findOne({
+    // Prepare trainers with institutes and ratings
+    const trainersWithDetails = await Promise.all(
+      trainers.map(async (trainer) => {
+        const [institute, stcount] = await Promise.all([
+          InstituteModel.findOne({
             trainers: trainer._id,
-          }).select("institute_name social_Media");
-
-          const stcount = await Review.aggregate([
+          })
+            .select("institute_name social_Media")
+            .lean(),
+          Review.aggregate([
             { $match: { t_id: trainer._id } },
             {
               $group: {
@@ -419,40 +425,46 @@ router.get("/trainers", async (req, res) => {
                 averageRating: { $avg: "$star_count" },
               },
             },
-          ]);
+          ]),
+        ]);
 
-          return {
-            _id: trainer?._id,
-            Business_Name: institute
-              ? institute?.institute_name
-              : trainer?.business_Name ||
-                trainer?.f_Name + " " + trainer?.l_Name,
-            f_Name: trainer?.f_Name,
-            l_Name: trainer?.l_Name,
-            role: trainer?.role,
-            course_count: trainer?.course_count,
-            social_Media: institute
-              ? institute?.social_Media
-              : trainer?.social_Media || "",
-            ratings: stcount[0]?.averageRating || "",
-            trainer_image: trainer?.trainer_image
-              ? `${baseUrl}/${trainer?.trainer_image?.replace(/\\/g, "/")}`
-              : "",
-          };
-        })
-      ),
+        return {
+          _id: trainer?._id,
+          Business_Name: institute
+            ? institute.institute_name
+            : trainer.business_Name || `${trainer.f_Name} ${trainer.l_Name}`,
+          f_Name: trainer.f_Name,
+          l_Name: trainer.l_Name,
+          role: trainer.role,
+          course_count: trainer.course_count,
+          social_Media: institute ? institute.social_Media : "",
+          ratings: stcount[0]?.averageRating || "No ratings yet",
+          trainer_image: trainer.trainer_image
+            ? `${baseUrl}/${trainer.trainer_image.replace(/\\/g, "/")}`
+            : "",
+        };
+      })
+    );
+
+    // Send the response with trainers and pagination details
+    res.status(200).json({
+      trainers: trainersWithDetails,
       pagination: {
-        currentPage: page,
-        totalPages: Math.ceil(totalTrainers / limit),
+        currentPage: pageNum,
+        totalPages: Math.ceil(totalTrainers / limitNum),
         totalItems: totalTrainers,
-        pageSize: limit,
+        pageSize: limitNum,
       },
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json(new ApiError(500, err.message || "Server Error", err));
+    console.error("Error fetching beforlogin/trainers:", err);
+    res
+      .status(500)
+      .json(new ApiError(500, err.message || "Error fetching data", err));
   }
 });
+
+// ========================= course/:id ====================================
 
 router.get("/course/:id", async (req, res, next) => {
   try {
@@ -503,7 +515,7 @@ router.get("/course/:id", async (req, res, next) => {
       ),
       course_price: course?.price || "",
       course_offer_prize: course?.offer_prize || "",
-      course_flag: course?.trainer_id?.role || "",
+      course_flag: getRoleOrInstitute(course?.trainer_id?.role) || "",
     };
 
     const page = parseInt(req.query.page) || 1;
@@ -557,7 +569,7 @@ router.get("/course/:id", async (req, res, next) => {
           ),
           course_price: course?.price || "",
           course_offer_prize: course?.offer_prize || "",
-          course_flag: course?.trainer_id?.role || "",
+          course_flag: getRoleOrInstitute(course?.trainer_id?.role) || "",
         };
         return result;
       });
@@ -683,11 +695,18 @@ router.get("/event/:id", async (req, res) => {
 
 // ========================= All Event ====================================
 router.get("/allevents", async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 16;
+
+  const startIndex = (page - 1) * limit;
+  const totalEvents = await Event.countDocuments();
   const baseUrl = req.protocol + "://" + req.get("host");
 
   try {
     const events = await Event.find()
       .sort({ createdAt: -1 })
+      .skip(startIndex)
+      .limit(limit)
       .populate("event_category", "category_name -_id")
       .populate("trainerid", "f_Name l_Name role business_Name");
     if (!events || events.length === 0) {
@@ -720,6 +739,16 @@ router.get("/allevents", async (req, res) => {
     });
 
     res.status(200).json(eventsWithThumbnails);
+
+    // res.status(200).json({
+    //   eventsWithThumbnails,
+    //   pagination: {
+    //     currentPage: page,
+    //     totalPages: Math.ceil(totalEvents / limit),
+    //     totalItems: totalEvents,
+    //     pageSize: limit,
+    //   },
+    // });
   } catch (err) {
     console.log(err);
     res
@@ -761,10 +790,9 @@ router.get("/product/:id", async function (req, res, next) {
       : `${product?.t_id?.f_Name || ""} ${
           product?.t_id?.l_Name || ""
         }`.trim() || "",
-    identityFlag:
-      product?.t_id?.role === "TRAINER" ? "Institute" : "Self Expert",
+    identityFlag: getRoleOrInstitute(product?.t_id?.role) || "",
     product_flag: product?.product_flag || "",
-    traienrid: product?.t_id?._id,
+    traienrid: product?.t_id?._id || "",
   };
   if (!product) {
     return res.status(404).json(new ApiError(404, "Event not found"));
@@ -804,8 +832,7 @@ router.get("/product/:id", async function (req, res, next) {
       products_name: product?.product_name || "",
       products_price: product?.product_prize || "",
       products_selling_price: product?.product_selling_prize || "",
-      identityFlag:
-        product?.t_id?.role === "TRAINER" ? "Institute" : "Self Expert",
+      identityFlag: getRoleOrInstitute(product?.t_id?.role) || "",
       product_flag: product?.product_flag || "",
     };
     return result;
@@ -814,52 +841,134 @@ router.get("/product/:id", async function (req, res, next) {
 });
 
 // Get a single product by ID
-router.get("/allproduct", async function (req, res, next) {
-  const baseUrl = req.protocol + "://" + req.get("host");
-  Product.find()
-    .sort({ createdAt: -1 })
-    .populate("categoryid", "category_name")
-    .populate("t_id", "f_Name l_Name role")
-    .then((result) => {
-      const productsWithFullImageUrls = result.map((product) => {
-        const reviews = product.reviews;
-        const totalStars = reviews.reduce(
-          (sum, review) => sum + review.star_count,
-          0
-        );
-        const averageRating = totalStars / reviews.length;
+// router.get("/allproduct", async function (req, res, next) {
+//   const page = parseInt(req.query.page) || 1;
+//   const limit = parseInt(req.query.limit) || 8;
 
-        const productData = {
-          _id: product?._id,
-          product_image: product?.product_image
-            ? `${baseUrl}/${product?.product_image?.replace(/\\/g, "/")}`
-            : "",
-          products_category: product?.categoryid?.category_name || "",
-          products_rating: averageRating || "",
-          products_category: product?.categoryid?.category_name || "",
-          products_name: product?.product_name || "",
-          products_price: product?.product_prize || "",
-          products_selling_price: product?.product_selling_prize || "",
-          identityFlag: product?.t_id?.role,
-          product_flag: product?.product_flag || "",
-        };
-        return productData;
-      });
-      // console.log(productsWithFullImageUrls),
-      res.status(200).json({ productsWithFullImageUrls });
-    })
-    .catch((err) => {
-      console.log(err);
-      res
-        .status(500)
-        .json(
-          new ApiError(
-            500,
-            err.message || "Server Error Gretting all Products",
-            err
-          )
-        );
+//   const startIndex = (page - 1) * limit;
+//   const totalProducts = await Product.countDocuments();
+
+//   const baseUrl = req.protocol + "://" + req.get("host");
+//   Product.find()
+//     .sort({ createdAt: -1 })
+//     .skip(startIndex)
+//     .limit(limit)
+//     .populate("categoryid", "category_name")
+//     .populate("t_id", "f_Name l_Name role")
+//     .then((result) => {
+//       const productsWithFullImageUrls = result.map((product) => {
+//         const reviews = product.reviews;
+//         const totalStars = reviews.reduce(
+//           (sum, review) => sum + review.star_count,
+//           0
+//         );
+//         const averageRating = totalStars / reviews.length;
+
+//         const productData = {
+//           _id: product?._id,
+//           product_image: product?.product_image
+//             ? `${baseUrl}/${product?.product_image?.replace(/\\/g, "/")}`
+//             : "",
+//           products_category: product?.categoryid?.category_name || "",
+//           products_rating: averageRating || "",
+//           products_category: product?.categoryid?.category_name || "",
+//           products_name: product?.product_name || "",
+//           products_price: product?.product_prize || "",
+//           products_selling_price: product?.product_selling_prize || "",
+//           identityFlag: getRoleOrInstitute(product?.t_id?.role) || "",
+//           product_flag: product?.product_flag || "",
+//         };
+//         return productData;
+//       });
+//       // console.log(productsWithFullImageUrls),
+//       res.status(200).json({
+//         productsWithFullImageUrls,
+//         pagination: {
+//           currentPage: page,
+//           totalPages: Math.ceil(totalProducts / limit),
+//           totalItems: totalProducts,
+//           pageSize: limit,
+//         },
+//       });
+//     })
+//     .catch((err) => {
+//       console.log(err);
+//       res
+//         .status(500)
+//         .json(
+//           new ApiError(
+//             500,
+//             err.message || "Server Error Gretting all Products",
+//             err
+//           )
+//         );
+//     });
+// });
+
+router.get("/allproduct", async function (req, res, next) {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 8;
+    const skip = (page - 1) * limit;
+
+    const baseUrl = req.protocol + "://" + req.get("host");
+
+    // Run both count and find queries in parallel using Promise.all()
+    const [totalProducts, products] = await Promise.all([
+      Product.countDocuments(),
+      Product.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+        .populate("categoryid", "category_name")
+        .populate("t_id", "f_Name l_Name role")
+        .select(
+          "product_image categoryid product_name product_prize product_selling_prize reviews product_flag"
+        ),
+    ]);
+
+    // Map the products to the required format
+    const productsWithFullImageUrls = products.map((product) => {
+      const reviews = product.reviews || [];
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating =
+        reviews.length > 0 ? totalStars / reviews.length : null;
+
+      return {
+        _id: product._id,
+        product_image: product.product_image
+          ? `${baseUrl}/${product.product_image.replace(/\\/g, "/")}`
+          : "",
+        products_category: product.categoryid?.category_name || "",
+        products_rating: averageRating || "No reviews",
+        products_name: product.product_name || "",
+        products_price: product.product_prize || "",
+        products_selling_price: product.product_selling_prize || "",
+        identityFlag: getRoleOrInstitute(product.t_id?.role) || "",
+        product_flag: product.product_flag || "",
+      };
     });
+
+    // Respond with products and pagination info
+    res.status(200).json({
+      productsWithFullImageUrls,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalProducts / limit),
+        totalItems: totalProducts,
+        pageSize: limit,
+      },
+    });
+  } catch (err) {
+    console.error("Error fetching products:", err);
+    res
+      .status(500)
+      .json(new ApiError(500, "Server Error fetching all products", err));
+  }
 });
 
 module.exports = router;
