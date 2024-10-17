@@ -388,6 +388,14 @@ router.get("/trainers", async (req, res) => {
           },
         },
         {
+          $lookup: {
+            from: "categories",
+            localField: "categories",
+            foreignField: "_id",
+            as: "categories",
+          },
+        },
+        {
           $project: {
             business_Name: 1,
             f_Name: 1,
@@ -395,6 +403,7 @@ router.get("/trainers", async (req, res) => {
             trainer_image: 1,
             role: 1,
             course_count: { $size: "$courses" },
+            categories: 1,
           },
         },
         {
@@ -437,6 +446,7 @@ router.get("/trainers", async (req, res) => {
           l_Name: trainer.l_Name,
           role: trainer.role,
           course_count: trainer.course_count,
+          categories: trainer?.categories?.map((category)=>category.category_name),
           social_Media: institute ? institute.social_Media : "",
           ratings: stcount[0]?.averageRating || "No ratings yet",
           trainer_image: trainer.trainer_image
