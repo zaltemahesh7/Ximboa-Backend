@@ -15,6 +15,7 @@ const testemonial = require("../../../model/testemonial");
 const gallary = require("../../../model/gallary");
 const { ApiError } = require("../../../utils/ApiError");
 const InstituteModel = require("../../../model/Institute/Institute.model");
+const { default: mongoose } = require("mongoose");
 
 // Get data according to the trainer Email id
 
