@@ -111,6 +111,7 @@ const {
   eventReview,
   getReviewsByEventId,
 } = require("../../controllers/Reviews/eventReview.controller");
+const replyReview = require("../../controllers/Reviews/replyReview.controller");
 
 router.post("/course", jwtAuthMiddleware, courseReviews);
 router.post("/product", jwtAuthMiddleware, productReview);
@@ -119,5 +120,7 @@ router.post("/event", jwtAuthMiddleware, eventReview);
 router.get("/course/:courseid", getReviewsByCourseId);
 router.get("/product/:productid", getReviewsByProductId);
 router.get("/event/:eventid", getReviewsByEventId);
+
+router.post("/:reviewId/reply", jwtAuthMiddleware, replyReview);
 
 module.exports = router;

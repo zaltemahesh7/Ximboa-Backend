@@ -3,7 +3,7 @@ const express = require("express");
 const app = express();
 
 const router = require("./app");
-const conndb = require("./utils/DbConnection");
+const conndb = require("./config/DbConnection");
 const cors = require("cors");
 
 const PORT = 1000;

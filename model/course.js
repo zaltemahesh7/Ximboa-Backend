@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const reviewSchema = require("./reviews.model");
 
 const courseShema = new mongoose.Schema(
   {
@@ -58,18 +59,7 @@ const courseShema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Registration",
     },
-    reviews: [
-      {
-        user_id: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "Registration",
-          required: true,
-        },
-        review: { type: String, required: true },
-        star_count: { type: Number, require: true },
-        addedAt: { type: Date, default: Date.now() },
-      },
-    ],
+    reviews: [reviewSchema],
   },
   { timestamps: true }
 );
