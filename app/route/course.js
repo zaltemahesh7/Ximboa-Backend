@@ -35,14 +35,11 @@ const upload = multer({
 router.get("/", async (req, res, next) => {
   try {
     const baseUrl = req.protocol + "://" + req.get("host");
-    // Get page and limit from query parameters with default values
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 4;
 
-    // Calculate the number of documents to skip
     const skip = (page - 1) * limit;
 
-    // Fetch courses with pagination, populate category and trainer, and apply limit and skip
     const courses = await Course.find()
       .sort({ createdAt: -1 })
       .populate("category_id")
@@ -50,7 +47,6 @@ router.get("/", async (req, res, next) => {
       .limit(limit)
       .skip(skip);
 
-    // Format the course data to include full image URLs
     const coursesWithFullImageUrls = courses.map((course) => ({
       _id: course?._id,
       category_name: course?.category_id?.category_name || "",
@@ -81,11 +77,9 @@ router.get("/", async (req, res, next) => {
       course_flag: course?.trainer_id?.role || "",
     }));
 
-    // Get total count of courses to calculate total pages
     const totalCourses = await Course.countDocuments();
     const totalPages = Math.ceil(totalCourses / limit);
 
-    // Send response with courses and pagination info
     res.status(200).json({
       courses: coursesWithFullImageUrls,
       currentPage: page,
@@ -134,7 +128,6 @@ router.post(
     });
 
     try {
-      // Save the course
       const savedCourse = await course.save();
 
       const trainerId = req.user.id;
@@ -149,7 +142,6 @@ router.post(
         { new: true }
       );
 
-      // Notify the trainer about the new course
       const notification = new NotificationModel({
         recipient: req.user.id,
         message: `Your course "${savedCourse.course_name}" has been created successfully.`,
@@ -170,7 +162,6 @@ router.post(
 );
 
 // ========================= course/:id ====================================
-// Controller to Get Course by ID
 router.get("/:id", async (req, res, next) => {
   const baseUrl = req.protocol + "://" + req.get("host");
 
@@ -192,7 +183,6 @@ router.get("/:id", async (req, res, next) => {
     );
     const averageRating = totalStars / reviews.length;
 
-    // Prepare the course object with image URLs
     const courseWithFullImageUrls = {
       _id: courseData?._id,
       course_name: courseData?.course_name || "",
@@ -228,9 +218,9 @@ router.get("/:id", async (req, res, next) => {
             100
         ) / 100
       ),
-      course_price: courseData?.price || "",
+      price: courseData?.price || "",
       tags: courseData?.tags || "",
-      course_offer_prize: courseData?.offer_prize || "",
+      offer_prize: courseData?.offer_prize || "",
       course_flag: courseData?.trainer_id?.role || "",
     };
 
@@ -432,10 +422,9 @@ router.get("/trainer", async (req, res) => {
       })
     );
 
-    // Send response with courses data
     res.status(200).json(coursesWithFullImageUrls);
   } catch (err) {
-    // console.error(err);
+    console.error(err);
     res.status(500).json({
       message: "Server Error",
       error: err.message || "An error occurred while fetching courses.",

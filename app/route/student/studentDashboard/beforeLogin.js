@@ -13,241 +13,446 @@ const Review = require("../../../../model/Review");
 const product = require("../../../../model/product");
 const { getRoleOrInstitute } = require("../../../../utils/helper");
 
+// router.get("/home", async (req, res) => {
+//   try {
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = parseInt(req.query.limit) || 4;
+
+//     const startIndex = (page - 1) * limit;
+
+//     const courses = await Course.find()
+//       .sort({ createdAt: -1 })
+//       .skip(startIndex)
+//       .limit(limit)
+//       .populate("category_id", "category_name")
+//       .populate("trainer_id", "f_Name l_Name trainer_image business_Name role");
+
+//     const baseUrl = req.protocol + "://" + req.get("host");
+
+//     const coursesWithFullImageUrl = await Promise.all(
+//       courses.map((course) => {
+//         const reviews = course.reviews;
+//         const totalStars = reviews.reduce(
+//           (sum, review) => sum + review.star_count,
+//           0
+//         );
+//         const averageRating = totalStars / reviews.length;
+
+//         return {
+//           _id: course?._id,
+//           course_name: course?.course_name || "",
+//           category_name: course?.category_id?.category_name || "",
+//           online_offline: course?.online_offline || "",
+//           thumbnail_image: course?.thumbnail_image
+//             ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
+//             : "",
+//           business_Name: course?.trainer_id?.business_Name
+//             ? course?.trainer_id?.business_Name
+//             : `${course?.trainer_id?.f_Name || ""} ${
+//                 course?.trainer_id?.l_Name || ""
+//               }`.trim() || "",
+//           trainer_image: course?.trainer_id?.trainer_image
+//             ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
+//                 /\\/g,
+//                 "/"
+//               )}`
+//             : "",
+//           course_rating: averageRating || "",
+//           tags: course?.tags || "",
+//           course_duration: Math.floor(
+//             Math.round(
+//               ((course?.end_date - course?.start_date) /
+//                 (1000 * 60 * 60 * 24 * 7)) *
+//                 100
+//             ) / 100
+//           ),
+//           course_price: course?.price || "",
+//           course_offer_prize: course?.offer_prize || "",
+//           course_flag: getRoleOrInstitute(course?.trainer_id?.role) || "",
+//         };
+//       })
+//     );
+
+//     const categories = await Category.find()
+//       .sort({ createdAt: -1 })
+//       .skip(startIndex)
+//       .limit(9);
+
+//     const categoriesWithFullImageUrl = categories.map((category) => {
+//       return {
+//         _id: category._id,
+//         category_name: category.category_name,
+//         Sub_title: category.sub_title,
+//         category_image: category.category_image
+//           ? `${baseUrl}/${category.category_image.replace(/\\/g, "/")}`
+//           : "",
+//         __v: category.__v,
+//         trainer_id: category.trainer_id,
+//       };
+//     });
+
+//     const trainers = await Trainer.aggregate([
+//       {
+//         $match: {
+//           role: { $in: ["TRAINER", "SELF_EXPERT"] },
+//         },
+//       },
+//       {
+//         $lookup: {
+//           from: "courses",
+//           localField: "_id",
+//           foreignField: "trainer_id",
+//           as: "courses",
+//         },
+//       },
+//       {
+//         $project: {
+//           business_Name: 1,
+//           f_Name: 1,
+//           l_Name: 1,
+//           trainer_image: 1,
+//           role: 1,
+//           course_count: { $size: "$courses" },
+//           date_of_birth: 1,
+//         },
+//       },
+//     ])
+//       .sort({ createdAt: -1 })
+//       .skip(startIndex)
+//       .limit(limit);
+
+//     const trainersWithFullImageUrl = await Promise.all(
+//       trainers.map(async (trainer) => {
+//         const institute = await InstituteModel.findOne({
+//           trainers: trainer._id,
+//         }).select("institute_name social_Media");
+
+//         const stcount = await Review.aggregate([
+//           { $match: { t_id: trainer._id } },
+//           {
+//             $group: {
+//               _id: "$t_id",
+//               averageRating: { $avg: "$star_count" },
+//             },
+//           },
+//         ]);
+
+//         return {
+//           t_id: trainer?._id,
+//           Business_Name: institute
+//             ? institute?.institute_name
+//             : trainer?.business_Name || trainer?.f_Name + " " + trainer?.l_Name,
+//           f_Name: trainer?.f_Name,
+//           l_Name: trainer?.l_Name,
+//           role: trainer?.role,
+//           course_count: trainer?.course_count,
+//           categories: trainer?.categories?.category_name,
+//           social_Media: institute
+//             ? institute?.social_Media
+//             : trainer?.social_Media || "",
+//           ratings: stcount[0]?.averageRating || "",
+//           trainer_image: trainer?.trainer_image
+//             ? `${baseUrl}/${trainer?.trainer_image?.replace(/\\/g, "/")}`
+//             : "",
+//         };
+//       })
+//     );
+
+//     // Fetch all products
+//     const products = await product
+//       .find()
+//       .skip(startIndex)
+//       .limit(limit)
+//       .sort({ createdAt: -1 })
+//       .populate({
+//         path: "categoryid",
+//         select: "category_name",
+//         model: "Category",
+//       })
+//       .populate({
+//         path: "t_id",
+//         select: "role",
+//         model: "Registration",
+//       })
+//       // .populate({
+//       //   path: "reviews", // Assuming product has 'reviews' referencing the 'Reviews' model
+//       //   select: "star_count", // We only need the star count for rating
+//       //   model: "Review",
+//       // })
+//       .select(
+//         "product_image product_name product_selling_prize product_prize product_flag"
+//       );
+
+//     const productDetails = products.map((product) => {
+//       let productRating = 0;
+//       if (product.reviews && product.reviews.length > 0) {
+//         const totalRating = product.reviews.reduce(
+//           (sum, review) => sum + review.star_count,
+//           0
+//         );
+//         productRating = (totalRating / product.reviews.length).toFixed(1);
+//       }
+
+//       return {
+//         _id: product?._id,
+//         productImage: product?.product_image
+//           ? `${baseUrl}/${product?.product_image?.replace(/\\/g, "/")}`
+//           : "",
+//         productName: product?.product_name || "",
+//         productPrice: product?.product_prize || "",
+//         productSellingPrice: product?.product_selling_prize || "",
+//         avgRating: productRating || "",
+//         categoryName: product?.categoryid?.category_name || "",
+//         identityFlag: getRoleOrInstitute(product?.t_id?.role) || "",
+//         productFlag: product?.product_flag || "",
+//       };
+//     });
+
+//     // Fetch events from the Event model
+//     const events = await Event.find()
+//       .sort({ createdAt: -1 })
+//       .skip(startIndex)
+//       .limit(limit)
+//       .sort({ createdAt: -1 })
+//       .populate("trainerid")
+//       .select(
+//         "event_thumbnail event_date event_name event_type event_start_time registered_users event_end_time"
+//       );
+
+//     const eventDetails = events.map((event) => {
+//       return {
+//         _id: event?._id,
+//         eventImage: event?.event_thumbnail
+//           ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
+//           : "",
+//         eventDate: event?.event_date || "",
+//         eventStartTime: event?.event_start_time || "",
+//         eventEndTime: event?.event_end_time || "",
+//         eventName: event?.event_name || "",
+//         mode: event?.event_type || "",
+//         enrollments: event?.registered_users?.length || "",
+//         event_falg: event?.trainerid.role || "",
+//       };
+//     });
+
+//     res.status(200).send({
+//       trainersWithFullImageUrl,
+//       categoriesWithFullImageUrl,
+//       coursesWithFullImageUrl,
+//       productDetails,
+//       eventDetails,
+//       // pagination: {
+//       //   currentPage: page,
+//       //   totalPages: Math.ceil(totalCourses / limit),
+//       //   totalItems: totalCourses,
+//       //   pageSize: limit,
+//       // },
+//     });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(500).json(new ApiError(500, err.message || "", err));
+//   }
+// });
+
+const NodeCache = require("node-cache");
+const cache = new NodeCache({ stdTTL: 300, checkperiod: 320 }); // TTL set to 5 minutes
+
 router.get("/home", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 4;
-
     const startIndex = (page - 1) * limit;
+    const cacheKey = `homeData_page_${page}_limit_${limit}`;
 
-    const courses = await Course.find()
-      .sort({ createdAt: -1 })
-      .skip(startIndex)
-      .limit(limit)
-      .populate("category_id", "category_name")
-      .populate("trainer_id", "f_Name l_Name trainer_image business_Name role");
+    // Check if data exists in cache
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      return res.status(200).send(cachedData);
+    }
 
     const baseUrl = req.protocol + "://" + req.get("host");
 
-    const coursesWithFullImageUrl = await Promise.all(
-      courses.map((course) => {
-        const reviews = course.reviews;
-        const totalStars = reviews.reduce(
-          (sum, review) => sum + review.star_count,
-          0
-        );
-        const averageRating = totalStars / reviews.length;
-
-        return {
-          _id: course?._id,
-          course_name: course?.course_name || "",
-          category_name: course?.category_id?.category_name || "",
-          online_offline: course?.online_offline || "",
-          thumbnail_image: course?.thumbnail_image
-            ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
-            : "",
-          business_Name: course?.trainer_id?.business_Name
-            ? course?.trainer_id?.business_Name
-            : `${course?.trainer_id?.f_Name || ""} ${
-                course?.trainer_id?.l_Name || ""
-              }`.trim() || "",
-          trainer_image: course?.trainer_id?.trainer_image
-            ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
-                /\\/g,
-                "/"
-              )}`
-            : "",
-          course_rating: averageRating || "",
-          tags: course?.tags || "",
-          course_duration: Math.floor(
-            Math.round(
-              ((course?.end_date - course?.start_date) /
-                (1000 * 60 * 60 * 24 * 7)) *
-                100
-            ) / 100
+    // Fetching courses, categories, trainers, products, events in parallel
+    const [courses, categories, trainers, products, events] = await Promise.all(
+      [
+        Course.find()
+          .sort({ createdAt: -1 })
+          .skip(startIndex)
+          .limit(limit)
+          .populate("category_id", "category_name")
+          .populate(
+            "trainer_id",
+            "f_Name l_Name trainer_image business_Name role"
           ),
-          course_price: course?.price || "",
-          course_offer_prize: course?.offer_prize || "",
-          course_flag: getRoleOrInstitute(course?.trainer_id?.role) || "",
-        };
-      })
+
+        Category.find().sort({ createdAt: -1 }).skip(startIndex).limit(9),
+
+        Trainer.aggregate([
+          { $match: { role: { $in: ["TRAINER", "SELF_EXPERT"] } } },
+          {
+            $lookup: {
+              from: "courses",
+              localField: "_id",
+              foreignField: "trainer_id",
+              as: "courses",
+            },
+          },
+          {
+            $project: {
+              business_Name: 1,
+              f_Name: 1,
+              l_Name: 1,
+              trainer_image: 1,
+              role: 1,
+              course_count: { $size: "$courses" },
+              date_of_birth: 1,
+            },
+          },
+        ])
+          .sort({ createdAt: -1 })
+          .skip(startIndex)
+          .limit(limit),
+
+        product
+          .find()
+          .sort({ createdAt: -1 })
+          .skip(startIndex)
+          .limit(limit)
+          .populate("categoryid", "category_name")
+          .populate("t_id", "role")
+          .select(
+            "product_image product_name product_selling_prize product_prize product_flag"
+          ),
+
+        Event.find()
+          .sort({ createdAt: -1 })
+          .skip(startIndex)
+          .limit(limit)
+          .populate("trainerid")
+          .select(
+            "event_thumbnail event_date event_name event_type event_start_time registered_users event_end_time"
+          ),
+      ]
     );
 
-    const categories = await Category.find()
-      .sort({ createdAt: -1 })
-      .skip(startIndex)
-      .limit(9);
+    // Process Courses
+    const coursesWithFullImageUrl = courses.map((course) => {
+      const reviews = course.reviews || [];
+      const totalStars = reviews.reduce(
+        (sum, review) => sum + review.star_count,
+        0
+      );
+      const averageRating = reviews.length
+        ? (totalStars / reviews.length).toFixed(1)
+        : "0";
 
-    const categoriesWithFullImageUrl = categories.map((category) => {
       return {
-        _id: category._id,
-        category_name: category.category_name,
-        Sub_title: category.sub_title,
-        category_image: category.category_image
-          ? `${baseUrl}/${category.category_image.replace(/\\/g, "/")}`
+        _id: course._id,
+        course_name: course.course_name || "",
+        category_name: course.category_id?.category_name || "",
+        online_offline: course.online_offline || "",
+        thumbnail_image: course.thumbnail_image
+          ? `${baseUrl}/${course.thumbnail_image.replace(/\\/g, "/")}`
           : "",
-        __v: category.__v,
-        trainer_id: category.trainer_id,
+        business_Name:
+          course.trainer_id?.business_Name ||
+          `${course.trainer_id?.f_Name} ${course.trainer_id?.l_Name}`.trim(),
+        trainer_image: course.trainer_id?.trainer_image
+          ? `${baseUrl}/${course.trainer_id.trainer_image.replace(/\\/g, "/")}`
+          : "",
+        course_rating: averageRating,
+        tags: course.tags || "",
+        course_duration:
+          Math.round(
+            ((course.end_date - course.start_date) /
+              (1000 * 60 * 60 * 24 * 7)) *
+              100
+          ) / 100,
+        course_price: course.price || "",
+        course_offer_prize: course.offer_prize || "",
+        course_flag: getRoleOrInstitute(course.trainer_id?.role) || "",
       };
     });
 
-    const trainers = await Trainer.aggregate([
-      {
-        $match: {
-          role: { $in: ["TRAINER", "SELF_EXPERT"] },
-        },
-      },
-      {
-        $lookup: {
-          from: "courses",
-          localField: "_id",
-          foreignField: "trainer_id",
-          as: "courses",
-        },
-      },
-      {
-        $project: {
-          business_Name: 1,
-          f_Name: 1,
-          l_Name: 1,
-          trainer_image: 1,
-          role: 1,
-          course_count: { $size: "$courses" },
-          date_of_birth: 1,
-        },
-      },
-    ])
-      .sort({ createdAt: -1 })
-      .skip(startIndex)
-      .limit(limit);
+    // Process Categories
+    const categoriesWithFullImageUrl = categories.map((category) => ({
+      _id: category._id,
+      category_name: category.category_name,
+      Sub_title: category.sub_title,
+      category_image: category.category_image
+        ? `${baseUrl}/${category.category_image.replace(/\\/g, "/")}`
+        : "",
+    }));
 
+    // Process Trainers
     const trainersWithFullImageUrl = await Promise.all(
       trainers.map(async (trainer) => {
         const institute = await InstituteModel.findOne({
           trainers: trainer._id,
         }).select("institute_name social_Media");
-
         const stcount = await Review.aggregate([
           { $match: { t_id: trainer._id } },
-          {
-            $group: {
-              _id: "$t_id",
-              averageRating: { $avg: "$star_count" },
-            },
-          },
+          { $group: { _id: "$t_id", averageRating: { $avg: "$star_count" } } },
         ]);
 
         return {
-          t_id: trainer?._id,
-          Business_Name: institute
-            ? institute?.institute_name
-            : trainer?.business_Name || trainer?.f_Name + " " + trainer?.l_Name,
-          f_Name: trainer?.f_Name,
-          l_Name: trainer?.l_Name,
-          role: trainer?.role,
-          course_count: trainer?.course_count,
-          categories: trainer?.categories?.category_name,
-          social_Media: institute
-            ? institute?.social_Media
-            : trainer?.social_Media || "",
-          ratings: stcount[0]?.averageRating || "",
-          trainer_image: trainer?.trainer_image
-            ? `${baseUrl}/${trainer?.trainer_image?.replace(/\\/g, "/")}`
+          t_id: trainer._id,
+          Business_Name:
+            institute?.institute_name || `${trainer.f_Name} ${trainer.l_Name}`,
+          f_Name: trainer.f_Name,
+          l_Name: trainer.l_Name,
+          role: trainer.role,
+          course_count: trainer.course_count,
+          ratings: stcount[0]?.averageRating || "0",
+          trainer_image: trainer.trainer_image
+            ? `${baseUrl}/${trainer.trainer_image.replace(/\\/g, "/")}`
             : "",
         };
       })
     );
 
-    // Fetch all products
-    const products = await product
-      .find()
-      .skip(startIndex)
-      .limit(limit)
-      .sort({ createdAt: -1 })
-      .populate({
-        path: "categoryid",
-        select: "category_name",
-        model: "Category",
-      })
-      .populate({
-        path: "t_id",
-        select: "role",
-        model: "Registration",
-      })
-      // .populate({
-      //   path: "reviews", // Assuming product has 'reviews' referencing the 'Reviews' model
-      //   select: "star_count", // We only need the star count for rating
-      //   model: "Review",
-      // })
-      .select(
-        "product_image product_name product_selling_prize product_prize product_flag"
-      );
+    // Process Products
+    const productDetails = products.map((product) => ({
+      _id: product._id,
+      productImage: product.product_image
+        ? `${baseUrl}/${product.product_image.replace(/\\/g, "/")}`
+        : "",
+      productName: product.product_name || "",
+      productPrice: product.product_prize || "",
+      productSellingPrice: product.product_selling_prize || "",
+      categoryName: product.categoryid?.category_name || "",
+      identityFlag: getRoleOrInstitute(product.t_id?.role) || "",
+      productFlag: product.product_flag || "",
+    }));
 
-    const productDetails = products.map((product) => {
-      let productRating = 0;
-      if (product.reviews && product.reviews.length > 0) {
-        const totalRating = product.reviews.reduce(
-          (sum, review) => sum + review.star_count,
-          0
-        );
-        productRating = (totalRating / product.reviews.length).toFixed(1);
-      }
+    // Process Events
+    const eventDetails = events.map((event) => ({
+      _id: event._id,
+      eventImage: event.event_thumbnail
+        ? `${baseUrl}/${event.event_thumbnail.replace(/\\/g, "/")}`
+        : "",
+      eventDate: event.event_date || "",
+      eventStartTime: event.event_start_time || "",
+      eventEndTime: event.event_end_time || "",
+      eventName: event.event_name || "",
+      mode: event.event_type || "",
+      enrollments: event.registered_users?.length || "",
+    }));
 
-      return {
-        _id: product?._id,
-        productImage: product?.product_image
-          ? `${baseUrl}/${product?.product_image?.replace(/\\/g, "/")}`
-          : "",
-        productName: product?.product_name || "",
-        productPrice: product?.product_prize || "",
-        productSellingPrice: product?.product_selling_prize || "",
-        avgRating: productRating || "",
-        categoryName: product?.categoryid?.category_name || "",
-        identityFlag: getRoleOrInstitute(product?.t_id?.role) || "",
-        productFlag: product?.product_flag || "",
-      };
-    });
-
-    // Fetch events from the Event model
-    const events = await Event.find()
-      .sort({ createdAt: -1 })
-      .skip(startIndex)
-      .limit(limit)
-      .sort({ createdAt: -1 })
-      .populate("trainerid")
-      .select(
-        "event_thumbnail event_date event_name event_type event_start_time registered_users event_end_time"
-      );
-
-    const eventDetails = events.map((event) => {
-      return {
-        _id: event?._id,
-        eventImage: event?.event_thumbnail
-          ? `${baseUrl}/${event?.event_thumbnail?.replace(/\\/g, "/")}`
-          : "",
-        eventDate: event?.event_date || "",
-        eventStartTime: event?.event_start_time || "",
-        eventEndTime: event?.event_end_time || "",
-        eventName: event?.event_name || "",
-        mode: event?.event_type || "",
-        enrollments: event?.registered_users?.length || "",
-        event_falg: event?.trainerid.role || "",
-      };
-    });
-
-    res.status(200).send({
+    // The final response data
+    const responseData = {
       trainersWithFullImageUrl,
       categoriesWithFullImageUrl,
       coursesWithFullImageUrl,
       productDetails,
       eventDetails,
-      // pagination: {
-      //   currentPage: page,
-      //   totalPages: Math.ceil(totalCourses / limit),
-      //   totalItems: totalCourses,
-      //   pageSize: limit,
-      // },
-    });
+    };
+
+    // Store the data in cache
+    cache.set(cacheKey, responseData);
+
+    // Send the response
+    res.status(200).send(responseData);
   } catch (err) {
     console.log(err);
     res.status(500).json(new ApiError(500, err.message || "", err));

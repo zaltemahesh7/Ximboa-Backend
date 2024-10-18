@@ -40,13 +40,13 @@ const getReviewsByProductId = asyncHandler(async (req, res) => {
   const baseUrl = req.protocol + "://" + req.get("host");
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 2;
-  const eventid = req.params.eventid;
+  const productid = req.params.productid;
 
   try {
-    const productReview = await product.findById(eventid).select("reviews");
+    const productReview = await product.findById(productid).select("reviews");
 
     if (!productReview) {
-      return res.status(404).json(new ApiResponse(404, "Course not found"));
+      return res.status(404).json(new ApiResponse(404, "Product not found"));
     }
 
     const totalReviews = productReview.reviews.length;
@@ -71,7 +71,9 @@ const getReviewsByProductId = asyncHandler(async (req, res) => {
         );
         return {
           userid: populatedReview?._id,
-          user_name: `${populatedReview?.f_Name} ${populatedReview?.l_Name}`,
+          user_name: `${populatedReview?.f_Name || ""} ${
+            populatedReview?.l_Name || ""
+          }`,
           trainer_image: populatedReview?.trainer_image
             ? `${baseUrl}/${populatedReview?.trainer_image?.replace(
                 /\\/g,
@@ -90,7 +92,7 @@ const getReviewsByProductId = asyncHandler(async (req, res) => {
         200,
         "Course Reviews",
         {
-          eventid: productReview?._id,
+          productid: productReview?._id,
           reviews: paginatedReviews,
         },
         {
