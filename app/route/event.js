@@ -213,6 +213,7 @@ router.put(
   upload.single("event_thumbnail"),
   async (req, res) => {
     const eventId = req.params.id;
+    const userId = req.user.id;
     const {
       event_name,
       event_type,
@@ -227,7 +228,6 @@ router.put(
       event_languages,
       estimated_seats,
     } = req.body;
-    const userId = req.user.id;
     const eventImage = req.file ? req.file.path : "";
 
     try {

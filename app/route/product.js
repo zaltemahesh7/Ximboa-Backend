@@ -100,6 +100,7 @@ router.get("/", function (req, res, next) {
 
 // Get a single product by ID
 router.get("/:id", async function (req, res, next) {
+  const baseUrl = req.protocol + "://" + req.get("host");
   Product.findById(req.params.id)
     .populate("categoryid", "category_name")
     .select("-t_id")
@@ -112,9 +113,9 @@ router.get("/:id", async function (req, res, next) {
         products_info: result.products_info || "",
         products_description: result.products_description || "",
         product_flag: result.product_flag || "",
-        product_image: result.product_image || "",
-        product_gallary: result.product_gallary || "",
-        product_gallary: result.product_gallary || "",
+        product_image: result.product_image
+          ? `${baseUrl}/${result?.product_image?.replace(/\\/g, "/")}`
+          : "",
       });
     })
     .catch((err) => {
