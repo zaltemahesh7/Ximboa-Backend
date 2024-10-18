@@ -223,7 +223,7 @@ router.get("/:id", async (req, res, next) => {
       offer_prize: courseData?.offer_prize || "",
       course_flag: courseData?.trainer_id?.role || "",
     };
- 
+
     res.status(200).json(courseWithFullImageUrls);
   } catch (err) {
     console.error("Error fetching course:", err);

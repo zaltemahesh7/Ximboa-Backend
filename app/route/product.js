@@ -104,14 +104,21 @@ router.get("/:id", async function (req, res, next) {
     .populate("categoryid", "category_name")
     .select("-t_id")
     .then((result) => {
-      const productsWithFullImageUrls = result.map((product) => ({
-        ...product._doc,
-        product_image: `http://${req.headers.host}/${product.product_image}`,
-      }));
-      // console.log(productsWithFullImageUrls),
-      res.status(200).json(productsWithFullImageUrls[0]);
+      res.status(200).json({
+        category_name: result.categoryid.category_name || "",
+        product_name: result.product_name || "",
+        product_prize: result.product_prize || "",
+        product_selling_prize: result.product_selling_prize || "",
+        products_info: result.products_info || "",
+        products_description: result.products_description || "",
+        product_flag: result.product_flag || "",
+        product_image: result.product_image || "",
+        product_gallary: result.product_gallary || "",
+        product_gallary: result.product_gallary || "",
+      });
     })
     .catch((err) => {
+      console.log(err);
       res
         .status(500)
         .json(
