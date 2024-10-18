@@ -2,7 +2,7 @@ var mongoose = require("mongoose");
 
 var aboutSchema = new mongoose.Schema(
   {
-    about_us: String,
+    about_us: { type: String, trim: true },
     our_services: String,
     trainer: {
       type: mongoose.Schema.Types.ObjectId,

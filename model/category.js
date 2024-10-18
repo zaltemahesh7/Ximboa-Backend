@@ -1,30 +1,3 @@
-// // Category model
-// const mongoose = require("mongoose");
-
-// const categorySchema = new mongoose.Schema(
-//   {
-//     category_name: {
-//       type: String,
-//       required: true,
-//       unique: true, // Ensure the category name is unique
-//     },
-//     sub_title: {
-//       type: String,
-//     },
-//     trainer_id: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: "Registration",
-//     },
-//     category_image: String,
-//   },
-//   { timestamps: true }
-// );
-
-// module.exports = mongoose.model("Category", categorySchema);
-
-
-
-
 const mongoose = require("mongoose");
 
 const categorySchema = new mongoose.Schema(

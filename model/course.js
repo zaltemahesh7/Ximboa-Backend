@@ -6,10 +6,12 @@ const courseShema = new mongoose.Schema(
     course_name: {
       type: String,
       required: [true, "Course Name is Required"],
+      trim: true,
     },
     online_offline: {
       type: String,
       required: [true, "Course Mode is Required (Online/Offline"],
+      trim: true,
     },
     price: {
       type: String,
@@ -35,9 +37,11 @@ const courseShema = new mongoose.Schema(
     course_brief_info: {
       type: String,
       required: [true, "Course Course course_brief_info is Required"],
+      trim: true,
     },
     course_information: {
       type: String,
+      trim: true,
     },
     thumbnail_image: {
       type: String,
@@ -50,6 +54,7 @@ const courseShema = new mongoose.Schema(
     },
     tags: {
       type: String,
+      trim: true,
     },
     category_id: {
       type: mongoose.Schema.Types.ObjectId,

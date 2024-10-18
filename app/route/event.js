@@ -68,61 +68,39 @@ router.get("/:id", async (req, res) => {
     const eventId = req.params.id;
 
     // Find the event by its ID and populate category_id with only category_name
-    const eventWithFullImageUrls = await Event.findById(eventId)
+    const events = await Event.findById(eventId)
       .populate("event_category", "category_name -_id")
       .lean();
 
-    if (!eventWithFullImageUrls) {
+    if (!events) {
       return res.status(404).json({ message: "Event not found" });
     }
 
     const courseCount = await course.countDocuments({
-      trainer_id: eventWithFullImageUrls?.trainerid,
+      trainer_id: events?.trainerid,
     });
 
     const institute = await InstituteModel.findOne({
-      trainers: eventWithFullImageUrls?.trainerid?._id,
+      trainers: events?.trainerid?._id,
     }).select("institute_name social_Media");
     // Get base URL for image paths
     const baseUrl = req.protocol + "://" + req.get("host");
 
     const event = {
-      _id: eventWithFullImageUrls?._id,
+      _id: events?._id,
       event_thumbnail:
-        `${baseUrl}/${eventWithFullImageUrls?.event_thumbnail?.replace(
-          /\\/g,
-          "/"
-        )}` || "",
-      event_info: eventWithFullImageUrls?.event_info || "",
-      event_description: eventWithFullImageUrls?.event_description || "",
-      event_date: eventWithFullImageUrls?.event_date || "",
-      event_start_time: eventWithFullImageUrls?.event_start_time || "",
-      event_end_time: eventWithFullImageUrls?.event_end_time || "",
-      event_name: eventWithFullImageUrls?.event_name || "",
-      event_category:
-        eventWithFullImageUrls?.event_category.category_name || "",
-      event_languages: eventWithFullImageUrls?.event_languages || "",
-      estimated_seats: eventWithFullImageUrls?.estimated_seats || "",
-      event_location: eventWithFullImageUrls?.event_location || "",
-      event_type: eventWithFullImageUrls?.event_type || "",
-      registered_users: eventWithFullImageUrls?.registered_users.length || "",
-      trainer_image: eventWithFullImageUrls?.trainerid?.trainer_image
-        ? `${baseUrl}/${eventWithFullImageUrls?.trainerid?.trainer_image?.replace(
-            /\\/g,
-            "/"
-          )}`
-        : "",
-      trainer_id: eventWithFullImageUrls?.trainerid?._id,
-      business_Name: eventWithFullImageUrls?.trainerid?.business_Name
-        ? eventWithFullImageUrls?.trainerid?.business_Name
-        : `${eventWithFullImageUrls?.trainerid?.f_Name || ""} ${
-            eventWithFullImageUrls?.trainerid?.l_Name || ""
-          }`.trim() || "",
-      social_media: institute?.social_Media
-        ? institute?.social_Media
-        : eventWithFullImageUrls?.trainerid?.social_Media || "",
-      trainier_rating: "Pending..###...",
-      total_course: courseCount || "",
+        `${baseUrl}/${events?.event_thumbnail?.replace(/\\/g, "/")}` || "",
+      event_info: events?.event_info || "",
+      event_description: events?.event_description || "",
+      event_date: events?.event_date || "",
+      event_start_time: events?.event_start_time || "",
+      event_end_time: events?.event_end_time || "",
+      event_name: events?.event_name || "",
+      event_category: events?.event_category.category_name || "",
+      event_languages: events?.event_languages || "",
+      estimated_seats: events?.estimated_seats || "",
+      event_location: events?.event_location || "",
+      event_type: events?.event_type || "",
     };
 
     // Send back the event with the full thumbnail URL and direct category_name
@@ -133,38 +111,38 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.get("/events", async (req, res) => {
-  try {
-    // Get the event type from query params
-    const { event_type } = req.query;
+// router.get("/events", async (req, res) => {
+//   try {
+//     // Get the event type from query params
+//     const { event_type } = req.query;
 
-    // Validate the event type
-    if (!event_type) {
-      return res.status(400).json({ message: "Event type is required" });
-    }
+//     // Validate the event type
+//     if (!event_type) {
+//       return res.status(400).json({ message: "Event type is required" });
+//     }
 
-    // Filter events by the specified type
-    const events = await Event.find({ event_type });
+//     // Filter events by the specified type
+//     const events = await Event.find({ event_type });
 
-    // Get base URL for image paths
-    const baseUrl = req.protocol + "://" + req.get("host");
+//     // Get base URL for image paths
+//     const baseUrl = req.protocol + "://" + req.get("host");
 
-    // Add base URL to the event_thumbnail path
-    const eventsWithFullThumbnailUrl = events.map((event) => {
-      return {
-        ...event._doc,
-        event_thumbnail: event.event_thumbnail
-          ? `${baseUrl}/${event.event_thumbnail.replace(/\\/g, "/")}`
-          : "",
-      };
-    });
+//     // Add base URL to the event_thumbnail path
+//     const eventsWithFullThumbnailUrl = events.map((event) => {
+//       return {
+//         ...event._doc,
+//         event_thumbnail: event.event_thumbnail
+//           ? `${baseUrl}/${event.event_thumbnail.replace(/\\/g, "/")}`
+//           : "",
+//       };
+//     });
 
-    res.status(200).json(eventsWithFullThumbnailUrl);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Error fetching events", error });
-  }
-});
+//     res.status(200).json(eventsWithFullThumbnailUrl);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ message: "Error fetching events", error });
+//   }
+// });
 
 // trainer/:trainerid
 
