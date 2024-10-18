@@ -15,10 +15,10 @@ const InstituteDummySchema = new Schema(
     Email: {
       type: String,
     },
+    website: {
+      type: String,
+    },
     social_Media: {
-      Website: {
-        type: String,
-      },
       Facebook: {
         type: String,
       },
@@ -32,9 +32,24 @@ const InstituteDummySchema = new Schema(
     Phone_No: {
       type: Number,
     },
+    Whatsapp_number: {
+      type: String,
+    },
     About: {
       about_us: String,
       our_services: String,
+    },
+    Timestamp: {
+      type: String,
+    },
+    Timing: {
+      type: String,
+    },
+    training_type: {
+      type: String,
+    },
+    mode_of_instructor: {
+      type: String,
     },
     courses: {
       type: [String],

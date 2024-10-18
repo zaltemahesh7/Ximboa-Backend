@@ -76,14 +76,6 @@ router.get("/:id", async (req, res) => {
       return res.status(404).json({ message: "Event not found" });
     }
 
-    const courseCount = await course.countDocuments({
-      trainer_id: events?.trainerid,
-    });
-
-    const institute = await InstituteModel.findOne({
-      trainers: events?.trainerid?._id,
-    }).select("institute_name social_Media");
-    // Get base URL for image paths
     const baseUrl = req.protocol + "://" + req.get("host");
 
     const event = {

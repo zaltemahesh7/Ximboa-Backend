@@ -155,76 +155,157 @@ router.get("/", async (req, res) => {
 //   }
 // });
 
+// router.get("/student", jwtAuthMiddleware, async (req, res) => {
+//   try {
+//     const baseUrl = req.protocol + "://" + req.get("host");
+
+//     // Find all enrollments for the logged-in student
+//     const enrollment = await Enrollment.find({
+//       userid: req.user.id,
+//     }).populate("course_id", "course_name thumbnail_image");
+
+//     if (enrollment.length === 0) {
+//       return res
+//         .status(404)
+//         .json({ message: "No enrollments found for this student" });
+//     }
+
+//     // Process all enrollments in parallel using Promise.all
+//     const enrollments = await Promise.all(
+//       enrollment.map(async (course1) => {
+//         const course = await Course.findById(course1.course_id._id)
+//           .populate("category_id", "category_name")
+//           .populate("trainer_id", "f_Name l_Name trainer_image id city role");
+
+//         return {
+//           _id: course?._id,
+//           category_name: course?.category_id?.category_name || "",
+//           course_name: course?.course_name || "",
+//           online_offline: course?.online_offline || "",
+//           thumbnail_image: course?.thumbnail_image
+//             ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
+//             : "",
+//           trainer_image: course?.trainer_id?.trainer_image
+//             ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
+//                 /\\/g,
+//                 "/"
+//               )}`
+//             : "",
+//           trainer_id: course?.trainer_id?._id,
+//           business_Name: course?.trainer_id?.business_Name
+//             ? course?.trainer_id?.business_Name
+//             : `${course?.trainer_id?.f_Name || ""} ${
+//                 course?.trainer_id?.l_Name || ""
+//               }`.trim() || "",
+//           course_rating: "",
+//           course_duration: Math.floor(
+//             Math.round(
+//               ((course?.end_date - course?.start_date) /
+//                 (1000 * 60 * 60 * 24 * 7)) *
+//                 100
+//             ) / 100
+//           ),
+//           course_price: course?.price || "",
+//           course_offer_prize: course?.offer_prize || "",
+//           course_flag:
+//             course?.trainer_id?.role === "TRAINER"
+//               ? "Institute"
+//               : "Self Expert",
+//         };
+//       })
+//     );
+
+//     // Send the processed enrollment data
+//     res.status(200).json(enrollments);
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({
+//       message: error.message || "Error fetching enrollments",
+//       error,
+//     });
+//   }
+// });
+
+
+const NodeCache = require("node-cache");
+const cache = new NodeCache({ stdTTL: 3600 }); // Cache data for 1 hour
+
 router.get("/student", jwtAuthMiddleware, async (req, res) => {
   try {
     const baseUrl = req.protocol + "://" + req.get("host");
 
-    // Find all enrollments for the logged-in student
-    const enrollment = await Enrollment.find({
-      userid: req.user.id,
-    }).populate("course_id", "course_name thumbnail_image");
+    // Check if enrollments are already cached for this user
+    const cacheKey = `enrollments_${req.user.id}`;
+    let enrollments = cache.get(cacheKey);
 
-    if (enrollment.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No enrollments found for this student" });
-    }
+    // If not in cache, fetch from database
+    if (!enrollments) {
+      // Find all enrollments for the logged-in student with necessary population
+      const enrollment = await Enrollment.find({
+        userid: req.user.id,
+      })
+        .populate({
+          path: "course_id",
+          select: "course_name thumbnail_image online_offline price offer_prize start_date end_date",
+          populate: [
+            { path: "category_id", select: "category_name" },
+            { path: "trainer_id", select: "f_Name l_Name trainer_image business_Name role city" },
+          ],
+        });
 
-    // Process all enrollments in parallel using Promise.all
-    const enrollments = await Promise.all(
-      enrollment.map(async (course1) => {
-        const course = await Course.findById(course1.course_id._id)
-          .populate("category_id", "category_name")
-          .populate("trainer_id", "f_Name l_Name trainer_image id city role");
+      if (enrollment.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No enrollments found for this student" });
+      }
 
+      // Process all enrollments
+      enrollments = enrollment.map((course1) => {
+        const course = course1.course_id;
         return {
-          _id: course?._id,
+          _id: course._id,
           category_name: course?.category_id?.category_name || "",
           course_name: course?.course_name || "",
           online_offline: course?.online_offline || "",
           thumbnail_image: course?.thumbnail_image
-            ? `${baseUrl}/${course?.thumbnail_image?.replace(/\\/g, "/")}`
+            ? `${baseUrl}/${course?.thumbnail_image.replace(/\\/g, "/")}`
             : "",
           trainer_image: course?.trainer_id?.trainer_image
-            ? `${baseUrl}/${course?.trainer_id?.trainer_image?.replace(
-                /\\/g,
-                "/"
-              )}`
+            ? `${baseUrl}/${course?.trainer_id?.trainer_image.replace(/\\/g, "/")}`
             : "",
           trainer_id: course?.trainer_id?._id,
           business_Name: course?.trainer_id?.business_Name
             ? course?.trainer_id?.business_Name
-            : `${course?.trainer_id?.f_Name || ""} ${
-                course?.trainer_id?.l_Name || ""
-              }`.trim() || "",
-          course_rating: "",
-          course_duration: Math.floor(
-            Math.round(
-              ((course?.end_date - course?.start_date) /
-                (1000 * 60 * 60 * 24 * 7)) *
-                100
-            ) / 100
+            : `${course?.trainer_id?.f_Name || ""} ${course?.trainer_id?.l_Name || ""}`.trim() || "",
+          course_rating: "", // Add logic to calculate course rating if needed
+          course_duration: Math.round(
+            (new Date(course?.end_date) - new Date(course?.start_date)) /
+              (1000 * 60 * 60 * 24 * 7) // Duration in weeks
           ),
           course_price: course?.price || "",
           course_offer_prize: course?.offer_prize || "",
           course_flag:
-            course?.trainer_id?.role === "TRAINER"
-              ? "Institute"
-              : "Self Expert",
+            course?.trainer_id?.role === "TRAINER" ? "Institute" : "Self Expert",
         };
-      })
-    );
+      });
 
-    // Send the processed enrollment data
+      // Cache the processed data
+      cache.set(cacheKey, enrollments);
+    }
+
+    // Send the processed enrollment data (from cache or DB)
     res.status(200).json(enrollments);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({
       message: error.message || "Error fetching enrollments",
       error,
     });
   }
 });
+
+
+
 
 router.get("/course/:course_id", async (req, res) => {
   try {

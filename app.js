@@ -3,9 +3,12 @@ const app = express();
 const cors = require("cors");
 const path = require("path");
 const { jwtAuthMiddleware, generateToken } = require("./middleware/auth");
+const morgan = require("morgan");
 
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use(cors());
+
+app.use(morgan(":method :url :status :response-time ms"));
 
 const bodyparser = require("body-parser");
 app.use(bodyparser.urlencoded({ extended: false }));

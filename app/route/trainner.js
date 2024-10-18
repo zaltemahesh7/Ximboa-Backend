@@ -203,7 +203,7 @@ router.get("/", async (req, res) => {
       "user_id",
       "f_Name l_Name trainer_image"
     );
-    console.log(reviewData);
+    // console.log(reviewData);
     const reviews = reviewData.map((review) => {
       const result = {
         _id: review?._id || "",
