@@ -397,8 +397,9 @@ router.get("/home", async (req, res) => {
 
         return {
           t_id: trainer._id,
-          Business_Name:
-            institute?.institute_name || `${trainer.f_Name} ${trainer.l_Name}`,
+          Business_Name: trainer?.business_Name
+            ? trainer?.business_Name
+            : `${trainer.f_Name} ${trainer.l_Name}`,
           f_Name: trainer.f_Name,
           l_Name: trainer.l_Name,
           role: trainer.role,
