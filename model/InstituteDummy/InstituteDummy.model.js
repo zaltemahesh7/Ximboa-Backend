@@ -61,7 +61,7 @@ const InstituteDummySchema = new Schema(
       //   },
     },
     establishedYear: {
-      type: Number,
+      type: String,
       // required: [true, "Established year is required"],
       min: [1900, "Established year must be after 1900"],
     },
